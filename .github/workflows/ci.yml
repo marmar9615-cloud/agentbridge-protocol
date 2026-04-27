@@ -8,7 +8,7 @@ on:
 
 jobs:
   test:
-    name: Test & typecheck
+    name: Test, build, and pack
     runs-on: ubuntu-latest
 
     strategy:
@@ -32,10 +32,18 @@ jobs:
           npx tsc -p packages/core/tsconfig.json --noEmit
           npx tsc -p packages/sdk/tsconfig.json --noEmit
           npx tsc -p packages/scanner/tsconfig.json --noEmit
+          npx tsc -p packages/openapi/tsconfig.json --noEmit
+          npx tsc -p packages/cli/tsconfig.json --noEmit
           npx tsc -p apps/mcp-server/tsconfig.json --noEmit
 
       - name: Run tests
         run: npm test
+
+      - name: Build publishable packages
+        run: npm run build
+
+      - name: Pack dry-run
+        run: npm run pack:dry-run
 
       - name: Build demo-app
         run: npx next build
