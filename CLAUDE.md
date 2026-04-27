@@ -21,7 +21,7 @@ agentbridge/
 │   ├── sdk/        defineAgentAction, manifest builder, route handler wrapper
 │   ├── scanner/    0–100 readiness scoring, structured checks, Playwright probe
 │   ├── openapi/    OpenAPI 3.x → AgentBridge manifest converter
-│   └── cli/        @agentbridge/cli — scan, validate, init, generate, mcp-config
+│   └── cli/        @marmar9615-cloud/agentbridge-cli — scan, validate, init, generate, mcp-config
 ├── apps/
 │   ├── demo-app/   Next.js fake order app (port 3000) — manifest + actions
 │   ├── studio/     Next.js dashboard (port 3001) — scan, exercise, audit
@@ -34,16 +34,19 @@ agentbridge/
 
 ## Package responsibilities
 
+Publishable packages are scoped `@marmar9615-cloud/agentbridge-*`; apps
+keep an unscoped name and stay private. The `@agentbridge` scope is
+unowned on npm and is intentionally not used.
+
 | Package | Owns |
 |---|---|
-| `@agentbridge/core` | The contract. All schemas, validation, audit log. |
-| `@agentbridge/sdk` | App author DX. Zod-first action definitions, route handler glue. |
-| `@agentbridge/scanner` | Audit/score any URL. Structured `checks[]` + grouped recommendations. |
-| `@agentbridge/openapi` | OpenAPI-to-manifest conversion logic. CLI uses it. |
-| `@agentbridge/cli` | `agentbridge` CLI. Wraps scanner/openapi/core. |
+| `@marmar9615-cloud/agentbridge-core` | The contract. All schemas, validation, audit log. |
+| `@marmar9615-cloud/agentbridge-sdk` | App author DX. Zod-first action definitions, route handler glue. |
+| `@marmar9615-cloud/agentbridge-scanner` | Audit/score any URL. Structured `checks[]` + grouped recommendations. |
+| `@marmar9615-cloud/agentbridge-openapi` | OpenAPI-to-manifest conversion logic. CLI uses it. |
+| `@marmar9615-cloud/agentbridge-cli` | `agentbridge` CLI. Wraps scanner/openapi/core. |
 
-`@agentbridge/cli`, `@agentbridge/openapi`, `@agentbridge/scanner`, and
-`@agentbridge/sdk` all depend on `@agentbridge/core`. Don't introduce
+cli, openapi, scanner, and sdk all depend on core. Don't introduce
 circular deps.
 
 ## Commands
@@ -51,7 +54,10 @@ circular deps.
 ```bash
 npm install                # install workspace deps
 npm test                   # all Vitest suites
-npm run typecheck          # tsc -b across all tsconfigs
+npm run typecheck          # per-package tsc --noEmit
+npm run build              # tsup build for publishable packages → dist/
+npm run pack:dry-run       # validate published-tarball contents
+npm run smoke:external     # full external-clone simulation
 npm run dev                # demo + studio in parallel
 npm run dev:demo           # demo on :3000
 npm run dev:studio         # studio on :3001
@@ -59,8 +65,11 @@ npm run dev:mcp            # MCP server (stdio)
 npm run dev:cli -- scan http://localhost:3000   # run CLI
 ```
 
-CI: `.github/workflows/ci.yml` runs install, typecheck, tests, and Next.js
-builds on Node 20.x and 22.x.
+CI: `.github/workflows/ci.yml` runs install, typecheck (all 6
+packages), tests, build, pack-check, and Next.js builds on Node 20.x
+and 22.x. `.github/workflows/release-check.yml` is a manual workflow
+that additionally runs `npm run smoke:external` and prints every
+tarball's contents — run it before tagging a release.
 
 ## Coding style
 
