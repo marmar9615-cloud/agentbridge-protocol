@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/SECURITY.md
+    about: Do NOT open a public issue. See SECURITY.md for the private reporting channel.
+  - name: Roadmap
+    url: https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/docs/roadmap.md
+    about: Check the roadmap to see what's already planned.
+  - name: Manifest spec
+    url: https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/spec/agentbridge-manifest.v0.1.md
+    about: Read the manifest spec before asking schema questions.
