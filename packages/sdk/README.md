@@ -1,0 +1,73 @@
+# @marmar9615-cloud/agentbridge-sdk
+
+SDK for declaring [AgentBridge](https://github.com/marmar9615-cloud/agentbridge-protocol)
+actions and emitting AgentBridge manifests in any JavaScript/TypeScript
+app.
+
+Use this if you have a Next.js / Express / Hono / Fastify app and want
+AI agents to call its actions safely.
+
+## Install
+
+```bash
+npm install @marmar9615-cloud/agentbridge-sdk @marmar9615-cloud/agentbridge-core zod
+```
+
+## What's inside
+
+- `defineAgentAction(spec)` — Zod-first action definition. Compiles your
+  Zod input/output schemas into JSON Schema for the manifest while
+  keeping full type inference at the call site.
+- `createAgentBridgeManifest(spec)` — assemble a full manifest from a
+  list of actions.
+- `createActionHandler(action, handler)` — wraps a Next.js / Express
+  handler with input validation against the declared schema.
+- `z` — re-export of zod for convenience.
+
+## Quick example
+
+```ts
+import {
+  defineAgentAction,
+  createAgentBridgeManifest,
+  z,
+} from "@marmar9615-cloud/agentbridge-sdk";
+
+export const inviteUser = defineAgentAction({
+  name: "invite_user",
+  title: "Invite a user",
+  description: "Sends an invite email to a new user.",
+  method: "POST",
+  endpoint: "/api/agentbridge/actions/invite_user",
+  risk: "medium",
+  requiresConfirmation: true,
+  inputSchema: z.object({
+    email: z.string().email(),
+    role: z.enum(["admin", "member"]),
+  }),
+  outputSchema: z.object({ inviteId: z.string() }),
+  permissions: [{ scope: "users:invite" }],
+  examples: [{ input: { email: "alice@example.com", role: "member" } }],
+  humanReadableSummaryTemplate: "Invite {{email}} as {{role}}",
+});
+
+export const manifest = createAgentBridgeManifest({
+  name: "Acme",
+  version: "1.0.0",
+  baseUrl: "https://acme.example",
+  contact: "platform@acme.example",
+  actions: [inviteUser],
+});
+```
+
+See [`examples/nextjs-basic`](https://github.com/marmar9615-cloud/agentbridge-protocol/tree/main/examples/nextjs-basic)
+for a complete Next.js integration walkthrough.
+
+## Status
+
+Public beta (v0.2.0). API surface is intentionally small and stable for
+the v0.x line.
+
+## License
+
+Apache-2.0

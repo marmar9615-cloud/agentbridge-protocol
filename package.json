@@ -21,10 +21,12 @@
     "dev:mcp": "npm run dev -w apps/mcp-server",
     "dev:cli": "tsx packages/cli/src/bin.ts",
     "cli": "tsx packages/cli/src/bin.ts",
-    "build": "npm run build --workspaces --if-present",
+    "build": "npm run build -w packages/core -w packages/sdk -w packages/scanner -w packages/openapi -w packages/cli -w apps/mcp-server",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc -b"
+    "typecheck": "npx tsc -p packages/core/tsconfig.json --noEmit && npx tsc -p packages/sdk/tsconfig.json --noEmit && npx tsc -p packages/scanner/tsconfig.json --noEmit && npx tsc -p packages/openapi/tsconfig.json --noEmit && npx tsc -p packages/cli/tsconfig.json --noEmit && npx tsc -p apps/mcp-server/tsconfig.json --noEmit",
+    "pack:dry-run": "node scripts/pack-check.mjs",
+    "smoke:external": "node scripts/external-adopter-smoke.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
