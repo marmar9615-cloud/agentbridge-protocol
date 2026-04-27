@@ -21,9 +21,19 @@
 
 This is **v0.2.0 beta** — the first cut intended for outside developers to evaluate. It is suitable for local experimentation, prototyping, and reading. It is **not** yet a production security infrastructure: signed manifests, OAuth scope enforcement, HTTP MCP transport, and distributed audit storage are roadmap items (see [docs/roadmap.md](docs/roadmap.md)). Destructive demo actions remain simulated.
 
-Install the published packages once they are available on npm:
+**Distribution: source-only.** The `@marmar9615-cloud/agentbridge-*` packages are *prepared* for npm publishing (CI builds them, `npm pack --dry-run` validates each tarball) but **have not been published to npm yet**. The way to use AgentBridge today is to clone this repo:
 
 ```bash
+git clone https://github.com/marmar9615-cloud/agentbridge-protocol.git
+cd agentbridge-protocol
+npm install
+npm run dev      # demo on :3000, Studio on :3001
+```
+
+npm publishing is a separate manual step (see [docs/npm-publishing.md](docs/npm-publishing.md)). After it happens, the equivalent commands will be:
+
+```bash
+# Available only after the packages are published — not today.
 npm install @marmar9615-cloud/agentbridge-sdk @marmar9615-cloud/agentbridge-core
 npx @marmar9615-cloud/agentbridge-cli scan http://localhost:3000
 npx @marmar9615-cloud/agentbridge-mcp-server

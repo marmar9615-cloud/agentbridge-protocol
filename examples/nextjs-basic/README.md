@@ -4,6 +4,15 @@ This is a documentation-style example. The full runnable demo lives at
 [`apps/demo-app/`](../../apps/demo-app); the snippets here are the minimum
 you need to expose AgentBridge from any existing Next.js (App Router) app.
 
+> **Note:** `@marmar9615-cloud/agentbridge-*` is **not yet published to
+> npm** at v0.2.0-beta — the packages are publish-ready but distribution
+> is source-only at this stage (see
+> [docs/public-beta.md](../../docs/public-beta.md)). To run this
+> walkthrough today, copy the relevant files from
+> [`apps/demo-app/`](../../apps/demo-app) of your local clone and use
+> workspace deps. The `npm install` line below works once the packages
+> are on npm.
+
 ## 1. Install the SDK
 
 ```bash
