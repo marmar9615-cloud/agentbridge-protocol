@@ -1,8 +1,6 @@
 {
   "name": "@marmar9615-cloud/agentbridge-cli",
   "version": "0.2.0",
-  "private": true,
-  "type": "module",
   "description": "Command-line interface for AgentBridge: scan, validate, init, and generate manifests.",
   "license": "Apache-2.0",
   "repository": {
@@ -12,12 +10,26 @@
   },
   "homepage": "https://github.com/marmar9615-cloud/agentbridge-protocol",
   "keywords": ["agentbridge", "cli", "ai-agents", "mcp", "openapi"],
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
-  "bin": {
-    "agentbridge": "./src/bin.ts"
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
   },
+  "bin": {
+    "agentbridge": "./dist/bin.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
+    "build": "tsup",
     "dev": "tsx src/bin.ts"
   },
   "dependencies": {

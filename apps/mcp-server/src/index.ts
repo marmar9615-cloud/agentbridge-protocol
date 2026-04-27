@@ -1,4 +1,3 @@
-#!/usr/bin/env tsx
 /* AgentBridge MCP server.
  *
  * Speaks MCP over stdio. Exposes tools, resources, and prompts to AI agents
