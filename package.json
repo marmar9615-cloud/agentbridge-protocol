@@ -1,8 +1,15 @@
 {
   "name": "agentbridge",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
+  "description": "Workspace root for AgentBridge — an AI-native action layer for web apps.",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marmar9615-cloud/agentbridge-protocol.git"
+  },
+  "homepage": "https://github.com/marmar9615-cloud/agentbridge-protocol",
   "workspaces": [
     "packages/*",
     "apps/*"
@@ -12,6 +19,8 @@
     "dev:demo": "npm run dev -w apps/demo-app",
     "dev:studio": "npm run dev -w apps/studio",
     "dev:mcp": "npm run dev -w apps/mcp-server",
+    "dev:cli": "tsx packages/cli/src/bin.ts",
+    "cli": "tsx packages/cli/src/bin.ts",
     "build": "npm run build --workspaces --if-present",
     "test": "vitest run",
     "test:watch": "vitest",

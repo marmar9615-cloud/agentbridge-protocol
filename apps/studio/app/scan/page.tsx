@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { scanUrl, type ScanResult } from "@agentbridge/scanner";
+import { CopyButton } from "../../components/CopyButton";
 
 export const dynamic = "force-dynamic";
 
@@ -40,14 +41,22 @@ export default async function ScanPage({ searchParams }: Props) {
   const scoreClass =
     result.score >= 80 ? "score-good" : result.score >= 50 ? "score-mid" : "score-bad";
 
+  const errors = result.checks.filter((c) => c.severity === "error");
+  const warnings = result.checks.filter((c) => c.severity === "warning");
+  const infos = result.checks.filter((c) => c.severity === "info");
+  const groups = result.recommendationGroups;
+
   return (
     <div>
       <p className="muted">
         <Link href="/">← New scan</Link>
       </p>
-      <h1>
-        Scan: <code>{result.url}</code>
-      </h1>
+      <div className="section-head">
+        <h1>
+          Scan: <code>{result.url}</code>
+        </h1>
+        <CopyButton text={JSON.stringify(result, null, 2)} label="Copy JSON" />
+      </div>
 
       <div className="card">
         <div className="row">
@@ -65,10 +74,16 @@ export default async function ScanPage({ searchParams }: Props) {
               {result.actionCount} actions · {result.riskyActionCount} risky ·{" "}
               {result.missingConfirmationCount} missing confirmation
             </div>
+            <div className="muted" style={{ fontSize: 12 }}>
+              {errors.length} errors · {warnings.length} warnings · {infos.length} info ·{" "}
+              {result.passed.length} passed
+            </div>
             <div style={{ marginTop: 8 }}>
               <Link href={`/manifest?url=${encodeURIComponent(result.url)}`}>View manifest</Link>{" "}
               ·{" "}
-              <Link href={`/actions?url=${encodeURIComponent(result.url)}`}>View actions</Link>
+              <Link href={`/actions?url=${encodeURIComponent(result.url)}`}>
+                View actions
+              </Link>
             </div>
           </div>
         </div>
@@ -78,8 +93,9 @@ export default async function ScanPage({ searchParams }: Props) {
         <div className="card">
           <h2>Notes</h2>
           {result.notes.map((n, i) => (
-            <div key={i} className="issue">
-              {n}
+            <div key={i} className="check-row">
+              <span className="severity-tag severity-info">note</span>
+              <div>{n}</div>
             </div>
           ))}
         </div>
@@ -89,38 +105,122 @@ export default async function ScanPage({ searchParams }: Props) {
         <div className="card">
           <h2>Validation errors</h2>
           {result.validationErrors.map((e, i) => (
-            <div key={i} className="issue">
-              <code>{e}</code>
+            <div key={i} className="check-row">
+              <span className="severity-tag severity-error">error</span>
+              <div>
+                <code>{e}</code>
+              </div>
             </div>
           ))}
         </div>
       )}
 
-      <div className="card">
-        <h2>Issues ({result.issues.length})</h2>
-        {result.issues.length === 0 ? (
-          <p className="muted">No issues — this manifest is in great shape.</p>
-        ) : (
-          result.issues.map((issue, i) => (
-            <div key={i} className="issue">
-              {issue}
+      {errors.length > 0 && (
+        <div className="card">
+          <h2>Errors ({errors.length})</h2>
+          {errors.map((e, i) => (
+            <div key={i} className="check-row">
+              <span className="severity-tag severity-error">error</span>
+              <div>
+                <strong>{e.message}</strong>{" "}
+                <code className="muted" style={{ marginLeft: 4 }}>
+                  {e.path}
+                </code>
+                {e.recommendation && (
+                  <span className="recommendation">→ {e.recommendation}</span>
+                )}
+              </div>
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
 
-      <div className="card">
-        <h2>Recommendations ({result.recommendations.length})</h2>
-        {result.recommendations.length === 0 ? (
-          <p className="muted">Nothing to recommend.</p>
-        ) : (
-          result.recommendations.map((rec, i) => (
-            <div key={i} className="issue">
-              {rec}
+      {warnings.length > 0 && (
+        <div className="card">
+          <h2>Warnings ({warnings.length})</h2>
+          {warnings.map((w, i) => (
+            <div key={i} className="check-row">
+              <span className="severity-tag severity-warning">warn</span>
+              <div>
+                <strong>{w.message}</strong>{" "}
+                <code className="muted" style={{ marginLeft: 4 }}>
+                  {w.path}
+                </code>
+                {w.recommendation && (
+                  <span className="recommendation">→ {w.recommendation}</span>
+                )}
+              </div>
             </div>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
+
+      {infos.length > 0 && (
+        <div className="card">
+          <h2>Info ({infos.length})</h2>
+          {infos.map((info, i) => (
+            <div key={i} className="check-row">
+              <span className="severity-tag severity-info">info</span>
+              <div>
+                {info.message}{" "}
+                <code className="muted" style={{ marginLeft: 4 }}>
+                  {info.path}
+                </code>
+                {info.recommendation && (
+                  <span className="recommendation">→ {info.recommendation}</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {(["safety", "schema", "docs", "developerExperience"] as const).map((cat) =>
+        groups[cat].length > 0 ? (
+          <div key={cat} className="card">
+            <h2>Recommendations · {labelFor(cat)}</h2>
+            {groups[cat].map((r, i) => (
+              <div key={i} className="recommendation-card">
+                {r}
+              </div>
+            ))}
+          </div>
+        ) : null,
+      )}
+
+      {result.passed.length > 0 && (
+        <div className="card">
+          <h2>Passed checks ({result.passed.length})</h2>
+          {result.passed.map((p, i) => (
+            <div key={i} className="check-row">
+              <span className="severity-tag" style={{ color: "#047857" }}>
+                ✓
+              </span>
+              <div>
+                {p.message}{" "}
+                <code className="muted" style={{ marginLeft: 4 }}>
+                  {p.path}
+                </code>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
+}
+
+function labelFor(cat: string): string {
+  switch (cat) {
+    case "safety":
+      return "Safety";
+    case "schema":
+      return "Schema";
+    case "docs":
+      return "Documentation";
+    case "developerExperience":
+      return "Developer experience";
+    default:
+      return cat;
+  }
 }

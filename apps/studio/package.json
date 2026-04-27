@@ -1,7 +1,9 @@
 {
   "name": "@agentbridge/studio",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
+  "description": "AgentBridge Studio — visual dashboard for scanning, validating, and exercising manifests.",
+  "license": "Apache-2.0",
   "scripts": {
     "dev": "next dev -p 3001",
     "build": "next build",
@@ -10,6 +12,7 @@
   "dependencies": {
     "@agentbridge/core": "*",
     "@agentbridge/scanner": "*",
+    "marked": "^14.1.0",
     "next": "^15.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"

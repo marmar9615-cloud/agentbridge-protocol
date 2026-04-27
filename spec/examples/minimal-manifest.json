@@ -1,0 +1,28 @@
+{
+  "name": "Minimal Example",
+  "description": "Smallest viable AgentBridge manifest — one read-only action.",
+  "version": "0.1.0",
+  "baseUrl": "https://api.example.com",
+  "contact": "platform@example.com",
+  "auth": { "type": "none" },
+  "resources": [],
+  "actions": [
+    {
+      "name": "ping",
+      "title": "Ping",
+      "description": "Returns a heartbeat response. Useful for connectivity checks.",
+      "method": "GET",
+      "endpoint": "/api/agentbridge/actions/ping",
+      "risk": "low",
+      "requiresConfirmation": false,
+      "inputSchema": { "type": "object", "properties": {} },
+      "outputSchema": {
+        "type": "object",
+        "properties": { "ok": { "type": "boolean" }, "ts": { "type": "string" } }
+      },
+      "permissions": [],
+      "examples": [{ "input": {} }],
+      "humanReadableSummaryTemplate": "Ping the API"
+    }
+  ]
+}

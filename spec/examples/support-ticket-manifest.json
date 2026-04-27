@@ -1,0 +1,116 @@
+{
+  "name": "Helpdesk Support",
+  "description": "Triage, comment on, escalate, and close support tickets.",
+  "version": "0.4.0",
+  "baseUrl": "https://support.example.com",
+  "contact": "support-platform@example.com",
+  "auth": { "type": "bearer", "description": "Personal access tokens scoped per team." },
+  "resources": [
+    { "name": "tickets", "description": "Customer support tickets.", "url": "/tickets" },
+    { "name": "agents", "description": "Support staff.", "url": "/team" }
+  ],
+  "actions": [
+    {
+      "name": "list_tickets",
+      "title": "List tickets",
+      "description": "Returns tickets matching a status or assignee filter.",
+      "method": "GET",
+      "endpoint": "/api/agentbridge/actions/list_tickets",
+      "risk": "low",
+      "requiresConfirmation": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["open", "pending", "resolved", "closed"] },
+          "assigneeId": { "type": "string" },
+          "priority": { "type": "string", "enum": ["low", "normal", "high", "urgent"] }
+        }
+      },
+      "outputSchema": { "type": "object", "properties": { "tickets": { "type": "array" } } },
+      "permissions": [{ "scope": "tickets:read" }],
+      "examples": [
+        { "description": "All open tickets", "input": { "status": "open" } },
+        { "description": "My queue", "input": { "assigneeId": "agent_42", "status": "open" } }
+      ],
+      "humanReadableSummaryTemplate": "List tickets (status: {{status}}, assignee: {{assigneeId}})"
+    },
+    {
+      "name": "comment_on_ticket",
+      "title": "Comment on ticket",
+      "description": "Adds an internal or customer-facing comment to a ticket.",
+      "method": "POST",
+      "endpoint": "/api/agentbridge/actions/comment_on_ticket",
+      "risk": "medium",
+      "requiresConfirmation": true,
+      "inputSchema": {
+        "type": "object",
+        "required": ["ticketId", "body"],
+        "properties": {
+          "ticketId": { "type": "string" },
+          "body": { "type": "string", "minLength": 1, "maxLength": 4000 },
+          "internal": { "type": "boolean", "default": true }
+        }
+      },
+      "outputSchema": { "type": "object", "properties": { "commentId": { "type": "string" } } },
+      "permissions": [{ "scope": "tickets:comment" }],
+      "examples": [
+        {
+          "description": "Internal note",
+          "input": { "ticketId": "T-1001", "body": "Customer hit issue X. Investigating.", "internal": true }
+        }
+      ],
+      "humanReadableSummaryTemplate": "Comment on ticket {{ticketId}} (internal: {{internal}})"
+    },
+    {
+      "name": "escalate_ticket",
+      "title": "Escalate ticket",
+      "description": "Escalates a ticket to the on-call team and pages them.",
+      "method": "POST",
+      "endpoint": "/api/agentbridge/actions/escalate_ticket",
+      "risk": "high",
+      "requiresConfirmation": true,
+      "inputSchema": {
+        "type": "object",
+        "required": ["ticketId", "reason"],
+        "properties": {
+          "ticketId": { "type": "string" },
+          "reason": { "type": "string", "minLength": 10 },
+          "team": { "type": "string", "enum": ["payments", "auth", "platform", "abuse"] }
+        }
+      },
+      "outputSchema": { "type": "object", "properties": { "pagerincidentId": { "type": "string" } } },
+      "permissions": [{ "scope": "tickets:escalate", "description": "Pages on-call. Use sparingly." }],
+      "examples": [
+        {
+          "input": {
+            "ticketId": "T-1042",
+            "reason": "Customer cannot complete payment; multiple retries failing.",
+            "team": "payments"
+          }
+        }
+      ],
+      "humanReadableSummaryTemplate": "ESCALATE ticket {{ticketId}} to {{team}} on-call (reason: {{reason}})"
+    },
+    {
+      "name": "close_ticket",
+      "title": "Close ticket",
+      "description": "Marks a ticket as resolved and closed.",
+      "method": "POST",
+      "endpoint": "/api/agentbridge/actions/close_ticket",
+      "risk": "medium",
+      "requiresConfirmation": true,
+      "inputSchema": {
+        "type": "object",
+        "required": ["ticketId"],
+        "properties": {
+          "ticketId": { "type": "string" },
+          "resolution": { "type": "string" }
+        }
+      },
+      "outputSchema": { "type": "object" },
+      "permissions": [{ "scope": "tickets:close" }],
+      "examples": [{ "input": { "ticketId": "T-1001", "resolution": "Issue resolved by customer." } }],
+      "humanReadableSummaryTemplate": "Close ticket {{ticketId}} (resolution: {{resolution}})"
+    }
+  ]
+}

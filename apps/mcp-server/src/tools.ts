@@ -26,18 +26,26 @@ import {
 } from "@agentbridge/core";
 import { scanUrl } from "@agentbridge/scanner";
 import { assertAllowedUrl, assertSameOrigin } from "./safety";
+import {
+  CONFIRMATION_TTL_MS,
+  consumeConfirmation,
+  createPendingConfirmation,
+} from "./confirmations";
+import { lookupIdempotent, recordIdempotent } from "./idempotency";
 
 const ajv = new Ajv({ allErrors: true, strict: false });
 
-async function fetchManifest(url: string): Promise<AgentBridgeManifest> {
+const ACTION_TIMEOUT_MS = 10_000;
+const MAX_RESPONSE_BYTES = 1_000_000; // 1MB cap on action responses to keep MCP payloads reasonable.
+
+async function fetchManifest(
+  url: string,
+  fetchImpl: typeof fetch = fetch,
+): Promise<AgentBridgeManifest> {
   const origin = assertAllowedUrl(url);
   const manifestUrl = new URL("/.well-known/agentbridge.json", origin).toString();
-  const res = await fetch(manifestUrl, {
-    signal: AbortSignal.timeout(5000),
-  });
-  if (!res.ok) {
-    throw new Error(`manifest fetch failed: HTTP ${res.status}`);
-  }
+  const res = await fetchImpl(manifestUrl, { signal: AbortSignal.timeout(5000) });
+  if (!res.ok) throw new Error(`manifest fetch failed: HTTP ${res.status}`);
   const json = await res.json();
   const validation = validateManifest(json);
   if (!validation.ok) {
@@ -84,7 +92,6 @@ export async function discoverManifest({ url }: { url: string }) {
 
 // ── Tool: scan_agent_readiness ───────────────────────────────────────
 export async function scanAgentReadiness({ url }: { url: string }) {
-  // Defer to the shared scanner so the MCP server and Studio share scoring.
   return scanUrl(url);
 }
 
@@ -100,6 +107,7 @@ export async function listActions({ url }: { url: string }) {
       endpoint: a.endpoint,
       risk: a.risk,
       requiresConfirmation: a.requiresConfirmation,
+      permissions: a.permissions ?? [],
     })),
   };
 }
@@ -110,41 +118,108 @@ export interface CallActionInput {
   actionName: string;
   input?: Record<string, unknown>;
   confirmationApproved?: boolean;
+  confirmationToken?: string;
+  idempotencyKey?: string;
 }
+
+export type CallActionResult =
+  | {
+      status: "confirmationRequired";
+      summary: string;
+      action: { name: string; risk: string; requiresConfirmation: boolean };
+      confirmationToken: string;
+      confirmationExpiresInSeconds: number;
+      hint: string;
+    }
+  | {
+      status: "ok";
+      result: unknown;
+      idempotent?: { key: string; replayed: boolean };
+    }
+  | {
+      status: "error";
+      error: string;
+      result?: unknown;
+      idempotent?: { key: string; replayed: boolean };
+    };
 
 export async function callAction(
   args: CallActionInput,
   fetchImpl: typeof fetch = fetch,
-) {
-  const manifest = await fetchManifest(args.url);
+): Promise<CallActionResult> {
+  const manifest = await fetchManifest(args.url, fetchImpl);
   const action = findAction(manifest, args.actionName);
   validateInputAgainstSchema(action, args.input ?? {});
 
-  // Confirmation gate. ANY risky action without explicit approval returns a
-  // confirmationRequired response and never touches the upstream endpoint.
-  if (isRiskyAction(action) && args.confirmationApproved !== true) {
-    const summary = summarizeAction(action, args.input);
-    await appendAuditEvent(
-      createAuditEvent({
-        source: "mcp",
+  // ── Idempotency (replay) ───────────────────────────────────────────
+  if (args.idempotencyKey) {
+    const lookup = await lookupIdempotent({
+      key: args.idempotencyKey,
+      url: args.url,
+      actionName: args.actionName,
+      input: args.input ?? {},
+    });
+    if (lookup.kind === "hit") {
+      return {
+        status: lookup.record.status === "ok" ? "ok" : "error",
+        result: lookup.record.result,
+        idempotent: { key: args.idempotencyKey, replayed: true },
+        ...(lookup.record.status === "error" ? { error: "replayed prior error" } : {}),
+      } as CallActionResult;
+    }
+    if (lookup.kind === "conflict") {
+      throw new Error(
+        `idempotencyKey "${args.idempotencyKey}" was previously used with different input. Use a new key for the new request.`,
+      );
+    }
+  }
+
+  // ── Confirmation gate ──────────────────────────────────────────────
+  if (isRiskyAction(action)) {
+    if (args.confirmationApproved !== true) {
+      // First call: issue a token and refuse to execute.
+      const summary = summarizeAction(action, args.input);
+      const pending = await createPendingConfirmation({
+        url: args.url,
         actionName: args.actionName,
-        manifestUrl: args.url,
-        input: args.input,
-        status: "confirmation_required",
-        confirmationApproved: false,
-      }),
-    );
-    return {
-      status: "confirmationRequired" as const,
-      summary,
-      action: {
-        name: action.name,
-        risk: action.risk,
-        requiresConfirmation: action.requiresConfirmation,
-      },
-      hint:
-        "Re-call this tool with confirmationApproved: true after a human has reviewed the summary.",
-    };
+        input: args.input ?? {},
+      });
+      await appendAuditEvent(
+        createAuditEvent({
+          source: "mcp",
+          actionName: args.actionName,
+          manifestUrl: args.url,
+          input: args.input,
+          status: "confirmation_required",
+          confirmationApproved: false,
+        }),
+      );
+      return {
+        status: "confirmationRequired",
+        summary,
+        action: {
+          name: action.name,
+          risk: action.risk,
+          requiresConfirmation: action.requiresConfirmation,
+        },
+        confirmationToken: pending.token,
+        confirmationExpiresInSeconds: Math.round(CONFIRMATION_TTL_MS / 1000),
+        hint:
+          "Re-call this tool with confirmationApproved: true AND the same confirmationToken after a human reviews the summary.",
+      };
+    }
+    // Approval claimed — verify the token actually matches.
+    const consume = await consumeConfirmation({
+      token: args.confirmationToken,
+      url: args.url,
+      actionName: args.actionName,
+      input: args.input ?? {},
+    });
+    if (!consume.ok) {
+      throw new Error(
+        `confirmation rejected: ${consume.reason}. Re-issue a confirmation by calling without confirmationApproved.`,
+      );
+    }
   }
 
   // Origin-pin: never call out beyond the manifest's baseUrl.
@@ -158,9 +233,14 @@ export async function callAction(
       method: action.method,
       headers: { "content-type": "application/json" },
       body: action.method === "GET" ? undefined : JSON.stringify(args.input ?? {}),
-      signal: AbortSignal.timeout(10_000),
+      signal: AbortSignal.timeout(ACTION_TIMEOUT_MS),
     });
-    upstreamBody = await res.json().catch(() => null);
+    const text = await readWithCap(res, MAX_RESPONSE_BYTES);
+    try {
+      upstreamBody = text === "" ? null : JSON.parse(text);
+    } catch {
+      upstreamBody = text;
+    }
     if (!res.ok) {
       auditStatus = "error";
       auditError = `upstream ${res.status}`;
@@ -183,10 +263,66 @@ export async function callAction(
     }),
   );
 
-  if (auditStatus === "error") {
-    return { status: "error" as const, error: auditError, result: upstreamBody };
+  if (args.idempotencyKey) {
+    await recordIdempotent({
+      key: args.idempotencyKey,
+      url: args.url,
+      actionName: args.actionName,
+      input: args.input ?? {},
+      result: upstreamBody,
+      status: auditStatus === "completed" ? "ok" : "error",
+    });
   }
-  return { status: "ok" as const, result: upstreamBody };
+
+  if (auditStatus === "error") {
+    return {
+      status: "error",
+      error: auditError ?? "unknown error",
+      result: upstreamBody,
+      ...(args.idempotencyKey
+        ? { idempotent: { key: args.idempotencyKey, replayed: false } }
+        : {}),
+    };
+  }
+  return {
+    status: "ok",
+    result: upstreamBody,
+    ...(args.idempotencyKey
+      ? { idempotent: { key: args.idempotencyKey, replayed: false } }
+      : {}),
+  };
+}
+
+// Read the response body with a hard size cap. Throws if exceeded.
+async function readWithCap(res: Response, maxBytes: number): Promise<string> {
+  if (!res.body) return await res.text();
+  const reader = res.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    if (value) {
+      total += value.length;
+      if (total > maxBytes) {
+        await reader.cancel();
+        throw new Error(`upstream response exceeded ${maxBytes} bytes`);
+      }
+      chunks.push(value);
+    }
+  }
+  return new TextDecoder().decode(concat(chunks));
+}
+
+function concat(chunks: Uint8Array[]): Uint8Array {
+  const total = chunks.reduce((sum, c) => sum + c.length, 0);
+  const out = new Uint8Array(total);
+  let offset = 0;
+  for (const c of chunks) {
+    out.set(c, offset);
+    offset += c.length;
+  }
+  return out;
 }
 
 // ── Tool: get_audit_log ──────────────────────────────────────────────
