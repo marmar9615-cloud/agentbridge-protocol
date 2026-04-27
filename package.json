@@ -1,0 +1,27 @@
+{
+  "name": "agentbridge",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n demo,studio -c blue,magenta \"npm run dev:demo\" \"npm run dev:studio\"",
+    "dev:demo": "npm run dev -w apps/demo-app",
+    "dev:studio": "npm run dev -w apps/studio",
+    "dev:mcp": "npm run dev -w apps/mcp-server",
+    "build": "npm run build --workspaces --if-present",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -b"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "concurrently": "^9.1.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
+  }
+}

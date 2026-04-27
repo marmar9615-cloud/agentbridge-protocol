@@ -1,0 +1,19 @@
+{
+  "name": "@agentbridge/mcp-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "agentbridge-mcp": "./src/index.ts"
+  },
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "start": "tsx src/index.ts"
+  },
+  "dependencies": {
+    "@agentbridge/core": "*",
+    "@agentbridge/scanner": "*",
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "ajv": "^8.17.0"
+  }
+}
