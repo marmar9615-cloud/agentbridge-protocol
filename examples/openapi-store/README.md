@@ -15,7 +15,7 @@ manifest.
 From the repo root:
 
 ```bash
-npx agentbridge generate openapi examples/openapi-store/store.openapi.json \
+npx @marmar9615-cloud/agentbridge-cli generate openapi examples/openapi-store/store.openapi.json \
   --base-url https://api.acme-store.example \
   --out examples/openapi-store/store.agentbridge.json
 ```
@@ -42,6 +42,6 @@ Request body schemas are merged into the action's `inputSchema.properties`.
 3. **Add `examples`.** Examples dramatically improve agent invocation
    accuracy.
 4. **Add `permissions[]`.** Document what scopes each action needs.
-5. **Validate.** `npx agentbridge validate examples/openapi-store/store.agentbridge.json`
-6. **Scan the live app.** Once you serve the manifest, `npx agentbridge scan
+5. **Validate.** `npx @marmar9615-cloud/agentbridge-cli validate examples/openapi-store/store.agentbridge.json`
+6. **Scan the live app.** Once you serve the manifest, `npx @marmar9615-cloud/agentbridge-cli scan
    https://your-app.com` to see the readiness score.

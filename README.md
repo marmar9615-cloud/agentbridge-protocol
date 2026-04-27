@@ -243,7 +243,7 @@ To run the MCP server (stdio) for an MCP client:
 npm run dev:mcp
 ```
 
-**Requirements:** Node 20+ (tested on Node 25), npm 10+.
+**Requirements:** Node 20+, npm 10+. CI runs on Node 20.x and 22.x.
 
 ---
 
@@ -452,7 +452,7 @@ npx @marmar9615-cloud/agentbridge-cli scan http://localhost:3000
 Example: take an existing OpenAPI document and turn it into a draft manifest in one shot:
 
 ```bash
-npx agentbridge generate openapi ./your-api.openapi.json \
+npx @marmar9615-cloud/agentbridge-cli generate openapi ./your-api.openapi.json \
   --base-url https://api.acme.com \
   --out ./public/.well-known/agentbridge.json
 ```

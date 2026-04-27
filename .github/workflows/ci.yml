@@ -27,14 +27,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Typecheck packages
-        run: |
-          npx tsc -p packages/core/tsconfig.json --noEmit
-          npx tsc -p packages/sdk/tsconfig.json --noEmit
-          npx tsc -p packages/scanner/tsconfig.json --noEmit
-          npx tsc -p packages/openapi/tsconfig.json --noEmit
-          npx tsc -p packages/cli/tsconfig.json --noEmit
-          npx tsc -p apps/mcp-server/tsconfig.json --noEmit
+      - name: Typecheck (with cleaned dist, mirrors fresh-clone state)
+        run: npm run typecheck:clean
 
       - name: Run tests
         run: npm test
