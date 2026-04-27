@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { scanUrl } from "../scanner";
 import { scoreManifest } from "../score";
-import type { AgentBridgeManifest } from "@agentbridge/core";
+import type { AgentBridgeManifest } from "@marmar9615-cloud/agentbridge-core";
 
 function makeFetch(handler: (url: string) => Promise<Response> | Response): typeof fetch {
   return ((url: RequestInfo | URL) => {

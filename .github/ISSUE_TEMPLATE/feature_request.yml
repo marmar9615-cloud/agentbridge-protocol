@@ -1,0 +1,52 @@
+name: Feature request
+description: Suggest a new capability or improvement.
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the suggestion. The most valuable proposals describe a
+        real problem first, then sketch the proposed solution. Refer to
+        the [roadmap](https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/docs/roadmap.md)
+        before opening — your idea may already be planned.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the use case from the user's perspective.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: |
+        How should AgentBridge change? Be concrete: which packages, which
+        APIs, what the user-visible behaviour looks like.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What else did you think about? Why is your proposal better?
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Where would this live?
+      multiple: true
+      options:
+        - Manifest schema (packages/core)
+        - SDK (packages/sdk)
+        - Scanner (packages/scanner)
+        - OpenAPI converter (packages/openapi)
+        - CLI (packages/cli)
+        - MCP server (apps/mcp-server)
+        - Studio (apps/studio)
+        - Documentation
+        - Other
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Sketches, related projects, prior art.

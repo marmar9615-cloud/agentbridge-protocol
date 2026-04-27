@@ -1,5 +1,5 @@
-import type { AgentAction, AgentBridgeManifest } from "@agentbridge/core";
-import { validateManifest } from "@agentbridge/core";
+import type { AgentAction, AgentBridgeManifest } from "@marmar9615-cloud/agentbridge-core";
+import { validateManifest } from "@marmar9615-cloud/agentbridge-core";
 import type { OpenApiDocument } from "./types";
 import { operationToAgentAction } from "./convert";
 

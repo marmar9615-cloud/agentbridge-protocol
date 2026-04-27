@@ -1,22 +1,26 @@
 # MCP client config
 
 Example configurations for hooking the AgentBridge MCP server into common
-MCP clients. Pick the client you use, copy the snippet, edit the absolute
-path to point at your local checkout, and restart the client.
+MCP clients. Pick the client you use, copy the snippet, restart the
+client.
 
-## Claude Desktop (macOS)
+## Claude Desktop (macOS / Windows)
 
-Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
+**macOS:** edit `~/Library/Application Support/Claude/claude_desktop_config.json`
+
+**Windows:** edit `%APPDATA%\Claude\claude_desktop_config.json`
+
+### Option A — published package (recommended)
 
 ```json
 {
   "mcpServers": {
     "agentbridge": {
       "command": "npx",
-      "args": [
-        "tsx",
-        "/absolute/path/to/agentbridge-protocol/apps/mcp-server/src/index.ts"
-      ]
+      "args": ["@marmar9615-cloud/agentbridge-mcp-server"],
+      "env": {
+        "AGENTBRIDGE_ALLOW_REMOTE": "false"
+      }
     }
   }
 }
@@ -24,28 +28,26 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 See [`claude-desktop.json`](./claude-desktop.json) for a copy-pasteable file.
 
-## Claude Desktop (Windows)
-
-```
-%APPDATA%\Claude\claude_desktop_config.json
-```
-
-Same shape as macOS — just adjust the path.
-
-## Cursor
-
-Cursor's settings → MCP. Use the same shape:
+### Option B — local checkout (for development on this repo)
 
 ```json
 {
   "mcpServers": {
     "agentbridge": {
-      "command": "npx",
-      "args": ["tsx", "/absolute/path/to/agentbridge-protocol/apps/mcp-server/src/index.ts"]
+      "command": "node",
+      "args": [
+        "/absolute/path/to/agentbridge-protocol/apps/mcp-server/dist/index.js"
+      ]
     }
   }
 }
 ```
+
+Run `npm run build` first to produce `apps/mcp-server/dist/index.js`.
+
+## Cursor
+
+Settings → MCP. Same shape as Claude Desktop.
 
 ## Custom MCP client (HTTP example)
 
@@ -55,9 +57,9 @@ behind an MCP HTTP transport adapter. See [`docs/mcp-client-setup.md`](../../doc
 ## After connecting
 
 1. Restart your MCP client.
-2. Confirm the `agentbridge` server appears with 5 tools (`discover_manifest`,
-   `scan_agent_readiness`, `list_actions`, `call_action`, `get_audit_log`)
-   and 4 resources / 4 prompts.
+2. Confirm the `agentbridge` server appears with 5 tools
+   (`discover_manifest`, `scan_agent_readiness`, `list_actions`,
+   `call_action`, `get_audit_log`) plus 4 resources and 4 prompts.
 3. Ask your agent to scan `http://localhost:3000` after starting the demo
    app (`npm run dev:demo`).
 4. Try a high-risk action — your agent will get a `confirmationRequired`
@@ -68,8 +70,8 @@ behind an MCP HTTP transport adapter. See [`docs/mcp-client-setup.md`](../../doc
 You don't have to write any of this by hand:
 
 ```bash
-npx agentbridge mcp-config
+npx @marmar9615-cloud/agentbridge-cli mcp-config
 ```
 
-prints both the direct-tsx form and an npm-script form, with the absolute
-path resolved from the current working directory.
+prints copy-pasteable config snippets for direct invocation and for a
+local-checkout setup.

@@ -1,4 +1,4 @@
-import { createAuditEvent, appendAuditEvent } from "@agentbridge/core";
+import { createAuditEvent, appendAuditEvent } from "@marmar9615-cloud/agentbridge-core";
 
 export interface DemoAuditInput {
   actionName: string;

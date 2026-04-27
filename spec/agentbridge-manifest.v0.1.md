@@ -90,7 +90,7 @@ Missing keys render as `<unknown>`. Object values render as JSON.
 
 ### Input/output schemas
 
-Both `inputSchema` and `outputSchema` are JSON Schema documents (any draft compatible with [Ajv](https://ajv.js.org/) `strict: false`). The MVP validator ([`@agentbridge/sdk`](../packages/sdk)) accepts a Zod schema and converts it via [`zod-to-json-schema`](https://github.com/StefanTerdell/zod-to-json-schema), but raw JSON Schema is equally valid.
+Both `inputSchema` and `outputSchema` are JSON Schema documents (any draft compatible with [Ajv](https://ajv.js.org/) `strict: false`). The MVP validator ([`@marmar9615-cloud/agentbridge-sdk`](../packages/sdk)) accepts a Zod schema and converts it via [`zod-to-json-schema`](https://github.com/StefanTerdell/zod-to-json-schema), but raw JSON Schema is equally valid.
 
 ### Examples
 

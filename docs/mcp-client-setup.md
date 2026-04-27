@@ -18,14 +18,31 @@ its config file.
 
 **Windows:** edit `%APPDATA%\Claude\claude_desktop_config.json`
 
+### Option A — published package (recommended once on npm)
+
 ```json
 {
   "mcpServers": {
     "agentbridge": {
       "command": "npx",
+      "args": ["@marmar9615-cloud/agentbridge-mcp-server"],
+      "env": {
+        "AGENTBRIDGE_ALLOW_REMOTE": "false"
+      }
+    }
+  }
+}
+```
+
+### Option B — local checkout (development)
+
+```json
+{
+  "mcpServers": {
+    "agentbridge": {
+      "command": "node",
       "args": [
-        "tsx",
-        "/absolute/path/to/agentbridge-protocol/apps/mcp-server/src/index.ts"
+        "/absolute/path/to/agentbridge-protocol/apps/mcp-server/dist/index.js"
       ],
       "env": {
         "AGENTBRIDGE_ALLOW_REMOTE": "false"
@@ -34,6 +51,8 @@ its config file.
   }
 }
 ```
+
+Run `npm run build` first to produce `apps/mcp-server/dist/index.js`.
 
 Restart Claude Desktop. You should see `agentbridge` in the tools panel
 with these surfaces:
@@ -79,8 +98,8 @@ You should see the agent:
 ## Troubleshooting
 
 **The server starts but no tools appear**
-- Confirm the path is absolute and points at `apps/mcp-server/src/index.ts`.
-- Run `npx tsx /your/path/apps/mcp-server/src/index.ts < /dev/null` directly. The process should exit cleanly without errors.
+- For Option A, run `npx @marmar9615-cloud/agentbridge-mcp-server < /dev/null` and confirm it exits cleanly.
+- For Option B, confirm the path is absolute and points at `apps/mcp-server/dist/index.js` (the compiled bin, not the TS source). Run `node /your/path/apps/mcp-server/dist/index.js < /dev/null` directly.
 
 **`Only loopback URLs allowed` errors**
 - Default behaviour. To talk to a remote AgentBridge surface, set `AGENTBRIDGE_ALLOW_REMOTE=true` in the `env` block of your MCP config.

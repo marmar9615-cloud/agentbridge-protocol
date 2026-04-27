@@ -1,4 +1,4 @@
-import { scanUrl } from "@agentbridge/scanner";
+import { scanUrl } from "@marmar9615-cloud/agentbridge-scanner";
 import { c } from "../colors";
 
 export interface ScanOptions {

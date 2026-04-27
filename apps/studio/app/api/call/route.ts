@@ -3,8 +3,8 @@ import {
   appendAuditEvent,
   createAuditEvent,
   summarizeAction,
-} from "@agentbridge/core";
-import { scanUrl } from "@agentbridge/scanner";
+} from "@marmar9615-cloud/agentbridge-core";
+import { scanUrl } from "@marmar9615-cloud/agentbridge-scanner";
 
 export const dynamic = "force-dynamic";
 

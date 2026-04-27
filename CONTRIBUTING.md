@@ -24,7 +24,9 @@ git clone https://github.com/marmar9615-cloud/agentbridge-protocol.git
 cd agentbridge-protocol
 npm install
 npm test                  # all suites
-npm run typecheck         # tsc -b across the workspace
+npm run typecheck         # per-package tsc --noEmit
+npm run build             # tsup → dist/ for publishable packages
+npm run pack:dry-run      # validate published-tarball contents
 npm run dev               # demo + studio in parallel
 ```
 
@@ -39,7 +41,7 @@ npm run dev               # demo + studio in parallel
 ## Pull requests
 
 1. Branch from `main`.
-2. Add a test for any new behaviour. We're at ~80 tests; expect that bar to keep rising.
+2. Add a test for any new behaviour. The bar is "every new feature ships with a test".
 3. Run `npm test`, `npm run typecheck`, and `npx next build` for the demo
    and studio apps before pushing.
 4. If it changes user-visible behaviour or the manifest format, update

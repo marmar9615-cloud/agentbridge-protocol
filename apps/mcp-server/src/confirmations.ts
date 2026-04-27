@@ -1,7 +1,7 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { createHash, randomBytes } from "node:crypto";
-import { getAuditFilePath } from "@agentbridge/core";
+import { getAuditFilePath } from "@marmar9615-cloud/agentbridge-core";
 
 /* Pending-confirmation store.
  *

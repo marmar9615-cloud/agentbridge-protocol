@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { scanUrl } from "@agentbridge/scanner";
+import { scanUrl } from "@marmar9615-cloud/agentbridge-scanner";
 import { ActionsBrowser } from "./browser";
 
 export const dynamic = "force-dynamic";

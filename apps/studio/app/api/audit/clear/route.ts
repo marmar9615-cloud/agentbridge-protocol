@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { promises as fs } from "node:fs";
-import { getAuditFilePath } from "@agentbridge/core";
+import { getAuditFilePath } from "@marmar9615-cloud/agentbridge-core";
 
 export const dynamic = "force-dynamic";
 

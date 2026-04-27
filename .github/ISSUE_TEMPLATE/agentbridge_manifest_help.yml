@@ -1,0 +1,50 @@
+name: Manifest help
+description: Help with declaring or validating an AgentBridge manifest.
+labels: ["question", "manifest"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template if you're trying to write or fix an
+        AgentBridge manifest and something isn't clicking. For obvious
+        bugs, use the bug-report template instead.
+
+        Read [the manifest spec](https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/spec/agentbridge-manifest.v0.1.md)
+        and [the OpenAPI import guide](https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/docs/openapi-import.md)
+        first.
+  - type: input
+    id: manifest-url
+    attributes:
+      label: Manifest URL (if public)
+      placeholder: "https://example.com/.well-known/agentbridge.json"
+  - type: textarea
+    id: manifest-snippet
+    attributes:
+      label: Or paste the manifest snippet
+      description: Redact secrets. Keep it minimal — the action(s) in question.
+      render: json
+  - type: textarea
+    id: scanner-output
+    attributes:
+      label: Scanner output (if you ran it)
+      description: |
+        Output of `npx @marmar9615-cloud/agentbridge-cli scan <url>` or
+        the scanner page in Studio.
+      render: text
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to see?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What did you see instead?
+    validations:
+      required: true
+  - type: textarea
+    id: tried
+    attributes:
+      label: What have you tried?
+      description: Helps avoid loops where the answer is "yeah I already tried that".

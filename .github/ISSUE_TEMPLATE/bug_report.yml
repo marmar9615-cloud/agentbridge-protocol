@@ -1,0 +1,107 @@
+name: Bug report
+description: Something behaved incorrectly or crashed.
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug.
+        Security issues should be sent privately — see [SECURITY.md](https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/SECURITY.md).
+  - type: input
+    id: agentbridge-version
+    attributes:
+      label: AgentBridge version
+      description: Which package version were you using? (e.g. 0.2.0-beta)
+      placeholder: "0.2.0-beta"
+    validations:
+      required: true
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js version
+      description: Run `node --version`.
+      placeholder: "v20.18.0"
+    validations:
+      required: true
+  - type: input
+    id: npm-version
+    attributes:
+      label: npm version
+      description: Run `npm --version`.
+      placeholder: "10.8.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: OS
+      options:
+        - macOS
+        - Linux
+        - Windows
+        - WSL
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Which surface?
+      options:
+        - CLI (@marmar9615-cloud/agentbridge-cli)
+        - SDK (@marmar9615-cloud/agentbridge-sdk)
+        - Scanner (@marmar9615-cloud/agentbridge-scanner)
+        - OpenAPI (@marmar9615-cloud/agentbridge-openapi)
+        - MCP server (@marmar9615-cloud/agentbridge-mcp-server)
+        - Core (@marmar9615-cloud/agentbridge-core)
+        - Studio (apps/studio)
+        - Demo app (apps/demo-app)
+        - Build / packaging
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Command run / steps to reproduce
+      description: Exact command(s) you ran, in order. Code snippets welcome.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: manifest
+    attributes:
+      label: Manifest URL or snippet (if applicable)
+      description: |
+        If your bug involves a specific manifest, paste the URL or the
+        relevant action(s). Redact secrets before pasting.
+      render: json
+  - type: textarea
+    id: scanner-report
+    attributes:
+      label: Scanner report (if applicable)
+      description: Output of `agentbridge scan <url> --json`.
+      render: json
+  - type: input
+    id: mcp-client
+    attributes:
+      label: MCP client (if applicable)
+      placeholder: "Claude Desktop 0.7.4 / Cursor 0.42 / custom client"
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: Include error messages and stack traces verbatim.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Logs, screenshots, hypotheses, what you've already tried.

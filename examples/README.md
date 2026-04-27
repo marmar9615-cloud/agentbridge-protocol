@@ -4,7 +4,7 @@ Self-contained examples showing how to integrate AgentBridge in different contex
 
 | Directory | What it shows |
 |---|---|
-| [`nextjs-basic/`](./nextjs-basic) | Minimal Next.js integration using `@agentbridge/sdk`. |
+| [`nextjs-basic/`](./nextjs-basic) | Minimal Next.js integration using `@marmar9615-cloud/agentbridge-sdk`. |
 | [`openapi-store/`](./openapi-store) | OpenAPI document → AgentBridge manifest via the CLI. |
 | [`mcp-client-config/`](./mcp-client-config) | Wiring AgentBridge MCP into Claude Desktop / Cursor / others. |
 

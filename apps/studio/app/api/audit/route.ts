@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readAuditEvents } from "@agentbridge/core";
+import { readAuditEvents } from "@marmar9615-cloud/agentbridge-core";
 
 export const dynamic = "force-dynamic";
 

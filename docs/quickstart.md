@@ -19,7 +19,7 @@ couple of small dependencies (~20 seconds on a cached network).
 npm test
 ```
 
-You should see all suites green (~80 tests).
+You should see all suites green.
 
 ## 3. Boot the local stack
 
@@ -90,3 +90,15 @@ with `confirmationApproved: true` AND that token to actually execute.
 - Use the [OpenAPI import guide](./openapi-import.md) if you have an
   existing API.
 - Connect to your favourite MCP client via [mcp-client-setup.md](./mcp-client-setup.md).
+
+## Pre-publish: build and pack-check
+
+If you want to verify what a published package would look like:
+
+```bash
+npm run build           # tsup → dist/
+npm run pack:dry-run    # asserts each tarball contains dist/, README, LICENSE
+npm run smoke:external  # full external-clone simulation
+```
+
+See [release-checklist.md](./release-checklist.md) for the full pre-release sequence.

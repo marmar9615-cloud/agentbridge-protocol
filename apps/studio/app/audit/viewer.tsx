@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { AuditEvent } from "@agentbridge/core";
+import type { AuditEvent } from "@marmar9615-cloud/agentbridge-core";
 
 type SourceFilter = "all" | "demo" | "studio" | "mcp";
 type StatusFilter = "all" | "completed" | "confirmation_required" | "rejected" | "error";

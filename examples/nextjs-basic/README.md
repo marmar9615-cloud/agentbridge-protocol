@@ -7,7 +7,7 @@ you need to expose AgentBridge from any existing Next.js (App Router) app.
 ## 1. Install the SDK
 
 ```bash
-npm install @agentbridge/sdk @agentbridge/core zod
+npm install @marmar9615-cloud/agentbridge-sdk @marmar9615-cloud/agentbridge-core zod
 ```
 
 ## 2. Define your actions
@@ -16,7 +16,7 @@ Create `lib/agentbridge.ts`:
 
 ```ts
 // lib/agentbridge.ts
-import { defineAgentAction, createAgentBridgeManifest, z } from "@agentbridge/sdk";
+import { defineAgentAction, createAgentBridgeManifest, z } from "@marmar9615-cloud/agentbridge-sdk";
 
 export const listUsers = defineAgentAction({
   name: "list_users",
@@ -102,7 +102,7 @@ export async function GET(req: NextRequest) {
 `app/api/agentbridge/actions/[actionName]/route.ts`:
 ```ts
 import { NextRequest } from "next/server";
-import { createActionHandler } from "@agentbridge/sdk";
+import { createActionHandler } from "@marmar9615-cloud/agentbridge-sdk";
 import { ALL } from "../../../../lib/agentbridge";
 
 const handlers = {

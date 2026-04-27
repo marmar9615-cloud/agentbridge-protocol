@@ -4,6 +4,80 @@ All notable changes to AgentBridge are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0-beta] — 2026-04-26 — Phase 3A: Public Beta Release Hardening
+
+### Changed (potentially breaking for any pre-existing imports)
+
+- All publishable packages renamed from `@agentbridge/*` to
+  `@marmar9615-cloud/agentbridge-*`. The `@agentbridge` npm scope is
+  unowned/unverifiable; the prefixed scope is owned and publishable. See
+  [docs/npm-scope.md](docs/npm-scope.md).
+- Apps `demo-app` and `studio` dropped the `@agentbridge/` scope (they
+  remain `private`); root remains `agentbridge` (sentinel for repo-root walks).
+- All publishable packages bumped to `0.2.0` for synchronized release.
+- Workspace dependency ranges changed from `"*"` to `"^0.2.0"` (npm
+  rejects `"*"` in published manifests).
+
+### Added
+
+- **Real build pipeline (tsup)** for all publishable packages — outputs
+  `dist/index.js` + `dist/index.d.ts` + sourcemaps. CLI also emits
+  `dist/bin.js` with `#!/usr/bin/env node` shebang via tsup banner.
+  `package.json` `main`/`types`/`exports`/`bin`/`files` now point at
+  `dist/`. Packages flipped from `private: true` to publishable.
+- `scripts/external-adopter-smoke.mjs` — `git archive HEAD` into a
+  tmpdir, `npm ci`/test/build/pack-check, then boot demo-app and run
+  the compiled CLI scan against it. Validates the external-clone
+  experience.
+- `scripts/pack-check.mjs` — runs `npm pack --dry-run --json` per
+  workspace, asserts each tarball contains the expected files (dist,
+  README, LICENSE) and excludes src/test/tsconfig artifacts.
+- Per-package READMEs for core, sdk, scanner, openapi, cli, mcp-server.
+  Included in npm pack so they show on the npm package page.
+- New CI workflow `.github/workflows/release-check.yml`
+  (`workflow_dispatch` only) that runs the full release validation:
+  test, build, pack-check, smoke, plus printing every tarball's
+  contents. Does not publish.
+- `ci.yml` extended: typechecks `cli` + `openapi` (previously missing),
+  runs `npm run build`, runs `npm run pack:dry-run`.
+- Issue templates (bug report, feature request, manifest help, config),
+  pull request template, and Dependabot config (`npm` weekly grouped
+  dev-deps + GitHub Actions monthly).
+- New documentation:
+  - [docs/npm-scope.md](docs/npm-scope.md) — naming decision, fallback,
+    how to verify scope availability.
+  - [docs/release-checklist.md](docs/release-checklist.md) — pre/post
+    publish steps in dependency order.
+  - [docs/npm-publishing.md](docs/npm-publishing.md) — exact publish
+    commands, recovery from partial publishes.
+  - [docs/external-adopter-test.md](docs/external-adopter-test.md) —
+    what `npm run smoke:external` does and how to run it manually.
+  - [docs/public-beta.md](docs/public-beta.md) — what is and isn't in
+    v0.2.0-beta; safety notes; roadmap pointers.
+  - [docs/releases/v0.2.0-beta.md](docs/releases/v0.2.0-beta.md) —
+    full release notes draft.
+- Root `package.json` scripts: `pack:dry-run`, `smoke:external`. Updated
+  `build` to target only publishable packages and `typecheck` to cover
+  all six.
+
+### Fixed
+
+- README test count was outdated ("28 tests" → suite is 86). Removed
+  hardcoded counts; README now just says `npm test`.
+- README MCP config example pointed at a local `tsx` invocation; now
+  shows `npx @marmar9615-cloud/agentbridge-mcp-server` for users who
+  install from npm. Local-checkout path documented in
+  [docs/mcp-client-setup.md](docs/mcp-client-setup.md) for development.
+- README badge changed from "Status: MVP" to "Status: Public Beta".
+
+### Compatibility
+
+- All 86 tests still pass at every commit on this branch.
+- All safety invariants preserved (confirmation gate, origin pinning,
+  URL allowlist, audit redaction, simulated destructive demo actions).
+- No runtime behavior modified; this is a pure packaging/release-prep
+  change.
+
 ## [0.2.0] — Phase 2: Developer Tooling
 
 ### Added

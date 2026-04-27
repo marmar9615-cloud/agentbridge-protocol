@@ -61,9 +61,9 @@ const TS_CONFIG_TEMPLATE = `// AgentBridge config — edit to declare your app's
 //   npx agentbridge validate ./agentbridge.config.ts
 //
 // In a Next.js app, generate /.well-known/agentbridge.json from this:
-//   import { defineAgentAction, createAgentBridgeManifest, z } from "@agentbridge/sdk";
+//   import { defineAgentAction, createAgentBridgeManifest, z } from "@marmar9615-cloud/agentbridge-sdk";
 
-import { defineAgentAction, createAgentBridgeManifest, z } from "@agentbridge/sdk";
+import { defineAgentAction, createAgentBridgeManifest, z } from "@marmar9615-cloud/agentbridge-sdk";
 
 export const ping = defineAgentAction({
   name: "ping",

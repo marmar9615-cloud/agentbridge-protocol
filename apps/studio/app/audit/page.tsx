@@ -1,4 +1,4 @@
-import { readAuditEvents, getAuditFilePath, type AuditEvent } from "@agentbridge/core";
+import { readAuditEvents, getAuditFilePath, type AuditEvent } from "@marmar9615-cloud/agentbridge-core";
 import { AuditViewer } from "./viewer";
 
 export const dynamic = "force-dynamic";

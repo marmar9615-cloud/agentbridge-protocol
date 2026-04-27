@@ -1,4 +1,3 @@
-#!/usr/bin/env tsx
 import { runCli } from "./index";
 
 runCli().then(

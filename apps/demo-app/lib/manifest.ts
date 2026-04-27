@@ -1,7 +1,7 @@
 // PROD: Real apps would attach OAuth scopes per action and check them on
 // each invocation. The demo treats permissions as documentation only.
 
-import { defineAgentAction, createAgentBridgeManifest, z } from "@agentbridge/sdk";
+import { defineAgentAction, createAgentBridgeManifest, z } from "@marmar9615-cloud/agentbridge-sdk";
 
 export const listOrdersAction = defineAgentAction({
   name: "list_orders",
