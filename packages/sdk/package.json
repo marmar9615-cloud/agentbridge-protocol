@@ -1,6 +1,6 @@
 {
-  "name": "@agentbridge/sdk",
-  "version": "0.1.0",
+  "name": "@marmar9615-cloud/agentbridge-sdk",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "main": "./src/index.ts",
@@ -9,7 +9,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@agentbridge/core": "*",
+    "@marmar9615-cloud/agentbridge-core": "^0.2.0",
     "zod": "^3.23.0",
     "zod-to-json-schema": "^3.23.0"
   }

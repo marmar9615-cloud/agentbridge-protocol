@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { readAuditEvents } from "@agentbridge/core";
-import { scanUrl } from "@agentbridge/scanner";
+import { readAuditEvents } from "@marmar9615-cloud/agentbridge-core";
+import { scanUrl } from "@marmar9615-cloud/agentbridge-scanner";
 
 /* MCP resources surface AgentBridge data to agents as URIs they can fetch.
  *

@@ -1,5 +1,5 @@
 import { promises as fs } from "node:fs";
-import { validateManifest } from "@agentbridge/core";
+import { validateManifest } from "@marmar9615-cloud/agentbridge-core";
 import { c } from "../colors";
 
 export interface ValidateOptions {

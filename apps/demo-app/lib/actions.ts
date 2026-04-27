@@ -2,7 +2,7 @@
 // through audit metadata (actor user id, request id, IP). The demo trusts
 // the caller and only logs the action invocation.
 
-import { createActionHandler } from "@agentbridge/sdk";
+import { createActionHandler } from "@marmar9615-cloud/agentbridge-sdk";
 import {
   listOrders,
   getOrder,

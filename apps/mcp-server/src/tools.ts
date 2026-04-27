@@ -23,8 +23,8 @@ import {
   validateManifest,
   type AgentBridgeManifest,
   type AgentAction,
-} from "@agentbridge/core";
-import { scanUrl } from "@agentbridge/scanner";
+} from "@marmar9615-cloud/agentbridge-core";
+import { scanUrl } from "@marmar9615-cloud/agentbridge-scanner";
 import { assertAllowedUrl, assertSameOrigin } from "./safety";
 import {
   CONFIRMATION_TTL_MS,

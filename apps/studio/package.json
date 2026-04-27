@@ -1,5 +1,5 @@
 {
-  "name": "@agentbridge/studio",
+  "name": "agentbridge-studio",
   "version": "0.2.0",
   "private": true,
   "description": "AgentBridge Studio — visual dashboard for scanning, validating, and exercising manifests.",
@@ -10,8 +10,8 @@
     "start": "next start -p 3001"
   },
   "dependencies": {
-    "@agentbridge/core": "*",
-    "@agentbridge/scanner": "*",
+    "@marmar9615-cloud/agentbridge-core": "^0.2.0",
+    "@marmar9615-cloud/agentbridge-scanner": "^0.2.0",
     "marked": "^14.1.0",
     "next": "^15.0.0",
     "react": "^19.0.0",

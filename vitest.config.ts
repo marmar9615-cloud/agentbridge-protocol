@@ -12,11 +12,11 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@agentbridge/core": new URL("./packages/core/src/index.ts", import.meta.url).pathname,
-      "@agentbridge/sdk": new URL("./packages/sdk/src/index.ts", import.meta.url).pathname,
-      "@agentbridge/scanner": new URL("./packages/scanner/src/index.ts", import.meta.url).pathname,
-      "@agentbridge/openapi": new URL("./packages/openapi/src/index.ts", import.meta.url).pathname,
-      "@agentbridge/cli": new URL("./packages/cli/src/index.ts", import.meta.url).pathname,
+      "@marmar9615-cloud/agentbridge-core": new URL("./packages/core/src/index.ts", import.meta.url).pathname,
+      "@marmar9615-cloud/agentbridge-sdk": new URL("./packages/sdk/src/index.ts", import.meta.url).pathname,
+      "@marmar9615-cloud/agentbridge-scanner": new URL("./packages/scanner/src/index.ts", import.meta.url).pathname,
+      "@marmar9615-cloud/agentbridge-openapi": new URL("./packages/openapi/src/index.ts", import.meta.url).pathname,
+      "@marmar9615-cloud/agentbridge-cli": new URL("./packages/cli/src/index.ts", import.meta.url).pathname,
     },
   },
 });

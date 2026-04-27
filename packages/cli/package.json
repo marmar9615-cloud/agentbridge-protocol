@@ -1,5 +1,5 @@
 {
-  "name": "@agentbridge/cli",
+  "name": "@marmar9615-cloud/agentbridge-cli",
   "version": "0.2.0",
   "private": true,
   "type": "module",
@@ -21,8 +21,8 @@
     "dev": "tsx src/bin.ts"
   },
   "dependencies": {
-    "@agentbridge/core": "*",
-    "@agentbridge/openapi": "*",
-    "@agentbridge/scanner": "*"
+    "@marmar9615-cloud/agentbridge-core": "^0.2.0",
+    "@marmar9615-cloud/agentbridge-openapi": "^0.2.0",
+    "@marmar9615-cloud/agentbridge-scanner": "^0.2.0"
   }
 }
