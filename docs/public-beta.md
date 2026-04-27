@@ -3,20 +3,32 @@
 AgentBridge is in public beta. This document is the honest answer to
 "what can I count on?"
 
-## What you can do today
+> **Distribution: source-only at the time of v0.2.0-beta.** The
+> `@marmar9615-cloud/agentbridge-*` packages are *prepared* for npm
+> publishing — CI builds them and `npm pack --dry-run` validates each
+> tarball — but they **have not been published to npm yet**. Anything
+> below that names an `npx @marmar9615-cloud/...` command works
+> *after* npm publishing happens (a separate manual step; see
+> [docs/npm-publishing.md](npm-publishing.md)). Today, run these via a
+> local checkout.
 
-- **Author actions** — declare typed actions in TypeScript with
-  `@marmar9615-cloud/agentbridge-sdk`, get a JSON Schema-backed manifest
-  for free.
-- **Score a URL** — `npx @marmar9615-cloud/agentbridge-cli scan <url>`
-  returns a 0–100 readiness score with grouped recommendations.
-- **Validate a manifest** — `agentbridge validate <path-or-url>`.
-- **Convert OpenAPI** — `agentbridge generate openapi <doc>` produces a
-  draft AgentBridge manifest with risk inferred per HTTP method.
-- **Run an MCP server** — `npx @marmar9615-cloud/agentbridge-mcp-server`
-  speaks stdio MCP, exposes tools/resources/prompts to AI clients,
-  enforces a confirmation gate, origin pinning, URL allowlist, and an
-  audit log with redaction.
+## What you can do today (from a local checkout)
+
+- **Author actions** — declare typed actions in TypeScript with the
+  SDK package (`packages/sdk`), get a JSON Schema-backed manifest for
+  free.
+- **Score a URL** — `npm run dev:cli -- scan <url>` (today) or
+  `npx @marmar9615-cloud/agentbridge-cli scan <url>` (after npm
+  publish) returns a 0–100 readiness score with grouped recommendations.
+- **Validate a manifest** — `npm run dev:cli -- validate <path-or-url>`.
+- **Convert OpenAPI** — `npm run dev:cli -- generate openapi <doc>`
+  produces a draft AgentBridge manifest with risk inferred per HTTP
+  method.
+- **Run an MCP server** — `npm run dev:mcp` (today) speaks stdio MCP,
+  exposes tools/resources/prompts to AI clients, enforces a confirmation
+  gate, origin pinning, URL allowlist, and an audit log with redaction.
+  After publishing, the same server is available via
+  `npx @marmar9615-cloud/agentbridge-mcp-server`.
 - **Try Studio locally** — `npm run dev:studio` for a developer
   dashboard at `:3001`.
 - **Run the demo locally** — `npm run dev:demo` for the simulated
