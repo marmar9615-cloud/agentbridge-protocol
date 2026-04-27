@@ -39,7 +39,34 @@ function fail(msg) {
   console.error(`[smoke] FAIL: ${msg}`);
   cleanupOnExit = false;
   console.error(`[smoke] tmpdir preserved: ${tmpRoot}`);
+  killDemo();
   process.exit(1);
+}
+
+// Kill the demo's whole process group so `next dev` and its webpack
+// workers actually go away. Plain `proc.kill()` only signals the npm
+// shim, which on Linux does NOT propagate to grandchildren — those
+// linger and keep our pipes open, so Node can never naturally exit.
+function killDemo() {
+  if (!demoProc || demoProc.exitCode !== null || demoProc.killed) return;
+  const pid = demoProc.pid;
+  if (!pid) return;
+  try {
+    process.kill(-pid, "SIGTERM");
+  } catch {
+    try { demoProc.kill("SIGTERM"); } catch {}
+  }
+}
+
+function killDemoForce() {
+  if (!demoProc || demoProc.exitCode !== null) return;
+  const pid = demoProc.pid;
+  if (!pid) return;
+  try {
+    process.kill(-pid, "SIGKILL");
+  } catch {
+    try { demoProc.kill("SIGKILL"); } catch {}
+  }
 }
 
 function waitForUrl(url, timeoutMs) {
@@ -68,11 +95,7 @@ function isPortFree(port) {
 }
 
 process.on("exit", () => {
-  if (demoProc && demoProc.exitCode === null) {
-    try {
-      demoProc.kill("SIGKILL");
-    } catch {}
-  }
+  killDemoForce();
   if (cleanupOnExit && existsSync(tmpRoot)) {
     rmSync(tmpRoot, { recursive: true, force: true });
   }
@@ -131,15 +154,17 @@ process.on("exit", () => {
     fail("pack-check failed");
   }
 
-  // 7. boot demo-app, run CLI scan, kill demo
+  // 7. boot demo-app in its own process group, run CLI scan, kill the
+  //    whole group. detached: true creates a new process group with
+  //    npm as the leader; `next dev` and its workers inherit it.
   log(`booting demo-app on :${PORT}`);
   demoProc = spawn("npm", ["run", "dev:demo"], {
     cwd: tmpRoot,
-    stdio: ["ignore", "pipe", "pipe"],
-    detached: false,
+    stdio: ["ignore", "ignore", "ignore"],
+    detached: true,
   });
-  demoProc.stdout.on("data", () => {});
-  demoProc.stderr.on("data", () => {});
+  // Don't keep the parent event loop alive on this child's stdio.
+  demoProc.unref();
 
   try {
     await waitForUrl(`http://localhost:${PORT}/.well-known/agentbridge.json`, 60_000);
@@ -158,27 +183,39 @@ process.on("exit", () => {
   }
 
   log("stopping demo-app");
-  if (demoProc.exitCode === null) {
-    demoProc.kill("SIGTERM");
-    await new Promise((r) => setTimeout(r, 1000));
-    if (demoProc.exitCode === null) demoProc.kill("SIGKILL");
-  }
+  killDemo();
+  await new Promise((r) => setTimeout(r, 1500));
+  killDemoForce();
 
-  // 8. MCP server boot check
+  // 8. MCP server boot check.
+  //    stdin must stay an open pipe — MCP reads JSON-RPC over stdio, and
+  //    treating stdin as ignored/closed gives it immediate EOF and a
+  //    graceful exit, which would falsely look like a crash. stdout/stderr
+  //    are "ignore" so no piped fds linger and keep Node's event loop alive
+  //    after we kill the child.
   log("MCP server boot check");
   try {
     const mcp = spawn("node", ["apps/mcp-server/dist/index.js"], {
       cwd: tmpRoot,
-      stdio: ["pipe", "pipe", "pipe"],
+      stdio: ["pipe", "ignore", "ignore"],
+      detached: false,
     });
     await new Promise((r) => setTimeout(r, 1500));
     if (mcp.exitCode !== null) {
       fail(`MCP server exited prematurely with code ${mcp.exitCode}`);
     }
     mcp.kill("SIGTERM");
+    await new Promise((r) => setTimeout(r, 500));
+    if (mcp.exitCode === null) mcp.kill("SIGKILL");
+    // Drop the stdin Writable so it doesn't keep the parent event loop alive.
+    try { mcp.stdin?.destroy(); } catch {}
   } catch (err) {
     fail(`MCP server boot failed: ${err.message}`);
   }
 
   log("PASS");
+  // Force exit. Even after our explicit kills, residual stdio handles
+  // or stray child processes can keep Node's event loop alive. The
+  // smoke test has succeeded by this point — exit cleanly.
+  process.exit(0);
 })();
