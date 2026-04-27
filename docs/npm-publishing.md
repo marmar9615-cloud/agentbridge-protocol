@@ -121,7 +121,7 @@ graduate to a non-beta version.
 mkdir /tmp/abg-postpublish && cd /tmp/abg-postpublish
 npm init -y
 npm install @marmar9615-cloud/agentbridge-cli
-npx agentbridge version  # should print the version
+npx @marmar9615-cloud/agentbridge-cli version  # should print the version
 ```
 
 If that succeeds, announce the release on whatever channels are

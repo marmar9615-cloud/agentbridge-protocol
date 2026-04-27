@@ -144,7 +144,7 @@ function camelCase(s: string) {
 ```bash
 npm run dev
 curl -s http://localhost:3000/.well-known/agentbridge.json | jq .
-npx agentbridge scan http://localhost:3000
+npx @marmar9615-cloud/agentbridge-cli scan http://localhost:3000
 ```
 
 You should see your two actions, with `invite_user` flagged as medium-risk

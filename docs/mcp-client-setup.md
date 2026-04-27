@@ -6,7 +6,7 @@ local stdio process directly.
 ## Quick check from the CLI
 
 ```bash
-npx agentbridge mcp-config
+npx @marmar9615-cloud/agentbridge-cli mcp-config
 ```
 
 prints two snippets — pick the one that fits your client and paste it into

@@ -6,7 +6,7 @@ CLI can generate a draft manifest in one command.
 ## Generate
 
 ```bash
-npx agentbridge generate openapi ./your-api.openapi.json \
+npx @marmar9615-cloud/agentbridge-cli generate openapi ./your-api.openapi.json \
   --base-url https://api.acme.com \
   --out ./public/.well-known/agentbridge.json
 ```
@@ -14,7 +14,7 @@ npx agentbridge generate openapi ./your-api.openapi.json \
 URL inputs work too:
 
 ```bash
-npx agentbridge generate openapi https://api.acme.com/openapi.json
+npx @marmar9615-cloud/agentbridge-cli generate openapi https://api.acme.com/openapi.json
 ```
 
 The generator:
@@ -43,7 +43,7 @@ might be expensive and worth marking `medium`.
 ## What you get
 
 ```bash
-$ npx agentbridge generate openapi packages/openapi/fixtures/simple-store.openapi.json
+$ npx @marmar9615-cloud/agentbridge-cli generate openapi packages/openapi/fixtures/simple-store.openapi.json
 ✓ generated manifest with 4 actions
   → agentbridge.generated.json
 
@@ -74,8 +74,8 @@ Open the file. You'll see something like:
    placeholder; hand-written ones read much better in confirmation prompts.
 3. **Add `examples[]`.** Examples dramatically improve invocation accuracy.
 4. **Add `permissions[]`.** Document required scopes for each action.
-5. **Validate.** `npx agentbridge validate ./your.agentbridge.json`
-6. **Scan the live app.** Once you serve the manifest, `npx agentbridge scan
+5. **Validate.** `npx @marmar9615-cloud/agentbridge-cli validate ./your.agentbridge.json`
+6. **Scan the live app.** Once you serve the manifest, `npx @marmar9615-cloud/agentbridge-cli scan
    https://your-app.com` to see the readiness score.
 
 ## Limitations
