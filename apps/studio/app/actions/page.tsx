@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { scanUrl } from "@agentbridge/scanner";
+import { ActionsBrowser } from "./browser";
 
 export const dynamic = "force-dynamic";
 
@@ -34,37 +35,7 @@ export default async function ActionsPage({ searchParams }: Props) {
       {error ? (
         <div className="callout">{error}</div>
       ) : (
-        <div>
-          {manifest.actions.map((action: any) => (
-            <Link
-              key={action.name}
-              href={`/actions/${action.name}?url=${encodeURIComponent(url)}`}
-              style={{ color: "inherit", textDecoration: "none" }}
-            >
-              <div className="card action-card">
-                <div className="row" style={{ justifyContent: "space-between" }}>
-                  <div>
-                    <strong>
-                      <code>{action.name}</code>
-                    </strong>{" "}
-                    — {action.title}
-                  </div>
-                  <div>
-                    <span className={`pill pill-${action.risk}`}>{action.risk}</span>{" "}
-                    {action.requiresConfirmation && (
-                      <span className="pill" style={{ marginLeft: 6 }}>
-                        confirm
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <p className="muted" style={{ marginTop: 8, marginBottom: 0 }}>
-                  {action.description}
-                </p>
-              </div>
-            </Link>
-          ))}
-        </div>
+        <ActionsBrowser url={url} actions={manifest.actions} />
       )}
     </div>
   );

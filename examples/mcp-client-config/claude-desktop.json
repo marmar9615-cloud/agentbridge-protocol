@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "agentbridge": {
+      "command": "npx",
+      "args": [
+        "tsx",
+        "/absolute/path/to/agentbridge-protocol/apps/mcp-server/src/index.ts"
+      ],
+      "env": {
+        "AGENTBRIDGE_ALLOW_REMOTE": "false"
+      }
+    }
+  }
+}

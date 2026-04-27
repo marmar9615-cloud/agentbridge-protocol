@@ -1,0 +1,143 @@
+{
+  "name": "Acme Storefront",
+  "description": "Order, product, and refund operations for an e-commerce backend.",
+  "version": "1.2.0",
+  "baseUrl": "https://api.acme.com",
+  "contact": "platform@acme.com",
+  "auth": {
+    "type": "oauth2",
+    "description": "OAuth 2.0 with scopes per-action. See permissions[]."
+  },
+  "resources": [
+    { "name": "orders", "description": "Customer orders and fulfillment status.", "url": "/orders" },
+    { "name": "products", "description": "Catalog items, variants, inventory.", "url": "/products" },
+    { "name": "refunds", "description": "Refund drafts and executions.", "url": "/refunds" }
+  ],
+  "actions": [
+    {
+      "name": "list_orders",
+      "title": "List orders",
+      "description": "Returns recent orders, optionally filtered by status or customer.",
+      "method": "GET",
+      "endpoint": "/api/agentbridge/actions/list_orders",
+      "risk": "low",
+      "requiresConfirmation": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["pending", "shipped", "delivered", "refunded"] },
+          "customerId": { "type": "string" },
+          "limit": { "type": "integer", "minimum": 1, "maximum": 200 }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": { "orders": { "type": "array" } }
+      },
+      "permissions": [{ "scope": "orders:read" }],
+      "examples": [
+        { "description": "All orders", "input": {} },
+        { "description": "Only shipped", "input": { "status": "shipped", "limit": 50 } }
+      ],
+      "humanReadableSummaryTemplate": "List orders (status: {{status}}, customer: {{customerId}})"
+    },
+    {
+      "name": "get_product",
+      "title": "Get product",
+      "description": "Returns full details for a single product including variants and inventory.",
+      "method": "GET",
+      "endpoint": "/api/agentbridge/actions/get_product",
+      "risk": "low",
+      "requiresConfirmation": false,
+      "inputSchema": {
+        "type": "object",
+        "required": ["productId"],
+        "properties": { "productId": { "type": "string", "minLength": 1 } }
+      },
+      "outputSchema": { "type": "object" },
+      "permissions": [{ "scope": "products:read" }],
+      "examples": [{ "input": { "productId": "SKU-001" } }],
+      "humanReadableSummaryTemplate": "Get product {{productId}}"
+    },
+    {
+      "name": "draft_refund",
+      "title": "Draft a refund",
+      "description": "Creates a refund draft. Not executed until confirmed via execute_refund.",
+      "method": "POST",
+      "endpoint": "/api/agentbridge/actions/draft_refund",
+      "risk": "medium",
+      "requiresConfirmation": true,
+      "inputSchema": {
+        "type": "object",
+        "required": ["orderId", "amount", "reason"],
+        "properties": {
+          "orderId": { "type": "string" },
+          "amount": { "type": "number", "minimum": 0.01 },
+          "reason": { "type": "string", "minLength": 3 }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": { "draftId": { "type": "string" }, "summary": { "type": "string" } }
+      },
+      "permissions": [{ "scope": "refunds:draft" }],
+      "examples": [
+        {
+          "description": "Partial refund for damaged item",
+          "input": { "orderId": "ORD-1001", "amount": 24, "reason": "Damaged on arrival" }
+        }
+      ],
+      "humanReadableSummaryTemplate": "Draft a ${{amount}} refund on order {{orderId}} (reason: {{reason}})"
+    },
+    {
+      "name": "execute_refund",
+      "title": "Execute refund",
+      "description": "Executes a previously drafted refund. Issues funds back to the customer.",
+      "method": "POST",
+      "endpoint": "/api/agentbridge/actions/execute_refund",
+      "risk": "high",
+      "requiresConfirmation": true,
+      "inputSchema": {
+        "type": "object",
+        "required": ["draftId", "confirmationText"],
+        "properties": {
+          "draftId": { "type": "string" },
+          "confirmationText": { "type": "string", "const": "CONFIRM" }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "transactionId": { "type": "string" },
+          "executedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "permissions": [{ "scope": "refunds:execute", "description": "Privileged scope. Audit every grant." }],
+      "examples": [
+        { "input": { "draftId": "draft_xxx", "confirmationText": "CONFIRM" } }
+      ],
+      "humanReadableSummaryTemplate": "EXECUTE refund draft {{draftId}} (irreversible)"
+    },
+    {
+      "name": "cancel_order",
+      "title": "Cancel order",
+      "description": "Cancels an unshipped order. Releases inventory.",
+      "method": "DELETE",
+      "endpoint": "/api/agentbridge/actions/cancel_order",
+      "risk": "high",
+      "requiresConfirmation": true,
+      "inputSchema": {
+        "type": "object",
+        "required": ["orderId"],
+        "properties": {
+          "orderId": { "type": "string" },
+          "reason": { "type": "string" }
+        }
+      },
+      "outputSchema": { "type": "object" },
+      "permissions": [{ "scope": "orders:cancel" }],
+      "examples": [{ "input": { "orderId": "ORD-1003", "reason": "Customer request" } }],
+      "humanReadableSummaryTemplate": "Cancel order {{orderId}} (reason: {{reason}})"
+    }
+  ]
+}

@@ -26,13 +26,17 @@
 - [The confirmation flow](#the-confirmation-flow)
 - [Quick start](#quick-start)
 - [Project layout](#project-layout)
-- [The five packages](#the-five-packages)
+- [Packages and apps](#packages-and-apps)
+- [The CLI](#the-cli)
+- [OpenAPI import](#openapi-import)
+- [Manifest spec](#manifest-spec)
 - [Demo walkthrough](#demo-walkthrough)
 - [Wire it to an MCP client](#wire-it-to-an-mcp-client)
 - [Manifest schema reference](#manifest-schema-reference)
 - [MCP tools reference](#mcp-tools-reference)
 - [Security model](#security-model)
 - [Testing](#testing)
+- [Documentation](#documentation)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [License](#license)
@@ -117,22 +121,28 @@ flowchart TB
         direction TB
 
         subgraph packages["packages/"]
-            CORE["📦 @agentbridge/core<br/><i>Zod schemas, types, validation,<br/>audit log primitives</i>"]
-            SDK["📦 @agentbridge/sdk<br/><i>defineAgentAction, manifest builder,<br/>route handler wrapper</i>"]
-            SCAN["📦 @agentbridge/scanner<br/><i>0–100 readiness scoring,<br/>optional Playwright probe</i>"]
+            CORE["📦 @agentbridge/core<br/><i>schemas, types,<br/>validation, audit</i>"]
+            SDK["📦 @agentbridge/sdk<br/><i>defineAgentAction,<br/>manifest builder</i>"]
+            SCAN["📦 @agentbridge/scanner<br/><i>readiness scoring,<br/>structured checks</i>"]
+            OAPI["📦 @agentbridge/openapi<br/><i>OpenAPI 3.x →<br/>manifest converter</i>"]
+            CLI["📦 @agentbridge/cli<br/><i>scan, validate, init,<br/>generate, mcp-config</i>"]
         end
 
         subgraph apps["apps/"]
             DEMO["🛒 demo-app  (:3000)<br/><i>Fake order management.<br/>Serves manifest + actions.</i>"]
-            STUDIO["🎛 studio  (:3001)<br/><i>Developer dashboard:<br/>scan, score, exercise actions.</i>"]
-            MCP["🔌 mcp-server  (stdio)<br/><i>Exposes 5 MCP tools to agents.<br/>Enforces confirmation gate.</i>"]
+            STUDIO["🎛 studio  (:3001)<br/><i>Developer dashboard.<br/>Scan, exercise, audit.</i>"]
+            MCP["🔌 mcp-server  (stdio)<br/><i>Tools, resources, prompts.<br/>Confirmation tokens + idempotency.</i>"]
         end
 
-        DATA[("📁 data/audit.json<br/>shared audit log")]
+        DATA[("📁 data/<br/>audit · confirmations · idempotency")]
     end
 
     SDK --> CORE
     SCAN --> CORE
+    OAPI --> CORE
+    CLI --> CORE
+    CLI --> SCAN
+    CLI --> OAPI
     DEMO --> SDK
     DEMO --> CORE
     STUDIO --> SCAN
@@ -149,6 +159,8 @@ flowchart TB
     style CORE fill:#dbeafe,stroke:#2563eb
     style SDK fill:#dbeafe,stroke:#2563eb
     style SCAN fill:#dbeafe,stroke:#2563eb
+    style OAPI fill:#dbeafe,stroke:#2563eb
+    style CLI fill:#dbeafe,stroke:#2563eb
     style DEMO fill:#dcfce7,stroke:#16a34a
     style STUDIO fill:#dcfce7,stroke:#16a34a
     style MCP fill:#fef3c7,stroke:#d97706
@@ -226,20 +238,30 @@ agentbridge-protocol/
 ├── packages/
 │   ├── core/             # 📦 schemas, types, validation, audit
 │   ├── sdk/              # 📦 defineAgentAction, manifest builder
-│   └── scanner/          # 📦 readiness scoring + Playwright probe
+│   ├── scanner/          # 📦 readiness scoring + structured checks
+│   ├── openapi/          # 📦 OpenAPI 3.x → AgentBridge manifest converter
+│   └── cli/              # 📦 @agentbridge/cli — scan, validate, init, generate
 ├── apps/
 │   ├── demo-app/         # 🛒 Next.js order-management demo (port 3000)
 │   ├── studio/           # 🎛 Next.js dashboard (port 3001)
-│   └── mcp-server/       # 🔌 stdio MCP server with 5 tools
-├── data/                 # 📁 local audit log (gitignored)
+│   └── mcp-server/       # 🔌 stdio MCP server: tools + resources + prompts
+├── spec/
+│   ├── agentbridge-manifest.schema.json   # JSON Schema for the manifest
+│   ├── agentbridge-manifest.v0.1.md       # human-readable spec
+│   └── examples/                          # 3 example manifests
+├── examples/             # nextjs-basic · openapi-store · mcp-client-config
+├── docs/                 # quickstart, mcp-client-setup, openapi-import, roadmap
+├── data/                 # 📁 local audit/confirmations/idempotency (gitignored)
 ├── .github/workflows/    # CI
+├── CLAUDE.md             # working notes for AI agents
+├── CONTRIBUTING.md / SECURITY.md / CODE_OF_CONDUCT.md / CHANGELOG.md
 ├── README.md
 └── LICENSE               # Apache 2.0
 ```
 
 ---
 
-## The five packages
+## Packages and apps
 
 ### 📦 `packages/core`
 
@@ -380,7 +402,85 @@ A developer dashboard at `:3001` for inspecting and exercising any AgentBridge s
 
 ### 🔌 `apps/mcp-server`
 
-A Model Context Protocol server speaking stdio. Exposes 5 tools to AI agents (see [MCP tools reference](#mcp-tools-reference) below). Enforces the confirmation gate, origin pinning, and URL allowlist before any outbound call.
+A Model Context Protocol server speaking stdio. Exposes 5 tools, 4 resources, and 4 prompts to AI agents (see [MCP tools reference](#mcp-tools-reference) below). Enforces the confirmation gate, origin pinning, URL allowlist, **confirmation tokens**, and **idempotency keys** before any outbound call.
+
+### 📦 `packages/openapi`
+
+OpenAPI 3.x → AgentBridge manifest converter. Used by the CLI; can also be imported directly. Resolves `$ref`s, infers risk from method, merges path/query/body params into the action's `inputSchema`. See [docs/openapi-import.md](docs/openapi-import.md) for limits.
+
+### 📦 `packages/cli`
+
+The `agentbridge` command. See [The CLI](#the-cli) below.
+
+---
+
+## The CLI
+
+```bash
+# From the repo root, no install needed:
+npm run dev:cli -- scan http://localhost:3000
+
+# After installing globally (future), or via npx in a project that depends on @agentbridge/cli:
+npx agentbridge scan http://localhost:3000
+```
+
+| Command | What it does |
+|---|---|
+| `agentbridge scan <url>` | Score the URL's AgentBridge readiness. Readable terminal output; `--json` for machine output. |
+| `agentbridge validate <file-or-url>` | Validate a manifest from disk or a URL against the schema. `--json`. |
+| `agentbridge init` | Scaffold an `agentbridge.config.ts` and a starter `/.well-known/agentbridge.json`. `--force` to overwrite, `--format json` for JSON config. |
+| `agentbridge generate openapi <src>` | Generate a draft manifest from an OpenAPI 3.x doc. `--out PATH`, `--base-url URL`, `--json`. |
+| `agentbridge mcp-config` | Print copy-pasteable MCP client configs for Claude Desktop / Cursor / others. |
+| `agentbridge version` | Print CLI version. |
+
+Example: take an existing OpenAPI document and turn it into a draft manifest in one shot:
+
+```bash
+npx agentbridge generate openapi ./your-api.openapi.json \
+  --base-url https://api.acme.com \
+  --out ./public/.well-known/agentbridge.json
+```
+
+See [docs/openapi-import.md](docs/openapi-import.md) for the full guide.
+
+---
+
+## OpenAPI import
+
+The CLI's `generate openapi` command and the `@agentbridge/openapi` package
+turn an existing OpenAPI 3.x document into a draft AgentBridge manifest.
+
+| OpenAPI method | Risk inferred | requiresConfirmation |
+|---|---|---|
+| `GET` / `HEAD` | low | false |
+| `POST` / `PUT` / `PATCH` | medium | true |
+| `DELETE` | high | true |
+
+The generator walks every operation, uses `operationId` (snake-cased) as the
+action name, merges path/query params and request body into the action's
+`inputSchema.properties`, and resolves `$ref`s against `components.schemas`.
+
+Review every action after generation — heuristics aren't a substitute for
+intent. See the [example](examples/openapi-store/) and
+[docs/openapi-import.md](docs/openapi-import.md).
+
+---
+
+## Manifest spec
+
+The manifest format is a stable, versioned spec — not just whatever
+`@agentbridge/core` happens to validate.
+
+| Artifact | Path |
+|---|---|
+| Human-readable spec | [`spec/agentbridge-manifest.v0.1.md`](spec/agentbridge-manifest.v0.1.md) |
+| JSON Schema (Draft 2020-12) | [`spec/agentbridge-manifest.schema.json`](spec/agentbridge-manifest.schema.json) |
+| Examples | [`spec/examples/`](spec/examples/) — minimal, e-commerce, support tickets |
+
+The example manifests are validated by tests, so they stay in sync with the
+schema as it evolves. Add a new example by dropping a JSON file into
+`spec/examples/` and the test in `packages/core/src/tests/spec-examples.test.ts`
+will pick it up automatically.
 
 ---
 
@@ -517,20 +617,44 @@ A complete example manifest:
 
 ## MCP tools reference
 
-The MCP server exposes 5 tools. All accept a target `url` (the origin of an AgentBridge-enabled app).
+The MCP server exposes **5 tools, 4 resources, and 4 prompts**. All accept a target `url` (the origin of an AgentBridge-enabled app).
+
+### Tools
 
 | Tool | Purpose |
 |---|---|
 | **`discover_manifest`** | Fetch + summarize a manifest. Use first to understand what an app supports. |
-| **`scan_agent_readiness`** | Run the full scanner; returns 0–100 score, issues, recommendations. |
-| **`list_actions`** | Compact list of actions with name, title, risk, confirmation flag. |
-| **`call_action`** | Invoke an action. Risky actions require `confirmationApproved: true`; otherwise returns a `confirmationRequired` summary without touching the upstream endpoint. |
+| **`scan_agent_readiness`** | Run the full scanner; returns 0–100 score, structured `checks[]`, grouped recommendations. |
+| **`list_actions`** | Compact list of actions with name, title, risk, confirmation flag, permissions. |
+| **`call_action`** | Invoke an action. Risky actions return `confirmationRequired` plus a `confirmationToken`; the second call must include `confirmationApproved: true` AND the same token. Optional `idempotencyKey` replays prior results. |
 | **`get_audit_log`** | Read recent audit events; filter by `url`. |
 
-### Example: full call_action transaction
+### Resources
+
+URIs the agent can fetch directly:
+
+| URI | What it returns |
+|---|---|
+| `agentbridge://manifest?url=<encoded>` | The validated manifest at the given URL. |
+| `agentbridge://readiness?url=<encoded>` | Full scanner report (score, checks, recommendations). |
+| `agentbridge://audit-log?url=<encoded>&limit=N` | Recent audit events, optionally filtered. |
+| `agentbridge://spec/manifest-v0.1` | Bundled human-readable manifest spec (markdown). |
+
+### Prompts
+
+Reusable agent prompts:
+
+| Prompt | Use case |
+|---|---|
+| `scan_app_for_agent_readiness` | Audit + write up findings for an AgentBridge surface. |
+| `generate_manifest_from_api` | Turn an OpenAPI doc or API description into a draft manifest. |
+| `explain_action_confirmation` | Translate an action for a human reviewer about to approve it. |
+| `review_manifest_for_security` | Safety-focused review of an existing manifest. |
+
+### Example: full call_action transaction (with token + idempotency)
 
 ```jsonc
-// First call — no confirmation
+// First call — no confirmation, no token yet
 {
   "tool": "call_action",
   "arguments": {
@@ -540,22 +664,26 @@ The MCP server exposes 5 tools. All accept a target `url` (the origin of an Agen
   }
 }
 
-// Response: gated, no upstream call made
+// Response: gated, no upstream call made; token returned
 {
   "status": "confirmationRequired",
   "summary": "EXECUTE refund draft draft_xxx (irreversible in real life)",
   "action": { "name": "execute_refund_order", "risk": "high", "requiresConfirmation": true },
-  "hint": "Re-call this tool with confirmationApproved: true after a human has reviewed the summary."
+  "confirmationToken": "f1c2…",
+  "confirmationExpiresInSeconds": 300,
+  "hint": "Re-call this tool with confirmationApproved: true AND the same confirmationToken after a human reviews the summary."
 }
 
-// Second call — explicit approval
+// Second call — explicit approval + token (single-use, input-bound)
 {
   "tool": "call_action",
   "arguments": {
     "url": "http://localhost:3000",
     "actionName": "execute_refund_order",
     "input": { "draftId": "draft_xxx", "confirmationText": "CONFIRM" },
-    "confirmationApproved": true
+    "confirmationApproved": true,
+    "confirmationToken": "f1c2…",
+    "idempotencyKey": "ord-1001-refund-2026-04-27"
   }
 }
 
@@ -566,9 +694,14 @@ The MCP server exposes 5 tools. All accept a target `url` (the origin of an Agen
     "simulated": true,
     "simulatedTransactionId": "sim_tx_1777255529536",
     "executedAt": "2026-04-27T02:05:29.536Z"
-  }
+  },
+  "idempotent": { "key": "ord-1001-refund-2026-04-27", "replayed": false }
 }
 ```
+
+A repeat call with the same `idempotencyKey` and same input returns the
+cached result without re-invoking the upstream endpoint. A repeat with the
+same key and **different** input is rejected as a conflict.
 
 ---
 
@@ -583,6 +716,9 @@ This is an MVP — but security is not an afterthought, because the entire value
 | **URL allowlist** | `mcp-server/src/safety.ts`, `scanner/src/scanner.ts` | Only loopback URLs by default. Override with `AGENTBRIDGE_ALLOW_REMOTE=true`. |
 | **Origin pinning** | `mcp-server/src/safety.ts:assertSameOrigin` | Action endpoints must share origin with `manifest.baseUrl`. A poisoned manifest cannot redirect calls elsewhere. |
 | **Confirmation gate** | `mcp-server/src/tools.ts:callAction`, `studio/api/call/route.ts` | Risky actions return `confirmationRequired` unless caller passes `confirmationApproved: true`. |
+| **Confirmation tokens** | `mcp-server/src/confirmations.ts` | Tokens are bound to `(url, actionName, hash(input))`, single-use, expire in 5 minutes. Reuse with different input is rejected. |
+| **Idempotency keys** | `mcp-server/src/idempotency.ts` | Optional per-call key replays prior result; same key + different input is a conflict. |
+| **Outbound timeout + size cap** | `mcp-server/src/tools.ts` | 10s timeout on action calls; 1MB response body cap. |
 | **Schema validation** | `mcp-server/src/tools.ts` (Ajv), SDK (Zod) | Inputs validated against the action's JSON Schema before any upstream call. |
 | **Audit redaction** | `core/src/audit.ts:redact` | Strips `authorization`, `cookie`, `password`, `token`, `secret`, `api_key` recursively before persisting. |
 | **Simulated destructive actions** | `demo-app/lib/orders.ts` | No real payment processor is wired anywhere. All "destructive" demo actions return `{ simulated: true, ... }`. |
@@ -618,22 +754,28 @@ npm run typecheck # tsc -b across the workspace
 
 **Coverage:**
 
-- `packages/core` — manifest validation, risk classification, summary template rendering, audit log persistence + redaction
-- `packages/scanner` — scoring across complete/incomplete/missing manifests, URL allowlist enforcement
-- `apps/mcp-server` — confirmation gate (refuse, then approve), JSON Schema validation, low-risk pass-through
+- `packages/core` — manifest validation, risk classification, summary template rendering, audit log persistence + redaction, spec example validation.
+- `packages/scanner` — scoring, structured checks, URL allowlist enforcement, cross-origin baseUrl, destructive-method detection.
+- `packages/openapi` — OpenAPI parsing, risk inference, name normalization, $ref resolution, full fixture conversion.
+- `packages/cli` — arg parsing, exit codes, validate/init/generate behaviour, file system side effects.
+- `apps/mcp-server` — confirmation gate, **token issuance + binding + single-use**, **idempotency replay + conflict**, origin pinning, JSON Schema validation, low-risk pass-through.
 
-```
-✓ packages/core/src/tests/actions.test.ts (8 tests)
-✓ packages/core/src/tests/manifest.test.ts (5 tests)
-✓ packages/core/src/tests/audit.test.ts (5 tests)
-✓ packages/scanner/src/tests/scanner.test.ts (6 tests)
-✓ apps/mcp-server/src/tests/call-action.test.ts (4 tests)
+CI runs `npm install`, typecheck, all tests, and Next.js builds on Node 20.x and 22.x — see [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
 
-Test Files  5 passed (5)
-     Tests  28 passed (28)
-```
+---
 
-CI runs `npm install`, `npm test`, and `npm run typecheck` on every push and PR — see [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+## Documentation
+
+| Doc | What it covers |
+|---|---|
+| [docs/quickstart.md](docs/quickstart.md) | Five-minute walkthrough from clone to running stack. |
+| [docs/mcp-client-setup.md](docs/mcp-client-setup.md) | Hooking AgentBridge MCP into Claude Desktop, Cursor, custom clients. |
+| [docs/openapi-import.md](docs/openapi-import.md) | Generating manifests from OpenAPI 3.x. |
+| [docs/roadmap.md](docs/roadmap.md) | What's shipped, what's next. |
+| [spec/agentbridge-manifest.v0.1.md](spec/agentbridge-manifest.v0.1.md) | The manifest specification. |
+| [CLAUDE.md](CLAUDE.md) | Working notes for AI agents operating on this codebase. |
+| [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Community + reporting. |
+| [CHANGELOG.md](CHANGELOG.md) | Per-release notes. |
 
 ---
 

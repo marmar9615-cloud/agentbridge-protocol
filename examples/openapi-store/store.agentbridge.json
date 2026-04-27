@@ -1,0 +1,120 @@
+{
+  "name": "Acme Store API",
+  "description": "Lightweight commerce API for the AgentBridge OpenAPI example.",
+  "version": "1.0.0",
+  "baseUrl": "https://api.acme-store.example",
+  "contact": "platform@acme-store.example",
+  "resources": [],
+  "actions": [
+    {
+      "name": "list_products",
+      "title": "List products",
+      "description": "Returns a paginated list of products, optionally filtered by category.",
+      "method": "GET",
+      "endpoint": "/products",
+      "risk": "low",
+      "requiresConfirmation": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          },
+          "category": {
+            "type": "string"
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "products": {
+            "type": "array"
+          }
+        }
+      },
+      "permissions": [],
+      "examples": [],
+      "humanReadableSummaryTemplate": "list products (GET /products)"
+    },
+    {
+      "name": "create_product",
+      "title": "Create product",
+      "description": "Create product",
+      "method": "POST",
+      "endpoint": "/products",
+      "risk": "medium",
+      "requiresConfirmation": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "priceCents": {
+            "type": "integer"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "priceCents"
+        ]
+      },
+      "permissions": [],
+      "examples": [],
+      "humanReadableSummaryTemplate": "create product (POST /products)"
+    },
+    {
+      "name": "get_order",
+      "title": "Get Order",
+      "description": "GET /orders/{orderId} (auto-generated from OpenAPI).",
+      "method": "GET",
+      "endpoint": "/orders/{orderId}",
+      "risk": "low",
+      "requiresConfirmation": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "orderId"
+        ]
+      },
+      "permissions": [],
+      "examples": [],
+      "humanReadableSummaryTemplate": "get order orderId={{orderId}}"
+    },
+    {
+      "name": "cancel_order",
+      "title": "Cancel an order",
+      "description": "Cancels an unshipped order and releases inventory.",
+      "method": "DELETE",
+      "endpoint": "/orders/{orderId}",
+      "risk": "high",
+      "requiresConfirmation": true,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "orderId"
+        ]
+      },
+      "permissions": [],
+      "examples": [],
+      "humanReadableSummaryTemplate": "cancel order orderId={{orderId}}"
+    }
+  ],
+  "generatedAt": "2026-04-27T02:57:22.106Z"
+}

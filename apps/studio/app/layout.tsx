@@ -21,6 +21,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <Link href="/actions">Actions</Link>
             <Link href="/manifest">Manifest</Link>
             <Link href="/audit">Audit log</Link>
+            <Link href="/spec">Spec</Link>
           </nav>
         </header>
         <main className="main">{children}</main>
