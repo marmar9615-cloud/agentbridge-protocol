@@ -1,0 +1,204 @@
+{
+  "format": "agentbridge-signed-manifest-test-vectors",
+  "version": "1",
+  "description": "Reference test vectors for AgentBridge v0.5.0 signed-manifest verification. Local-only, no network. See docs/designs/signed-manifests.md and packages/core/src/signing/.",
+  "generatedBy": "packages/core (one-off generator); see PR feat(core): add signed manifest verifier.",
+  "vectors": [
+    {
+      "name": "eddsa-valid",
+      "description": "Valid EdDSA signature over the reference manifest. The verifier must return ok:true with kid=acme-orders-ed25519-2026-04.",
+      "alg": "EdDSA",
+      "canonicalPayload": "{\"actions\":[{\"description\":\"Returns all orders, paginated.\",\"endpoint\":\"/api/agentbridge/actions/list_orders\",\"examples\":[],\"inputSchema\":{\"properties\":{},\"type\":\"object\"},\"method\":\"GET\",\"name\":\"list_orders\",\"outputSchema\":{\"properties\":{\"orders\":{\"items\":{},\"type\":\"array\"}},\"type\":\"object\"},\"permissions\":[],\"requiresConfirmation\":false,\"risk\":\"low\",\"title\":\"List Orders\"}],\"baseUrl\":\"https://orders.acme.example\",\"contact\":\"platform@acme.example\",\"description\":\"Reference test-vector manifest for AgentBridge signed-manifest verification.\",\"name\":\"Acme Orders\",\"resources\":[{\"description\":\"Customer orders.\",\"name\":\"orders\",\"url\":\"/orders\"}],\"version\":\"1.4.2\"}",
+      "_test_only_private_key_jwk": {
+        "crv": "Ed25519",
+        "d": "xFZcugjbaWO-2Dxt0l2qzScSnXJRXnG90PyhDR39emg",
+        "x": "QnFtUajHPMsJgIPkko1V2Kl7YSOz0TRjVVmx-OPiyhE",
+        "kty": "OKP"
+      },
+      "manifest": {
+        "name": "Acme Orders",
+        "description": "Reference test-vector manifest for AgentBridge signed-manifest verification.",
+        "version": "1.4.2",
+        "baseUrl": "https://orders.acme.example",
+        "contact": "platform@acme.example",
+        "resources": [
+          {
+            "name": "orders",
+            "description": "Customer orders.",
+            "url": "/orders"
+          }
+        ],
+        "actions": [
+          {
+            "name": "list_orders",
+            "title": "List Orders",
+            "description": "Returns all orders, paginated.",
+            "method": "GET",
+            "endpoint": "/api/agentbridge/actions/list_orders",
+            "risk": "low",
+            "requiresConfirmation": false,
+            "inputSchema": {
+              "type": "object",
+              "properties": {}
+            },
+            "outputSchema": {
+              "type": "object",
+              "properties": {
+                "orders": {
+                  "type": "array",
+                  "items": {}
+                }
+              }
+            },
+            "permissions": [],
+            "examples": []
+          }
+        ],
+        "signature": {
+          "alg": "EdDSA",
+          "kid": "acme-orders-ed25519-2026-04",
+          "iss": "https://orders.acme.example",
+          "signedAt": "2026-04-28T12:00:00.000Z",
+          "expiresAt": "2026-04-29T12:00:00.000Z",
+          "value": "tV7IN8QCPmCgvXTgZIg_OgiuQh8CjbsjTEW5bZY5e19ucViZwu1cnjn4C3IEl-mGYGTu9-Gq8VHs5IHXwLehCA"
+        }
+      },
+      "keySet": {
+        "issuer": "https://orders.acme.example",
+        "version": "1",
+        "keys": [
+          {
+            "kid": "acme-orders-ed25519-2026-04",
+            "alg": "EdDSA",
+            "use": "manifest-sign",
+            "publicKey": {
+              "crv": "Ed25519",
+              "x": "QnFtUajHPMsJgIPkko1V2Kl7YSOz0TRjVVmx-OPiyhE",
+              "kty": "OKP"
+            },
+            "notBefore": "2026-01-01T00:00:00.000Z",
+            "notAfter": "2026-12-31T23:59:59.000Z"
+          }
+        ],
+        "revokedKids": []
+      },
+      "expectedVerifyResult": {
+        "ok": true,
+        "kid": "acme-orders-ed25519-2026-04",
+        "iss": "https://orders.acme.example",
+        "alg": "EdDSA",
+        "signedAt": "2026-04-28T12:00:00.000Z",
+        "expiresAt": "2026-04-29T12:00:00.000Z"
+      },
+      "notes": [
+        "Use options.now between signedAt and expiresAt (e.g. \"2026-04-28T18:00:00Z\").",
+        "Ed25519 signatures are deterministic; bytes are reproducible across runs.",
+        "_test_only_private_key_jwk is provided for cross-language implementers to reproduce the vector. It is NOT part of the v0.5.0 key-set schema and is silently stripped by validateKeySet (Zod default)."
+      ]
+    },
+    {
+      "name": "es256-valid",
+      "description": "Valid ES256 signature over the reference manifest. The verifier must return ok:true with kid=acme-orders-es256-2026-04.",
+      "alg": "ES256",
+      "canonicalPayload": "{\"actions\":[{\"description\":\"Returns all orders, paginated.\",\"endpoint\":\"/api/agentbridge/actions/list_orders\",\"examples\":[],\"inputSchema\":{\"properties\":{},\"type\":\"object\"},\"method\":\"GET\",\"name\":\"list_orders\",\"outputSchema\":{\"properties\":{\"orders\":{\"items\":{},\"type\":\"array\"}},\"type\":\"object\"},\"permissions\":[],\"requiresConfirmation\":false,\"risk\":\"low\",\"title\":\"List Orders\"}],\"baseUrl\":\"https://orders.acme.example\",\"contact\":\"platform@acme.example\",\"description\":\"Reference test-vector manifest for AgentBridge signed-manifest verification.\",\"name\":\"Acme Orders\",\"resources\":[{\"description\":\"Customer orders.\",\"name\":\"orders\",\"url\":\"/orders\"}],\"version\":\"1.4.2\"}",
+      "_test_only_private_key_jwk": {
+        "kty": "EC",
+        "x": "mimLJnjcREs5c1gQxNL6Au4aTL5pJHqa6ZCiGXM9dc0",
+        "y": "xHIwK98OwYQ0m1YxCy1NmXxF8S6YkVy9hQXA80rB4Fo",
+        "crv": "P-256",
+        "d": "yWJGtMSeDqm9-RAnhfiUqfRUZP-aZzf_lC63SJJF48A"
+      },
+      "manifest": {
+        "name": "Acme Orders",
+        "description": "Reference test-vector manifest for AgentBridge signed-manifest verification.",
+        "version": "1.4.2",
+        "baseUrl": "https://orders.acme.example",
+        "contact": "platform@acme.example",
+        "resources": [
+          {
+            "name": "orders",
+            "description": "Customer orders.",
+            "url": "/orders"
+          }
+        ],
+        "actions": [
+          {
+            "name": "list_orders",
+            "title": "List Orders",
+            "description": "Returns all orders, paginated.",
+            "method": "GET",
+            "endpoint": "/api/agentbridge/actions/list_orders",
+            "risk": "low",
+            "requiresConfirmation": false,
+            "inputSchema": {
+              "type": "object",
+              "properties": {}
+            },
+            "outputSchema": {
+              "type": "object",
+              "properties": {
+                "orders": {
+                  "type": "array",
+                  "items": {}
+                }
+              }
+            },
+            "permissions": [],
+            "examples": []
+          }
+        ],
+        "signature": {
+          "alg": "ES256",
+          "kid": "acme-orders-es256-2026-04",
+          "iss": "https://orders.acme.example",
+          "signedAt": "2026-04-28T12:00:00.000Z",
+          "expiresAt": "2026-04-29T12:00:00.000Z",
+          "value": "qnefAEnQ9QfPC3es3yAmu_mVL6jFbZHrMbU8NOehpibZrbAU3LmrQkO9tAZqMkCkOB_qSJmZDQeOt_biqvwbsA"
+        }
+      },
+      "keySet": {
+        "issuer": "https://orders.acme.example",
+        "version": "1",
+        "keys": [
+          {
+            "kid": "acme-orders-es256-2026-04",
+            "alg": "ES256",
+            "use": "manifest-sign",
+            "publicKey": {
+              "kty": "EC",
+              "x": "mimLJnjcREs5c1gQxNL6Au4aTL5pJHqa6ZCiGXM9dc0",
+              "y": "xHIwK98OwYQ0m1YxCy1NmXxF8S6YkVy9hQXA80rB4Fo",
+              "crv": "P-256"
+            },
+            "notBefore": "2026-01-01T00:00:00.000Z",
+            "notAfter": "2026-12-31T23:59:59.000Z"
+          }
+        ],
+        "revokedKids": []
+      },
+      "expectedVerifyResult": {
+        "ok": true,
+        "kid": "acme-orders-es256-2026-04",
+        "iss": "https://orders.acme.example",
+        "alg": "ES256",
+        "signedAt": "2026-04-28T12:00:00.000Z",
+        "expiresAt": "2026-04-29T12:00:00.000Z"
+      },
+      "notes": [
+        "Use options.now between signedAt and expiresAt (e.g. \"2026-04-28T18:00:00Z\").",
+        "ES256 signatures are non-deterministic (random k); verify the embedded signature, do not compare bytes.",
+        "_test_only_private_key_jwk is provided for cross-language implementers to reproduce the vector. It is NOT part of the v0.5.0 key-set schema and is silently stripped by validateKeySet (Zod default)."
+      ]
+    },
+    {
+      "name": "tampered-manifest",
+      "description": "The Ed25519 vector with the manifest's `description` field mutated after signing. The verifier MUST return ok:false reason:signature-invalid because the canonical bytes no longer match the signed bytes.",
+      "derivedFrom": "ed25519-valid",
+      "tamperingNote": "Tester: take the ed25519-valid vector, mutate any non-signature field of the manifest, and assert verifyManifestSignature returns reason:signature-invalid.",
+      "expectedVerifyResult": {
+        "ok": false,
+        "reason": "signature-invalid"
+      }
+    }
+  ]
+}
