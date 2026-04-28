@@ -19,6 +19,10 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - [`examples/adopter-quickstart/`](examples/adopter-quickstart/) -
   static valid manifest examples for adopter onboarding, including a
   minimal order manifest and a production-shaped safe fixture.
+- OpenAPI converter regression fixtures and tests covering action-name
+  normalization, method-risk inference, request/response schema
+  conversion, skipped methods, metadata inheritance, and current
+  unsupported security/example mapping behavior.
 
 ## [0.3.0] — 2026-04-28 — Production Foundations
 
