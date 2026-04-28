@@ -508,10 +508,19 @@ to the implementation PRs that will follow this design.
 
 Releases land in this order:
 
-1. **v0.4.0 design PR (this).** Docs only. No runtime change.
-2. **v0.4.0 implementation PR 1 — transport abstraction.** Extract
-   `createMcpServer()` factory; refactor stdio entry to call it.
-   Zero behavior change. Adds the factory's tests if any.
+1. **v0.4.0 design PR.** ✅ landed (PR
+   [#23](https://github.com/marmar9615-cloud/agentbridge-protocol/pull/23)).
+   Docs only. No runtime change.
+2. **v0.4.0 implementation PR 1 — transport abstraction.** ✅
+   landed. Extracted `createMcpServer()` factory in
+   [`apps/mcp-server/src/server.ts`](../../apps/mcp-server/src/server.ts);
+   added stdio adapter at
+   [`apps/mcp-server/src/transports/stdio.ts`](../../apps/mcp-server/src/transports/stdio.ts);
+   refactored
+   [`apps/mcp-server/src/index.ts`](../../apps/mcp-server/src/index.ts)
+   to a thin entry that calls `runStdioServer()`. Zero behavior
+   change; verified by the existing `stdio-hygiene.test.ts`
+   subprocess test plus a new in-memory factory test.
 3. **v0.4.0 implementation PR 2 — HTTP transport + bearer auth.**
    Adds the HTTP entry path, env vars, host/auth/origin checks,
    and the Streamable HTTP wiring. All HTTP tests above land
