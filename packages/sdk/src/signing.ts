@@ -166,13 +166,23 @@ export function signManifest(
     );
   }
 
-  // Build a NEW manifest object. Drop any pre-existing signature, then
-  // attach the freshly-signed one. We avoid mutating `manifest`.
+  // Build a NEW manifest object that is fully isolated from `manifest`.
+  // A shallow `{ ...rest, signature }` would still share nested
+  // references — `actions`, `resources`, `auth`, etc. — so a caller
+  // who mutates `manifest.actions[0]` after signing would silently
+  // mutate the returned signed manifest, and the signature would no
+  // longer match the published bytes. Round-tripping through JSON is
+  // the right shape here: it produces exactly the form a publisher
+  // would serve and drops the same `undefined` / function / symbol
+  // values that `canonicalizeManifestForSigning` already discarded
+  // upstream, so the returned manifest matches the bytes the
+  // signature covers.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { signature: _stripped, ...rest } = manifest as AgentBridgeManifest & {
     signature?: unknown;
   };
-  return { ...rest, signature: validated.data } as AgentBridgeManifest;
+  const isolated = JSON.parse(JSON.stringify(rest)) as Record<string, unknown>;
+  return { ...isolated, signature: validated.data } as AgentBridgeManifest;
 }
 
 /**
@@ -239,25 +249,32 @@ function resolveExpiresAt(
   expiresAt: string | Date | undefined,
   expiresInSeconds: number | undefined,
 ): Date {
+  let result: Date;
   if (expiresAt !== undefined) {
-    const d = parseDate(expiresAt, "options.expiresAt");
-    if (d.getTime() <= signedAt.getTime()) {
-      throw new Error(
-        "signManifest: options.expiresAt must be strictly after signedAt",
-      );
-    }
-    return d;
-  }
-  if (expiresInSeconds !== undefined) {
+    result = parseDate(expiresAt, "options.expiresAt");
+  } else if (expiresInSeconds !== undefined) {
     if (!Number.isFinite(expiresInSeconds) || expiresInSeconds <= 0) {
       throw new Error(
         "signManifest: options.expiresInSeconds must be a positive finite number",
       );
     }
-    return new Date(signedAt.getTime() + Math.floor(expiresInSeconds) * 1000);
+    // Use millisecond precision so sub-second values (e.g. 0.5) produce
+    // a 500ms offset rather than truncating to 0 and producing an
+    // already-expired signature. `Math.round` keeps the boundary
+    // predictable; the post-check below catches any rounding that
+    // collapses to zero.
+    const offsetMs = Math.round(expiresInSeconds * 1000);
+    result = new Date(signedAt.getTime() + offsetMs);
+  } else {
+    // Default: 24h validity window.
+    return new Date(signedAt.getTime() + 24 * 60 * 60 * 1000);
   }
-  // Default: 24h validity window.
-  return new Date(signedAt.getTime() + 24 * 60 * 60 * 1000);
+  if (result.getTime() <= signedAt.getTime()) {
+    throw new Error(
+      "signManifest: expiresAt must be strictly after signedAt",
+    );
+  }
+  return result;
 }
 
 function parseDate(input: string | Date, label: string): Date {

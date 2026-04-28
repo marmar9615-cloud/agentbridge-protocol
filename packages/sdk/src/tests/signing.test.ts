@@ -109,6 +109,19 @@ describe("signManifest — does not mutate input", () => {
     expect(signed).not.toBe(manifest);
   });
 
+  it("returned manifest is isolated from input — mutating input.actions after signing does not change signed.actions", () => {
+    const { privateKey } = genEd25519();
+    const manifest = buildManifest();
+    const signed = signManifest(manifest, { kid: "k1", privateKey });
+    const lengthBefore = signed.actions.length;
+    // Tamper with the input AFTER signing. Without a deep clone, the
+    // shallow `{ ...rest, signature }` would share the actions array,
+    // so this push would also appear in `signed.actions` and break
+    // the signature/payload integrity invariant.
+    (manifest.actions as unknown[]).push({ tampered: true } as never);
+    expect(signed.actions.length).toBe(lengthBefore);
+  });
+
   it("does not attach a signature to the input even when one is present", () => {
     const { privateKey } = genEd25519();
     const manifest = buildManifest();
@@ -231,6 +244,34 @@ describe("signManifest — signedAt / expiresAt resolution", () => {
       expiresInSeconds: 3600,
     });
     expect(signed.signature?.expiresAt).toBe("2026-04-28T13:00:00.000Z");
+  });
+
+  it("preserves sub-second expiresInSeconds (0.5s → 500ms)", () => {
+    // Math.floor would truncate 0.5 to 0 and produce expiresAt ===
+    // signedAt — an already-expired signature. We use ms precision
+    // and round, so a 0.5 input lands 500ms after signedAt.
+    const { privateKey } = genEd25519();
+    const signedAt = new Date("2026-04-28T12:00:00.000Z");
+    const signed = signManifest(buildManifest(), {
+      kid: "k1",
+      privateKey,
+      signedAt,
+      expiresInSeconds: 0.5,
+    });
+    expect(signed.signature?.expiresAt).toBe("2026-04-28T12:00:00.500Z");
+  });
+
+  it("rejects expiresInSeconds that rounds to zero millisecond offset", () => {
+    // 0.0001s → round(0.1ms) === 0 → expiresAt would equal signedAt.
+    // The strict-after check catches this and refuses.
+    const { privateKey } = genEd25519();
+    expect(() =>
+      signManifest(buildManifest(), {
+        kid: "k1",
+        privateKey,
+        expiresInSeconds: 0.0001,
+      }),
+    ).toThrow(/strictly after signedAt/);
   });
 
   it("default expiresAt is signedAt + 24h", () => {
