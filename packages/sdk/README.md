@@ -22,6 +22,8 @@ npm install @marmarlabs/agentbridge-sdk @marmarlabs/agentbridge-core zod
   list of actions.
 - `createActionHandler(action, handler)` — wraps a Next.js / Express
   handler with input validation against the declared schema.
+- `validateActionInput(action, input)` — validate unknown input against
+  an action's runtime validator.
 - `z` — re-export of zod for convenience.
 
 ## Quick example
@@ -62,6 +64,26 @@ export const manifest = createAgentBridgeManifest({
 
 See [`examples/nextjs-basic`](https://github.com/marmar9615-cloud/agentbridge-protocol/tree/main/examples/nextjs-basic)
 for a complete Next.js integration walkthrough.
+
+## Public API contract
+
+The v0.x SDK public surface is intentionally small:
+
+- `defineAgentAction`
+- `createAgentBridgeManifest`
+- `createActionHandler`
+- `validateActionInput`
+- `z`
+
+The contract tests in
+[`packages/sdk/src/tests/public-api-contract.test.ts`](https://github.com/marmar9615-cloud/agentbridge-protocol/tree/main/packages/sdk/src/tests/public-api-contract.test.ts)
+pin the runtime behavior adopters rely on: action metadata preservation,
+Zod-to-JSON-Schema manifest output, manifest validation through
+`@marmarlabs/agentbridge-core`, handler input validation, structured
+JSON success/error responses, and the `z` re-export.
+
+For a small module-style example, see
+[`examples/sdk-basic`](https://github.com/marmar9615-cloud/agentbridge-protocol/tree/main/examples/sdk-basic).
 
 ## Status
 
