@@ -343,6 +343,46 @@ describe("canonicalizeManifestForSigning", () => {
     ).toThrow(/manifest object/);
   });
 
+  it("drops undefined optional fields (matches publisher JSON.stringify)", () => {
+    // SDK-built manifests carry `undefined` in optional slots when an
+    // adopter omits them (outputSchema, humanReadableSummaryTemplate, …).
+    // The signed bytes must equal the bytes a verifier would derive
+    // from the manifest as served, which goes through JSON.stringify
+    // and drops these fields. Otherwise no realistic manifest could
+    // ever be signed.
+    const m1 = {
+      name: "Acme",
+      version: "1.0.0",
+      baseUrl: "https://acme.example",
+      contact: undefined, // optional, omitted by adopter
+      auth: undefined,
+      actions: [
+        {
+          name: "x",
+          outputSchema: undefined,
+          humanReadableSummaryTemplate: undefined,
+        },
+      ],
+    } as unknown as Record<string, unknown>;
+    // Same logical document, written without the `undefined` slots.
+    const m2 = {
+      name: "Acme",
+      version: "1.0.0",
+      baseUrl: "https://acme.example",
+      actions: [{ name: "x" }],
+    };
+    expect(canonicalizeManifestForSigning(m1)).toBe(
+      canonicalizeManifestForSigning(m2),
+    );
+  });
+
+  it("strict canonicalizeJson still rejects undefined properties (unchanged from PR #35)", () => {
+    // The relaxation only affects canonicalizeManifestForSigning, which
+    // does an upfront JSON-roundtrip. The strict canonicalizer remains
+    // strict for callers that pass arbitrary JSON values.
+    expect(() => canonicalizeJson({ a: undefined })).toThrow(/undefined/);
+  });
+
   it("preserves a literal __proto__ property in the signed payload", () => {
     // JSON.parse of `{"__proto__": "x"}` yields an object with __proto__
     // as a real own enumerable data property — not a prototype change.

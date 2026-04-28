@@ -207,9 +207,31 @@ function jsonPointerEscape(token: string): string {
  * stripped**. This helper produces the canonical bytes the signer
  * (and verifier) operate on.
  *
- * It does not mutate the input. `signature` is dropped via shallow
- * copy because the field always lives at the top level (per the
- * v0.5.0 design).
+ * Important: the bytes signed here must equal the bytes the verifier
+ * produces from the manifest *as published* — i.e., as JSON the
+ * publisher serves at `/.well-known/agentbridge.json`. JSON
+ * serialization silently drops `undefined` property values, function
+ * values, and symbol-keyed properties, and converts `Date` instances
+ * via `toJSON()`. Manifests built by
+ * [`createAgentBridgeManifest`](../../sdk/src/manifest.ts) routinely
+ * carry `undefined` in optional slots (`outputSchema`,
+ * `humanReadableSummaryTemplate`, etc.), so the signer must match
+ * that drop behavior or every realistic manifest fails
+ * canonicalization with no signature ever produced.
+ *
+ * Strategy: round-trip through `JSON.parse(JSON.stringify(...))` to
+ * normalize the tree to its on-the-wire shape — exactly the bytes a
+ * downstream verifier reads — then run the strict canonicalizer over
+ * the cleaned tree. The strict `canonicalizeJson` continues to refuse
+ * `undefined` / function / symbol / non-finite numbers when called
+ * directly; only this manifest-specific helper does the upfront
+ * cleanup.
+ *
+ * The input manifest is not mutated. The `signature` field is
+ * dropped before the round-trip via a shallow copy on a null-proto
+ * object so a literal `__proto__` field (legal JSON, e.g. produced
+ * by `JSON.parse('{"__proto__": "x"}')`) is preserved instead of
+ * being re-parented by the `__proto__` setter.
  */
 export function canonicalizeManifestForSigning(
   manifest: Record<string, unknown>,
@@ -220,17 +242,7 @@ export function canonicalizeManifestForSigning(
       "",
     );
   }
-  // Shallow copy, drop signature. We don't deep-clone — `canon` doesn't
-  // mutate input, and the canonicalization process re-walks the tree.
-  //
-  // Use `Object.create(null)` so the copy has no prototype. This is
-  // critical for `__proto__`: a literal property named `__proto__`
-  // (legal JSON, e.g. produced by `JSON.parse('{"__proto__": "x"}')`)
-  // assigned via `copy[k] = ...` on a normal object would invoke the
-  // `__proto__` setter and *re-parent the copy*, silently dropping that
-  // field from the signed payload. With a null prototype, the same
-  // assignment produces an ordinary own property, preserving the
-  // signed-vs-canonical-bytes invariant.
+  // Shallow copy, drop signature. Null-proto so `__proto__` survives.
   const copy: Record<string, unknown> = Object.create(null) as Record<
     string,
     unknown
@@ -239,5 +251,21 @@ export function canonicalizeManifestForSigning(
     if (k === "signature") continue;
     copy[k] = manifest[k];
   }
-  return canonicalizeJson(copy);
+
+  // Normalize the tree to its on-the-wire JSON shape. This drops
+  // `undefined` properties, function values, and symbol keys, exactly
+  // as a publisher's `JSON.stringify(manifest)` would when serving the
+  // file. `JSON.stringify` here also fails fast on circular references
+  // and on `BigInt`, which is the safety property we want — those are
+  // not representable in JSON regardless of canonicalization rules.
+  let normalized: unknown;
+  try {
+    normalized = JSON.parse(JSON.stringify(copy));
+  } catch (err) {
+    throw new CanonicalizationError(
+      `could not normalize manifest before canonicalization: ${(err as Error).message}`,
+      "",
+    );
+  }
+  return canonicalizeJson(normalized);
 }
