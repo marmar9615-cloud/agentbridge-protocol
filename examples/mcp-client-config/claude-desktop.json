@@ -2,7 +2,7 @@
   "mcpServers": {
     "agentbridge": {
       "command": "npx",
-      "args": ["@marmar9615-cloud/agentbridge-mcp-server"],
+      "args": ["@marmarlabs/agentbridge-mcp-server"],
       "env": {
         "AGENTBRIDGE_ALLOW_REMOTE": "false"
       }

@@ -1,4 +1,4 @@
-# @marmar9615-cloud/agentbridge-sdk
+# @marmarlabs/agentbridge-sdk
 
 SDK for declaring [AgentBridge](https://github.com/marmar9615-cloud/agentbridge-protocol)
 actions and emitting AgentBridge manifests in any JavaScript/TypeScript
@@ -10,7 +10,7 @@ AI agents to call its actions safely.
 ## Install
 
 ```bash
-npm install @marmar9615-cloud/agentbridge-sdk @marmar9615-cloud/agentbridge-core zod
+npm install @marmarlabs/agentbridge-sdk @marmarlabs/agentbridge-core zod
 ```
 
 ## What's inside
@@ -31,7 +31,7 @@ import {
   defineAgentAction,
   createAgentBridgeManifest,
   z,
-} from "@marmar9615-cloud/agentbridge-sdk";
+} from "@marmarlabs/agentbridge-sdk";
 
 export const inviteUser = defineAgentAction({
   name: "invite_user",

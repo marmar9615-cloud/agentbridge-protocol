@@ -21,7 +21,7 @@ agentbridge/
 │   ├── sdk/        defineAgentAction, manifest builder, route handler wrapper
 │   ├── scanner/    0–100 readiness scoring, structured checks, Playwright probe
 │   ├── openapi/    OpenAPI 3.x → AgentBridge manifest converter
-│   └── cli/        @marmar9615-cloud/agentbridge-cli — scan, validate, init, generate, mcp-config
+│   └── cli/        @marmarlabs/agentbridge-cli — scan, validate, init, generate, mcp-config
 ├── apps/
 │   ├── demo-app/   Next.js fake order app (port 3000) — manifest + actions
 │   ├── studio/     Next.js dashboard (port 3001) — scan, exercise, audit
@@ -34,17 +34,17 @@ agentbridge/
 
 ## Package responsibilities
 
-Publishable packages are scoped `@marmar9615-cloud/agentbridge-*`; apps
+Publishable packages are scoped `@marmarlabs/agentbridge-*`; apps
 keep an unscoped name and stay private. The `@agentbridge` scope is
 unowned on npm and is intentionally not used.
 
 | Package | Owns |
 |---|---|
-| `@marmar9615-cloud/agentbridge-core` | The contract. All schemas, validation, audit log. |
-| `@marmar9615-cloud/agentbridge-sdk` | App author DX. Zod-first action definitions, route handler glue. |
-| `@marmar9615-cloud/agentbridge-scanner` | Audit/score any URL. Structured `checks[]` + grouped recommendations. |
-| `@marmar9615-cloud/agentbridge-openapi` | OpenAPI-to-manifest conversion logic. CLI uses it. |
-| `@marmar9615-cloud/agentbridge-cli` | `agentbridge` CLI. Wraps scanner/openapi/core. |
+| `@marmarlabs/agentbridge-core` | The contract. All schemas, validation, audit log. |
+| `@marmarlabs/agentbridge-sdk` | App author DX. Zod-first action definitions, route handler glue. |
+| `@marmarlabs/agentbridge-scanner` | Audit/score any URL. Structured `checks[]` + grouped recommendations. |
+| `@marmarlabs/agentbridge-openapi` | OpenAPI-to-manifest conversion logic. CLI uses it. |
+| `@marmarlabs/agentbridge-cli` | `agentbridge` CLI. Wraps scanner/openapi/core. |
 
 cli, openapi, scanner, and sdk all depend on core. Don't introduce
 circular deps.

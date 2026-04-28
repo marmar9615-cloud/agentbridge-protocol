@@ -73,7 +73,7 @@ Eyeball every line.
 After each publish, confirm:
 
 ```bash
-npm view @marmar9615-cloud/agentbridge-core version
+npm view @marmarlabs/agentbridge-core version
 # should print the version you just published
 ```
 
@@ -120,8 +120,8 @@ graduate to a non-beta version.
 # Install in a throwaway dir to confirm the published packages resolve
 mkdir /tmp/abg-postpublish && cd /tmp/abg-postpublish
 npm init -y
-npm install @marmar9615-cloud/agentbridge-cli
-npx @marmar9615-cloud/agentbridge-cli version  # should print the version
+npm install @marmarlabs/agentbridge-cli
+npx @marmarlabs/agentbridge-cli version  # should print the version
 ```
 
 If that succeeds, announce the release on whatever channels are

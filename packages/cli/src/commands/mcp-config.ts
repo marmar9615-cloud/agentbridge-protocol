@@ -11,7 +11,7 @@ export function runMcpConfig(): number {
     mcpServers: {
       agentbridge: {
         command: "npx",
-        args: ["@marmar9615-cloud/agentbridge-mcp-server"],
+        args: ["@marmarlabs/agentbridge-mcp-server"],
       },
     },
   };

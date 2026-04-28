@@ -1,4 +1,4 @@
-# @marmar9615-cloud/agentbridge-core
+# @marmarlabs/agentbridge-core
 
 Core types, schemas, validation, and audit utilities for [AgentBridge](https://github.com/marmar9615-cloud/agentbridge-protocol)
 — an AI-native action layer for web apps.
@@ -9,7 +9,7 @@ the types and validators it exports.
 ## Install
 
 ```bash
-npm install @marmar9615-cloud/agentbridge-core
+npm install @marmarlabs/agentbridge-core
 ```
 
 ## What's inside
@@ -32,7 +32,7 @@ npm install @marmar9615-cloud/agentbridge-core
 ## Quick example
 
 ```ts
-import { validateManifest } from "@marmar9615-cloud/agentbridge-core";
+import { validateManifest } from "@marmarlabs/agentbridge-core";
 
 const result = validateManifest(rawJson);
 if (!result.ok) {

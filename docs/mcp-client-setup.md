@@ -6,7 +6,7 @@ local stdio process directly.
 ## Quick check from the CLI
 
 ```bash
-npx @marmar9615-cloud/agentbridge-cli mcp-config
+npx @marmarlabs/agentbridge-cli mcp-config
 ```
 
 prints two snippets — pick the one that fits your client and paste it into
@@ -25,7 +25,7 @@ its config file.
   "mcpServers": {
     "agentbridge": {
       "command": "npx",
-      "args": ["@marmar9615-cloud/agentbridge-mcp-server"],
+      "args": ["@marmarlabs/agentbridge-mcp-server"],
       "env": {
         "AGENTBRIDGE_ALLOW_REMOTE": "false"
       }
@@ -98,7 +98,7 @@ You should see the agent:
 ## Troubleshooting
 
 **The server starts but no tools appear**
-- For Option A, run `npx @marmar9615-cloud/agentbridge-mcp-server < /dev/null` and confirm it exits cleanly.
+- For Option A, run `npx @marmarlabs/agentbridge-mcp-server < /dev/null` and confirm it exits cleanly.
 - For Option B, confirm the path is absolute and points at `apps/mcp-server/dist/index.js` (the compiled bin, not the TS source). Run `node /your/path/apps/mcp-server/dist/index.js < /dev/null` directly.
 
 **`Only loopback URLs allowed` errors**

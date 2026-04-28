@@ -1,6 +1,6 @@
 import { z, type ZodTypeAny } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
-import type { AgentAction, ActionExample, PermissionPolicy } from "@marmar9615-cloud/agentbridge-core";
+import type { AgentAction, ActionExample, PermissionPolicy } from "@marmarlabs/agentbridge-core";
 
 export interface DefineAgentActionConfig {
   name: string;

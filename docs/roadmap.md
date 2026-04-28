@@ -4,7 +4,7 @@ A living document. Anything in here is a direction, not a commitment.
 
 ## Phase 3A — Public beta release hardening (shipped 0.2.0-beta)
 
-- [x] Publishable npm packages on `@marmar9615-cloud/agentbridge-*` scope
+- [x] Publishable npm packages on `@marmarlabs/agentbridge-*` scope
 - [x] tsup build pipeline producing `dist/` outputs for all publishable packages
 - [x] CI typechecks all 6 packages, builds, runs `pack:dry-run`
 - [x] External-adopter smoke script (`npm run smoke:external`)

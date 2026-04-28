@@ -58,12 +58,12 @@ const STARTER_MANIFEST = {
 };
 
 const TS_CONFIG_TEMPLATE = `// AgentBridge config — edit to declare your app's actions, then run:
-//   npx @marmar9615-cloud/agentbridge-cli validate ./agentbridge.config.ts
+//   npx @marmarlabs/agentbridge-cli validate ./agentbridge.config.ts
 //
 // In a Next.js app, generate /.well-known/agentbridge.json from this:
-//   import { defineAgentAction, createAgentBridgeManifest, z } from "@marmar9615-cloud/agentbridge-sdk";
+//   import { defineAgentAction, createAgentBridgeManifest, z } from "@marmarlabs/agentbridge-sdk";
 
-import { defineAgentAction, createAgentBridgeManifest, z } from "@marmar9615-cloud/agentbridge-sdk";
+import { defineAgentAction, createAgentBridgeManifest, z } from "@marmarlabs/agentbridge-sdk";
 
 export const ping = defineAgentAction({
   name: "ping",
@@ -148,7 +148,7 @@ export async function runInit(opts: InitOptions): Promise<number> {
   }
 
   process.stdout.write(
-    `\n${c.bold("Next steps")}\n  1. Edit ${path.relative(cwd, configPath)} to declare your real actions.\n  2. ${c.cyan("npx @marmar9615-cloud/agentbridge-cli validate ./public/.well-known/agentbridge.json")}\n  3. ${c.cyan("npx @marmar9615-cloud/agentbridge-cli scan http://localhost:3000")}\n`,
+    `\n${c.bold("Next steps")}\n  1. Edit ${path.relative(cwd, configPath)} to declare your real actions.\n  2. ${c.cyan("npx @marmarlabs/agentbridge-cli validate ./public/.well-known/agentbridge.json")}\n  3. ${c.cyan("npx @marmarlabs/agentbridge-cli scan http://localhost:3000")}\n`,
   );
 
   return wrote === 0 && skipped > 0 ? 1 : 0;

@@ -1,4 +1,4 @@
-import { validateManifest, type AgentBridgeManifest } from "@marmar9615-cloud/agentbridge-core";
+import { validateManifest, type AgentBridgeManifest } from "@marmarlabs/agentbridge-core";
 import {
   scoreManifest,
   type ScannerCheck,

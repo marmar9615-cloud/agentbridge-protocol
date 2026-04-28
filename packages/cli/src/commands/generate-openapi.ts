@@ -3,7 +3,7 @@ import path from "node:path";
 import {
   parseOpenApiDocument,
   generateManifestFromOpenApi,
-} from "@marmar9615-cloud/agentbridge-openapi";
+} from "@marmarlabs/agentbridge-openapi";
 import { c } from "../colors";
 
 export interface GenerateOpenApiOptions {

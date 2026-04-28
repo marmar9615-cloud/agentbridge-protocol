@@ -12,7 +12,7 @@ Nothing in here actually publishes — it's the gate.
       consistent (all six should match the new version):
       `packages/{core,sdk,scanner,openapi,cli}` and `apps/mcp-server`.
 - [ ] Workspace dependency ranges in those `package.json` files match
-      (e.g., `"@marmar9615-cloud/agentbridge-core": "^0.2.0"`).
+      (e.g., `"@marmarlabs/agentbridge-core": "^0.2.0"`).
 - [ ] Apps `apps/{demo-app,studio}` are still `private: true` and don't
       have any `npm publish`-able shape.
 - [ ] Root `package.json` is still `private: true`.

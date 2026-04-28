@@ -1,43 +1,36 @@
-# Public beta status (v0.2.0-beta)
+# Status (v0.2.0)
 
-AgentBridge is in public beta. This document is the honest answer to
-"what can I count on?"
+> This document used to describe the v0.2.0-beta source-only state.
+> AgentBridge is now published as a stable v0.2.0 release on npm under
+> the `@marmarlabs` scope. For the current release notes, install
+> commands, and the honest scope/limitations write-up, see
+> [docs/releases/v0.2.0.md](releases/v0.2.0.md).
 
-> **Distribution: source-only at the time of v0.2.0-beta.** The
-> `@marmar9615-cloud/agentbridge-*` packages are *prepared* for npm
-> publishing — CI builds them and `npm pack --dry-run` validates each
-> tarball — but they **have not been published to npm yet**. Anything
-> below that names an `npx @marmar9615-cloud/...` command works
-> *after* npm publishing happens (a separate manual step; see
-> [docs/npm-publishing.md](npm-publishing.md)). Today, run these via a
-> local checkout.
+## What you can do today
 
-## What you can do today (from a local checkout)
-
-- **Author actions** — declare typed actions in TypeScript with the
-  SDK package (`packages/sdk`), get a JSON Schema-backed manifest for
+- **Author actions** — declare typed actions in TypeScript with
+  `@marmarlabs/agentbridge-sdk`, get a JSON Schema-backed manifest for
   free.
-- **Score a URL** — `npm run dev:cli -- scan <url>` (today) or
-  `npx @marmar9615-cloud/agentbridge-cli scan <url>` (after npm
-  publish) returns a 0–100 readiness score with grouped recommendations.
-- **Validate a manifest** — `npm run dev:cli -- validate <path-or-url>`.
-- **Convert OpenAPI** — `npm run dev:cli -- generate openapi <doc>`
-  produces a draft AgentBridge manifest with risk inferred per HTTP
-  method.
-- **Run an MCP server** — `npm run dev:mcp` (today) speaks stdio MCP,
-  exposes tools/resources/prompts to AI clients, enforces a confirmation
-  gate, origin pinning, URL allowlist, and an audit log with redaction.
-  After publishing, the same server is available via
-  `npx @marmar9615-cloud/agentbridge-mcp-server`.
-- **Try Studio locally** — `npm run dev:studio` for a developer
-  dashboard at `:3001`.
+- **Score a URL** — `npx @marmarlabs/agentbridge-cli scan <url>` returns
+  a 0–100 readiness score with grouped recommendations.
+- **Validate a manifest** — `npx @marmarlabs/agentbridge-cli validate
+  <path-or-url>`.
+- **Convert OpenAPI** — `npx @marmarlabs/agentbridge-cli generate
+  openapi <doc>` produces a draft AgentBridge manifest with risk
+  inferred per HTTP method.
+- **Run an MCP server** — `npx @marmarlabs/agentbridge-mcp-server`
+  speaks stdio MCP, exposes tools/resources/prompts to AI clients,
+  enforces a confirmation gate, origin pinning, URL allowlist, and an
+  audit log with redaction.
+- **Try Studio locally** — clone the repo and `npm run dev:studio` for
+  a developer dashboard at `:3001`.
 - **Run the demo locally** — `npm run dev:demo` for the simulated
   order-management surface at `:3000`.
 
-## What's NOT in 0.2.0-beta
+## What's NOT in 0.2.0
 
-These are explicitly **out of scope** for the beta and on the roadmap
-for production readiness:
+These are explicitly **out of scope** for the v0.2.0 line and on the
+roadmap for production readiness:
 
 - **Signed manifests.** A consumer cannot cryptographically verify a
   manifest's publisher. Treat manifests as untrusted input from any
@@ -62,7 +55,7 @@ for production readiness:
 See [docs/roadmap.md](roadmap.md) for the full picture of what's
 shipped and what's planned.
 
-## Safety guarantees that ARE in 0.2.0-beta
+## Safety guarantees that ARE in 0.2.0
 
 These are enforced by the bundled MCP server today, with tests:
 
@@ -75,7 +68,7 @@ These are enforced by the bundled MCP server today, with tests:
 | Demo-app destructive actions are simulated (`{ simulated: true, ... }`) — no real payment processor or external service is touched | `apps/demo-app/lib/actions.ts` | (manifest-level test) |
 | Inputs are validated against the action's JSON Schema before any outbound call | `apps/mcp-server/src/tools.ts` (Ajv) | `apps/mcp-server/src/tests/call-action.test.ts` |
 
-## What "beta" means
+## Versioning policy
 
 - **Manifest schema** is stable for all 0.x releases. Field additions
   are non-breaking; field removals or shape changes will bump to 1.0.

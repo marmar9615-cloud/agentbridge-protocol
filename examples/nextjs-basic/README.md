@@ -4,7 +4,7 @@ This is a documentation-style example. The full runnable demo lives at
 [`apps/demo-app/`](../../apps/demo-app); the snippets here are the minimum
 you need to expose AgentBridge from any existing Next.js (App Router) app.
 
-> **Note:** `@marmar9615-cloud/agentbridge-*` is **not yet published to
+> **Note:** `@marmarlabs/agentbridge-*` is **not yet published to
 > npm** at v0.2.0-beta — the packages are publish-ready but distribution
 > is source-only at this stage (see
 > [docs/public-beta.md](../../docs/public-beta.md)). To run this
@@ -16,7 +16,7 @@ you need to expose AgentBridge from any existing Next.js (App Router) app.
 ## 1. Install the SDK
 
 ```bash
-npm install @marmar9615-cloud/agentbridge-sdk @marmar9615-cloud/agentbridge-core zod
+npm install @marmarlabs/agentbridge-sdk @marmarlabs/agentbridge-core zod
 ```
 
 ## 2. Define your actions
@@ -25,7 +25,7 @@ Create `lib/agentbridge.ts`:
 
 ```ts
 // lib/agentbridge.ts
-import { defineAgentAction, createAgentBridgeManifest, z } from "@marmar9615-cloud/agentbridge-sdk";
+import { defineAgentAction, createAgentBridgeManifest, z } from "@marmarlabs/agentbridge-sdk";
 
 export const listUsers = defineAgentAction({
   name: "list_users",
@@ -111,7 +111,7 @@ export async function GET(req: NextRequest) {
 `app/api/agentbridge/actions/[actionName]/route.ts`:
 ```ts
 import { NextRequest } from "next/server";
-import { createActionHandler } from "@marmar9615-cloud/agentbridge-sdk";
+import { createActionHandler } from "@marmarlabs/agentbridge-sdk";
 import { ALL } from "../../../../lib/agentbridge";
 
 const handlers = {
@@ -153,7 +153,7 @@ function camelCase(s: string) {
 ```bash
 npm run dev
 curl -s http://localhost:3000/.well-known/agentbridge.json | jq .
-npx @marmar9615-cloud/agentbridge-cli scan http://localhost:3000
+npx @marmarlabs/agentbridge-cli scan http://localhost:3000
 ```
 
 You should see your two actions, with `invite_user` flagged as medium-risk

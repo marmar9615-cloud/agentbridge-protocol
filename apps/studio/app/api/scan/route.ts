@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { scanUrl } from "@marmar9615-cloud/agentbridge-scanner";
+import { scanUrl } from "@marmarlabs/agentbridge-scanner";
 
 export const dynamic = "force-dynamic";
 

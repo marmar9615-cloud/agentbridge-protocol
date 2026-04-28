@@ -1,4 +1,4 @@
-# @marmar9615-cloud/agentbridge-mcp-server
+# @marmarlabs/agentbridge-mcp-server
 
 stdio MCP server that exposes [AgentBridge](https://github.com/marmar9615-cloud/agentbridge-protocol)
 actions to AI agents (Claude Desktop, Cursor, custom clients) with
@@ -7,9 +7,9 @@ confirmation gates, origin pinning, and audit logging.
 ## Install
 
 ```bash
-npm install -g @marmar9615-cloud/agentbridge-mcp-server
+npm install -g @marmarlabs/agentbridge-mcp-server
 # or run directly:
-npx @marmar9615-cloud/agentbridge-mcp-server
+npx @marmarlabs/agentbridge-mcp-server
 ```
 
 ## Wire it up
@@ -23,7 +23,7 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
   "mcpServers": {
     "agentbridge": {
       "command": "npx",
-      "args": ["@marmar9615-cloud/agentbridge-mcp-server"]
+      "args": ["@marmarlabs/agentbridge-mcp-server"]
     }
   }
 }
