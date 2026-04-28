@@ -22,10 +22,17 @@ The repo ships:
 ## Current state
 
 - npm scope: **`@marmarlabs`** (do not change).
-- Latest published release: **v0.2.2** on npm and on GitHub
-  (Latest, stable). v0.3.0 is in progress on this branch
-  ("Production Foundations" — docs, stricter remote allowlist,
-  configurable bounds, draft Trusted Publishing workflow).
+- Latest published release: **v0.3.0** on npm and on GitHub
+  (Latest, stable; published via npm Trusted Publishing with SLSA
+  build provenance). The v0.2.x line shipped first public release,
+  docs cleanup, and Codex onboarding; v0.3.0 added production
+  foundations (stricter remote allowlist, configurable bounds,
+  Trusted Publishing workflow, threat model, v1.0 readiness
+  checklist, stdout-hygiene test).
+- Currently in flight: **v0.4.0** — opt-in HTTP MCP transport with
+  authentication and Origin validation. stdio remains the default.
+  Design in [docs/designs/http-mcp-transport-auth.md](docs/designs/http-mcp-transport-auth.md);
+  ADR in [docs/adr/0001-http-mcp-transport.md](docs/adr/0001-http-mcp-transport.md).
 - Manifest schema: v0.1, stable for the v0.x line. Will be frozen
   for v1.x per [docs/v1-readiness.md](docs/v1-readiness.md).
 
@@ -163,7 +170,11 @@ If a change weakens any of these, stop and ask before continuing.
   — every env var the MCP server honors.
 - [docs/trusted-publishing.md](docs/trusted-publishing.md) — npm
   Trusted Publishing plan and draft workflow.
+- [docs/designs/http-mcp-transport-auth.md](docs/designs/http-mcp-transport-auth.md)
+  — v0.4.0 HTTP MCP transport + auth design.
+- [docs/adr/0001-http-mcp-transport.md](docs/adr/0001-http-mcp-transport.md)
+  — ADR for the HTTP transport decision.
 - [docs/roadmap.md](docs/roadmap.md) — what's planned beyond v0.3.x
-  (signed manifests, HTTP MCP transport, OAuth scope enforcement,
+  (HTTP MCP transport, signed manifests, OAuth scope enforcement,
   distributed audit storage, …).
 - [SECURITY.md](SECURITY.md) — how to report security issues.

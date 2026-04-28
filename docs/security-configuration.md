@@ -252,6 +252,38 @@ AGENTBRIDGE_ACTION_TIMEOUT_MS=10 \
 # [agentbridge] AGENTBRIDGE_MAX_RESPONSE_BYTES=999999999 is outside [1024, 10485760]; clamped to 10485760.
 ```
 
+## Forthcoming env vars (v0.4.0 — HTTP transport)
+
+The v0.4.0 release line will add an opt-in HTTP MCP transport.
+The full env-var table for HTTP mode lives in the design doc
+([designs/http-mcp-transport-auth.md §5](designs/http-mcp-transport-auth.md#5-proposed-env-vars-and-flags))
+and the ADR
+([adr/0001-http-mcp-transport.md](adr/0001-http-mcp-transport.md)).
+
+In short, when v0.4.0 ships, additional knobs will appear under
+the `AGENTBRIDGE_HTTP_*` namespace:
+
+- `AGENTBRIDGE_TRANSPORT` — `stdio` (default) or `http`.
+- `AGENTBRIDGE_HTTP_HOST` — bind interface; default `127.0.0.1`.
+- `AGENTBRIDGE_HTTP_PORT` — TCP port; default `3333`.
+- `AGENTBRIDGE_HTTP_PATH` — endpoint path; default `/mcp`.
+- `AGENTBRIDGE_HTTP_AUTH_TOKEN` — static bearer token; required
+  for HTTP unless `AGENTBRIDGE_HTTP_REQUIRE_AUTH=false` *and* the
+  bind is loopback.
+- `AGENTBRIDGE_HTTP_REQUIRE_AUTH` — default `true`. Setting it to
+  `false` is allowed only on loopback and emits a stderr warning.
+- `AGENTBRIDGE_HTTP_ALLOWED_ORIGINS` — comma-separated inbound
+  `Origin` allowlist; required for non-loopback bind.
+- `AGENTBRIDGE_HTTP_PUBLIC_URL` — canonical server URL for
+  audit/metadata.
+- `AGENTBRIDGE_HTTP_ENABLE_SSE` — default `false`; enables
+  `GET /mcp` for Streamable HTTP / SSE session resumption.
+
+These names are tentative until the implementation PR lands.
+**The inbound `AGENTBRIDGE_HTTP_ALLOWED_ORIGINS` is independent
+from the outbound `AGENTBRIDGE_ALLOWED_TARGET_ORIGINS`** — they
+gate different traffic and are not interchangeable.
+
 ## See also
 
 - [production-readiness.md](production-readiness.md) — the
@@ -261,3 +293,7 @@ AGENTBRIDGE_ACTION_TIMEOUT_MS=10 \
   defending against.
 - [v1-readiness.md](v1-readiness.md) — the bar these knobs are
   helping us reach.
+- [designs/http-mcp-transport-auth.md](designs/http-mcp-transport-auth.md)
+  — the v0.4.0 HTTP transport design.
+- [adr/0001-http-mcp-transport.md](adr/0001-http-mcp-transport.md)
+  — the ADR.

@@ -370,28 +370,52 @@ For each threat:
 
 ### T14. Future HTTP transport risks
 
-When the HTTP MCP transport ships (planned `v0.4.0`), additional
-threats apply:
+The HTTP MCP transport is designed in
+[designs/http-mcp-transport-auth.md](designs/http-mcp-transport-auth.md)
+(ADR: [adr/0001-http-mcp-transport.md](adr/0001-http-mcp-transport.md))
+and will ship in `v0.4.0`. The mitigations called out below are the
+ones the design commits to up front; the implementation PRs will
+ship the tests that prove each one. Additional threats that apply
+when the HTTP transport ships:
 
 - **Unauthenticated access.** An open HTTP endpoint exposing
   AgentBridge tools is equivalent to remote shell access for any
-  agent. Requires bearer-token auth from day one.
+  agent. Requires bearer-token auth from day one. The design
+  ([§6](designs/http-mcp-transport-auth.md#6-auth-model)) makes
+  auth mandatory and fails public bind without auth at startup.
 - **CSRF / cross-origin.** HTTP endpoints must reject requests from
-  unintended origins.
+  unintended origins. The design
+  ([§7](designs/http-mcp-transport-auth.md#7-origin-and-cors-model))
+  requires exact-origin match against
+  `AGENTBRIDGE_HTTP_ALLOWED_ORIGINS`, no wildcard, no prefix match.
 - **TLS termination boundary.** A reverse proxy that terminates TLS
-  becomes a credential boundary.
+  becomes a credential boundary. The design defaults to loopback
+  bind and requires operators to opt into public bind explicitly
+  ([§8](designs/http-mcp-transport-auth.md#8-host-binding-model)).
 - **Multi-tenant isolation.** A single HTTP server process serving
   multiple tenants needs strict per-request scope checks and
-  per-tenant data-dir routing.
+  per-tenant data-dir routing. The design preserves the v0.3.0
+  recommendation of one process per tenant; multi-tenant inside one
+  process is deferred to a later release.
+- **Token leakage via query string.** Tokens in URLs end up in
+  proxy logs, browser histories, and server access logs. The design
+  rejects query-string tokens with a `400` before any tool runs.
+- **Caller-identity attribution.** Audit events for HTTP calls
+  must record `transport: "http"` and a non-secret caller
+  identifier so post-incident review can tell HTTP from stdio
+  ([§11](designs/http-mcp-transport-auth.md#11-audit-model)). The
+  bearer token itself is never written to audit.
 
-We are documenting these now so the HTTP transport ships with
-mitigations rather than retrofitting them. The full design will
-land alongside the implementation.
+We documented these in v0.3.0 so the HTTP transport ships with
+mitigations rather than retrofitting them; v0.4.0's design now
+turns each into a concrete commitment.
 
 - **v1.0 target (when HTTP ships).** Mandatory bearer-token auth,
   scope-checked tools, per-tenant audit/confirmation/idempotency
   segregation, signed-manifest verification.
-- **Test coverage.** N/A until implemented.
+- **Test coverage.** Implementation PRs will deliver the tests
+  enumerated in
+  [designs/http-mcp-transport-auth.md §12](designs/http-mcp-transport-auth.md#12-testing-plan).
 
 ---
 

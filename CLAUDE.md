@@ -173,3 +173,7 @@ Every new feature ships with a test. Categories of tests we currently maintain:
   every MCP server env var.
 - [docs/trusted-publishing.md](docs/trusted-publishing.md) — the npm
   publishing path toward v1.0 (Trusted Publishing + provenance).
+- [docs/designs/http-mcp-transport-auth.md](docs/designs/http-mcp-transport-auth.md)
+  — v0.4.0 HTTP MCP transport + auth design.
+- [docs/adr/0001-http-mcp-transport.md](docs/adr/0001-http-mcp-transport.md)
+  — ADR for adding the opt-in HTTP MCP transport.
