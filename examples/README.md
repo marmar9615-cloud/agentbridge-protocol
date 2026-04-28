@@ -5,6 +5,7 @@ Self-contained examples showing how to integrate AgentBridge in different contex
 | Directory | What it shows |
 |---|---|
 | [`nextjs-basic/`](./nextjs-basic) | Minimal Next.js integration using `@marmarlabs/agentbridge-sdk`. |
+| [`sdk-basic/`](./sdk-basic) | Lightweight SDK module showing action definitions, manifest creation, and validation. |
 | [`adopter-quickstart/`](./adopter-quickstart) | Static manifest examples for adding AgentBridge to an existing app. |
 | [`openapi-store/`](./openapi-store) | OpenAPI document → AgentBridge manifest via the CLI. |
 | [`openapi-regression/`](./openapi-regression) | OpenAPI converter regression fixtures for stable v1.0 mapping behavior. |
