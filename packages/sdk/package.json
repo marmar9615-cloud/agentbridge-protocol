@@ -1,6 +1,6 @@
 {
   "name": "@marmarlabs/agentbridge-sdk",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "SDK for declaring AgentBridge actions and emitting AgentBridge manifests in any JavaScript/TypeScript app.",
   "license": "Apache-2.0",
   "repository": {
@@ -29,7 +29,7 @@
     "build": "tsup"
   },
   "dependencies": {
-    "@marmarlabs/agentbridge-core": "^0.2.0",
+    "@marmarlabs/agentbridge-core": "^0.3.0",
     "zod": "^3.23.0",
     "zod-to-json-schema": "^3.23.0"
   }

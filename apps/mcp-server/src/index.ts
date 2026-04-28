@@ -26,7 +26,7 @@ import { PROMPTS, renderPrompt } from "./prompts";
 import { STATIC_RESOURCES, readResource } from "./resources";
 
 const server = new Server(
-  { name: "agentbridge", version: "0.2.0" },
+  { name: "agentbridge", version: "0.3.0" },
   { capabilities: { tools: {}, resources: {}, prompts: {} } },
 );
 

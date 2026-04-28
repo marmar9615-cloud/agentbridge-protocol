@@ -74,7 +74,11 @@ export function runMcpConfig(): number {
   out.write(indentBlock(JSON.stringify(localCheckoutConfig, null, 2)) + "\n\n");
 
   out.write(
-    `${c.bold("Safety reminder")}\n  ${c.dim("Loopback-only by default. Set AGENTBRIDGE_ALLOW_REMOTE=true to permit non-localhost URLs.")}\n  ${c.dim("Medium/high-risk actions require confirmationApproved + a single-use confirmationToken.")}\n`,
+    `${c.bold("Safety reminder")}\n` +
+      `  ${c.dim("Loopback-only by default. Production-recommended: set AGENTBRIDGE_ALLOWED_TARGET_ORIGINS=https://app.example.com,https://admin.example.com.")}\n` +
+      `  ${c.dim("Broad escape hatch: AGENTBRIDGE_ALLOW_REMOTE=true (emits a stderr warning).")}\n` +
+      `  ${c.dim("Medium/high-risk actions require confirmationApproved + a single-use confirmationToken.")}\n` +
+      `  ${c.dim("See docs/security-configuration.md for the full env-var reference.")}\n`,
   );
 
   return 0;

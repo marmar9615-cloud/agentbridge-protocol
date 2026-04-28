@@ -92,7 +92,14 @@ for everything else.
 - **Origin pinning** — action endpoints must share origin with the
   manifest's `baseUrl`. Cross-origin calls are rejected.
 - **Loopback-only by default** — only `localhost`/`127.0.0.1`/`::1` URLs
-  are allowed. Set `AGENTBRIDGE_ALLOW_REMOTE=true` to permit other hosts.
+  are allowed. Production-recommended: set
+  `AGENTBRIDGE_ALLOWED_TARGET_ORIGINS=https://app.example.com,https://admin.example.com`
+  for an exact-origin allowlist. Broad escape hatch:
+  `AGENTBRIDGE_ALLOW_REMOTE=true` (emits a one-time stderr warning).
+- **Configurable bounds** — `AGENTBRIDGE_ACTION_TIMEOUT_MS`,
+  `AGENTBRIDGE_MAX_RESPONSE_BYTES`, `AGENTBRIDGE_CONFIRMATION_TTL_SECONDS`
+  are clamped to safe ranges. See
+  [docs/security-configuration.md](https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/docs/security-configuration.md).
 - **Idempotency** — pass `idempotencyKey` to safely retry a `call_action`
   request; the same key+input replays the prior result.
 - **Audit redaction** — `authorization`, `cookie`, `password`, `token`,
@@ -106,12 +113,20 @@ example manifests) and pre-canned prompts for common workflows.
 
 ## Status
 
-Public release. v0.2.2 is a docs-only release that adds OpenAI Codex
-onboarding (CLI + `config.toml` examples, project-scoped config,
-[AGENTS.md](https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/AGENTS.md))
-on top of v0.2.1 — no code or behavior changes. AgentBridge is
-suitable for local development, manifest authoring, scanner workflows,
-OpenAPI import, and MCP experiments. It is not yet production security
+Public release. **v0.3.0** is the "Production Foundations" release:
+stricter remote-target allowlist, configurable timeouts/TTLs, an
+MCP stdout-hygiene test, a threat model, a v1.0 readiness checklist,
+a draft npm Trusted Publishing workflow, and updated docs. **Not
+yet v1.0** — see the
+[v1-readiness checklist](https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/docs/v1-readiness.md)
+for what we still owe before declaring production-ready.
+
+AgentBridge is suitable for local development, manifest authoring,
+scanner workflows, OpenAPI import, and MCP experiments. With the
+v0.3.0 controlled-staging configuration (see
+[production-readiness.md](https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/docs/production-readiness.md))
+it is also suitable for internal staging deployments behind an
+explicit origin allowlist. It is not yet production security
 infrastructure.
 
 HTTP transport, signed manifests, OAuth scope enforcement, and
