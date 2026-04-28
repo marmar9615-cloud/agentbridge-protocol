@@ -30,7 +30,7 @@ checklist in [v1-readiness.md](v1-readiness.md). v0.3.0 is in flight
 on the `feature/v030-production-foundations` branch and is **not**
 the v1.0 release — it's the foundation.
 
-### v0.3.0 — Production Foundations (in flight)
+### v0.3.0 — Production Foundations (shipped)
 
 - [x] Stricter remote-target allowlist (`AGENTBRIDGE_ALLOWED_TARGET_ORIGINS`,
       exact-origin match, prefix-attack tests).
@@ -49,16 +49,22 @@ the v1.0 release — it's the foundation.
       dry-run by default; activates once each npm package has a
       Trusted Publisher entry).
 
-### v0.4.0 — HTTP MCP transport + auth design/implementation
+### v0.4.0 — HTTP MCP transport + auth (in flight)
 
+- [x] Design doc + ADR
+      ([designs/http-mcp-transport-auth.md](designs/http-mcp-transport-auth.md),
+      [adr/0001-http-mcp-transport.md](adr/0001-http-mcp-transport.md)).
 - [ ] Authenticated HTTP MCP transport with the same confirmation
       gate, origin pinning, and audit redaction as the stdio path.
 - [ ] Caller-identity propagation into audit events (so events
       record *which agent / which user* invoked the action).
-- [ ] OAuth/bearer auth design completed; reference implementation
-      lands.
+- [ ] Static bearer-token auth (Phase 1 per the design).
+      Origin allowlist enforced. Loopback bind by default.
+- [ ] OAuth 2.1 resource-server design left in place; full
+      implementation deferred to a later v0.x release.
 - [ ] HTTP-transport-specific threat-model section
-      ([T14 in threat-model.md](threat-model.md#t14-future-http-transport-risks)).
+      ([T14 in threat-model.md](threat-model.md#t14-future-http-transport-risks))
+      becomes the implementation work.
 
 ### v0.5.0 — Signed manifests
 

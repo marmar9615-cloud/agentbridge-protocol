@@ -106,13 +106,30 @@ This is the well-tested mode. No additional configuration required.
   boundary** — anyone who can edit it can launch a different
   binary. Treat it like a Git hook or a launchd plist.
 
-### MCP HTTP mode (planned)
+### MCP HTTP mode (designed; implementation pending)
 
-Not implemented in v0.3.0. The roadmap targets v0.4.0 for an
-authenticated HTTP MCP transport with the same confirmation gate
-and origin pinning as the stdio path. See
-[roadmap.md](roadmap.md) and the "Future HTTP transport risks"
-section of [threat-model.md](threat-model.md).
+Not implemented in v0.3.0. The full design landed for v0.4.0 in
+[designs/http-mcp-transport-auth.md](designs/http-mcp-transport-auth.md)
+(ADR: [adr/0001-http-mcp-transport.md](adr/0001-http-mcp-transport.md)).
+Headline properties of the planned mode:
+
+- stdio remains the default. HTTP is opt-in via
+  `AGENTBRIDGE_TRANSPORT=http` or `--transport http`.
+- Static bearer-token auth is required for HTTP (Phase 1). Tokens
+  in URL query strings are rejected with `400`.
+- The `Origin` header is validated against an exact-origin
+  allowlist (`AGENTBRIDGE_HTTP_ALLOWED_ORIGINS`). Unknown origins
+  respond `403`.
+- Default bind is `127.0.0.1`. Public bind requires both auth
+  and an Origin allowlist; the server fails hard at startup if
+  either is missing.
+- The same confirmation gate, origin pinning, target-origin
+  allowlist, idempotency, and audit redaction apply over HTTP —
+  the dispatcher is shared.
+
+See [roadmap.md](roadmap.md) for the v0.4.0 line and the "Future
+HTTP transport risks" section of
+[threat-model.md](threat-model.md) for the threat catalogue.
 
 ## Required boundaries today
 

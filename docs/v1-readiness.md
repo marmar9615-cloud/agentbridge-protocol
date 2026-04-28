@@ -5,18 +5,22 @@ AgentBridge project. It is a living checklist, not a marketing claim.
 We use it to decide whether a given release line can call itself
 `v1.0.0`.
 
-> **Status.** Current published release is `v0.2.2`. The release
-> currently in flight is `v0.3.0` (Production Foundations). v0.3.0 is
-> a step toward — not a delivery of — v1.0.
+> **Status.** Current published release is `v0.3.0` (Production
+> Foundations). The release currently in flight is `v0.4.0` (HTTP
+> MCP transport + auth) — see
+> [designs/http-mcp-transport-auth.md](designs/http-mcp-transport-auth.md)
+> and [adr/0001-http-mcp-transport.md](adr/0001-http-mcp-transport.md).
+> Neither v0.3.0 nor v0.4.0 alone delivers v1.0; both are steps
+> toward it.
 
 ## 1. Current status
 
-| Surface | State (v0.3.0) |
+| Surface | State (v0.3.0 / v0.4.0 in flight) |
 |---|---|
 | Manifest spec | v0.1, stable for the v0.x line. Not yet declared frozen for v1. |
 | Public package APIs | Stable shape; not yet annotated with `@stable` / `@experimental` boundaries. |
-| MCP transport | stdio only. HTTP MCP transport not implemented. |
-| Authorization | None (caller identity is implicit in stdio). OAuth/scopes designed in [docs/threat-model.md](threat-model.md), not yet implemented. |
+| MCP transport | stdio only on npm. HTTP transport designed in [designs/http-mcp-transport-auth.md](designs/http-mcp-transport-auth.md); implementation pending in v0.4.0. |
+| Authorization | None over stdio (caller identity implicit). HTTP transport adds static bearer-token auth in v0.4.0; OAuth 2.1 resource-server mode designed for, not yet implemented. |
 | Persistence | Local JSON files for audit, confirmations, idempotency. No pluggable storage adapter. |
 | Outbound URL gate | Loopback by default; opt-in `AGENTBRIDGE_ALLOWED_TARGET_ORIGINS` (strict) and `AGENTBRIDGE_ALLOW_REMOTE` (broad) escape hatches. |
 | Confirmation tokens | Single-use, input-bound, default 5-minute TTL (configurable 30s–1h). |
@@ -50,8 +54,8 @@ To call any release `v1.0.0`, every one of these must be true:
 | 5 | Manifest schema version frozen for v1.x | not yet |
 | 6 | Backwards-compatibility policy documented (this file's §13) | yes (this doc) |
 | 7 | Signed-manifest design complete (implementation may follow) | not yet |
-| 8 | HTTP MCP transport implemented OR explicitly deferred to v1.x with a date | not yet |
-| 9 | OAuth / authorization design complete (implementation may follow) | not yet |
+| 8 | HTTP MCP transport implemented OR explicitly deferred to v1.x with a date | **design complete** ([designs/http-mcp-transport-auth.md](designs/http-mcp-transport-auth.md)); implementation pending in v0.4.0 |
+| 9 | OAuth / authorization design complete (implementation may follow) | **partial** — static bearer designed for v0.4.0 ([designs/http-mcp-transport-auth.md §6](designs/http-mcp-transport-auth.md#6-auth-model)); OAuth 2.1 resource-server mode designed-for-future, not yet implemented |
 | 10 | Production storage adapter shipped or interface declared | not yet |
 | 11 | Configurable, exact-origin remote allowlist | **yes** (v0.3.0) |
 | 12 | Security threat model published | **yes** (v0.3.0; see [threat-model.md](threat-model.md)) |
@@ -110,9 +114,12 @@ Before the MCP server line can claim production-readiness:
       (**v0.3.0**)
 - [x] Action timeout, max response bytes, and confirmation TTL are
       configurable within bounded ranges. (**v0.3.0**)
-- [ ] Authenticated HTTP MCP transport (in addition to stdio).
+- [ ] Authenticated HTTP MCP transport (in addition to stdio). Design
+      complete in [designs/http-mcp-transport-auth.md](designs/http-mcp-transport-auth.md);
+      implementation pending in v0.4.0.
 - [ ] Caller identity propagation (so audit events record *which agent
       / which user* invoked the action, not just `source: "mcp"`).
+      Designed for v0.4.0 ([§11](designs/http-mcp-transport-auth.md#11-audit-model)).
 - [ ] Per-action permission/scope enforcement (today `permissions[]`
       is advisory).
 - [ ] Rate limiting + cost accounting hooks.

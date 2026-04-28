@@ -11,7 +11,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js&logoColor=white)](https://nextjs.org/)
 [![MCP](https://img.shields.io/badge/MCP-1.0-orange)](https://modelcontextprotocol.io)
-[![Status: v0.2.2](https://img.shields.io/badge/Status-v0.2.2-blue)]()
+[![Status: v0.3.0](https://img.shields.io/badge/Status-v0.3.0-blue)]()
 [![npm](https://img.shields.io/npm/v/@marmarlabs/agentbridge-sdk?label=%40marmarlabs%2Fagentbridge-sdk)](https://www.npmjs.com/package/@marmarlabs/agentbridge-sdk)
 
 </div>
@@ -20,15 +20,21 @@
 
 ## Status
 
-**AgentBridge v0.2.2 is live on npm under the `@marmarlabs` scope.**
-v0.2.0 was the first public release, v0.2.1 was a docs-only cleanup
-patch, and v0.2.2 adds first-class OpenAI Codex onboarding.
-**v0.3.0 (in flight)** adds production-foundation work — a stricter
-remote-target allowlist, configurable timeouts/TTLs, an MCP stdout
-hygiene test, a draft npm Trusted Publishing workflow, and a v1.0
-readiness checklist (see [docs/v1-readiness.md](docs/v1-readiness.md)).
-v0.3.0 is **not** v1.0 production readiness — it's the foundation
-for it.
+**AgentBridge v0.3.0 is live on npm under the `@marmarlabs` scope**
+(published via npm Trusted Publishing with SLSA build provenance).
+The v0.2.x line shipped the first public release, a docs cleanup
+patch, and OpenAI Codex onboarding; v0.3.0 added production-
+foundation work — a stricter remote-target allowlist, configurable
+timeouts/TTLs, an MCP stdout-hygiene test, the Trusted Publishing
+workflow, a security threat model, and the v1.0 readiness
+checklist (see [docs/v1-readiness.md](docs/v1-readiness.md)).
+**v0.4.0 (in flight)** adds an opt-in HTTP MCP transport with
+authentication and Origin validation while preserving stdio as the
+default — see
+[docs/designs/http-mcp-transport-auth.md](docs/designs/http-mcp-transport-auth.md)
+and [docs/adr/0001-http-mcp-transport.md](docs/adr/0001-http-mcp-transport.md).
+Neither v0.3.0 nor v0.4.0 alone is v1.0 production readiness;
+both are steps toward it.
 
 ```bash
 npm install @marmarlabs/agentbridge-sdk @marmarlabs/agentbridge-core
@@ -44,11 +50,13 @@ distributed audit storage are roadmap items (see
 [docs/roadmap.md](docs/roadmap.md)). Destructive demo actions remain
 simulated.
 
-For release notes, see [docs/releases/v0.2.2.md](docs/releases/v0.2.2.md)
+For release notes, see [docs/releases/v0.3.0.md](docs/releases/v0.3.0.md)
 for the current release,
-[docs/releases/v0.2.1.md](docs/releases/v0.2.1.md) for the docs cleanup
-patch, and [docs/releases/v0.2.0.md](docs/releases/v0.2.0.md) for the
-first public release.
+[docs/releases/v0.2.2.md](docs/releases/v0.2.2.md) for the Codex
+onboarding release,
+[docs/releases/v0.2.1.md](docs/releases/v0.2.1.md) for the docs
+cleanup patch, and [docs/releases/v0.2.0.md](docs/releases/v0.2.0.md)
+for the first public release.
 
 ---
 
@@ -860,6 +868,8 @@ CI runs `npm install`, typecheck, all tests, and Next.js builds on Node 20.x and
 | [docs/threat-model.md](docs/threat-model.md) | Full threat catalogue with current mitigations and v1.0 targets. |
 | [docs/security-configuration.md](docs/security-configuration.md) | Every env var the MCP server honors, with defaults, ranges, and recipes. |
 | [docs/trusted-publishing.md](docs/trusted-publishing.md) | npm Trusted Publishing plan and the draft `release-publish.yml` workflow. |
+| [docs/designs/http-mcp-transport-auth.md](docs/designs/http-mcp-transport-auth.md) | v0.4.0 HTTP MCP transport + auth design. |
+| [docs/adr/0001-http-mcp-transport.md](docs/adr/0001-http-mcp-transport.md) | ADR for adding the opt-in HTTP MCP transport. |
 | [docs/roadmap.md](docs/roadmap.md) | What's shipped, what's next. |
 | [spec/agentbridge-manifest.v0.1.md](spec/agentbridge-manifest.v0.1.md) | The manifest specification. |
 | [AGENTS.md](AGENTS.md) | Short, model-neutral working notes for any AI coding agent (Codex, Claude, Cursor, custom). |
@@ -876,7 +886,7 @@ Near-term, in rough priority order:
 - **Signed manifests.** A published manifest carries a publisher signature an agent can verify offline. Removes the need to trust the host you're talking to.
 - **Standardized risk taxonomy.** Move from `low | medium | high` to a richer model: `read`, `write-self`, `write-others`, `financial`, `irreversible`. Lets agents reason about action consequences more precisely.
 - **Policy primitives.** First-class support for cost caps, rate limits, business-hours gating, and N-of-M approver workflows declared *in the manifest*.
-- **HTTP MCP transport.** stdio works for desktop clients; production agents need an authenticated HTTP transport.
+- **HTTP MCP transport.** stdio works for desktop clients; production agents need an authenticated HTTP transport. The v0.4.0 design is in [docs/designs/http-mcp-transport-auth.md](docs/designs/http-mcp-transport-auth.md).
 - **Cross-app workflows.** Let an agent compose actions from multiple AgentBridge surfaces with consistent confirmation semantics across them.
 - **Browser fallback + auto-generation.** When a site doesn't publish a manifest, run a Playwright probe and *generate* a starter manifest from visible buttons and forms — give app teams a one-click on-ramp.
 - **Manifest registry.** Optional public index of manifests so agents can discover what surfaces exist for a given task ("find me an app that can refund a Stripe charge").
