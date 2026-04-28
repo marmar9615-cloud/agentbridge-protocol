@@ -187,13 +187,13 @@ process.on("exit", () => {
   await new Promise((r) => setTimeout(r, 1500));
   killDemoForce();
 
-  // 8. MCP server boot check.
+  // 8. MCP server boot check (stdio).
   //    stdin must stay an open pipe — MCP reads JSON-RPC over stdio, and
   //    treating stdin as ignored/closed gives it immediate EOF and a
   //    graceful exit, which would falsely look like a crash. stdout/stderr
   //    are "ignore" so no piped fds linger and keep Node's event loop alive
   //    after we kill the child.
-  log("MCP server boot check");
+  log("MCP server boot check (stdio)");
   try {
     const mcp = spawn("node", ["apps/mcp-server/dist/index.js"], {
       cwd: tmpRoot,
@@ -211,6 +211,26 @@ process.on("exit", () => {
     try { mcp.stdin?.destroy(); } catch {}
   } catch (err) {
     fail(`MCP server boot failed: ${err.message}`);
+  }
+
+  // 9. MCP HTTP transport smoke.
+  //    Spawns the dist binary in HTTP mode on an ephemeral port and
+  //    exercises auth (missing/wrong/query-string), Origin allowlist,
+  //    valid initialize+tools/list, and the public-bind / missing-token
+  //    fail-closed paths. Token never logged.
+  log("MCP HTTP transport smoke");
+  try {
+    const httpSmokeScript = path.join(root, "scripts", "http-mcp-smoke.mjs");
+    const httpSmoke = spawn("node", [httpSmokeScript], {
+      cwd: tmpRoot,
+      stdio: "inherit",
+    });
+    const code = await new Promise((r) => httpSmoke.on("exit", r));
+    if (code !== 0) {
+      fail(`HTTP MCP smoke exited with code ${code}`);
+    }
+  } catch (err) {
+    fail(`HTTP MCP smoke crashed: ${err.message}`);
   }
 
   log("PASS");

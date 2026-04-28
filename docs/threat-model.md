@@ -368,54 +368,108 @@ For each threat:
 
 ---
 
-### T14. Future HTTP transport risks
+### T14. HTTP transport risks (implemented in v0.4.0)
 
 The HTTP MCP transport is designed in
 [designs/http-mcp-transport-auth.md](designs/http-mcp-transport-auth.md)
 (ADR: [adr/0001-http-mcp-transport.md](adr/0001-http-mcp-transport.md))
-and will ship in `v0.4.0`. The mitigations called out below are the
-ones the design commits to up front; the implementation PRs will
-ship the tests that prove each one. Additional threats that apply
-when the HTTP transport ships:
+and ships **opt-in** in `v0.4.0` (release-prepared on
+`release/v0.4.0-http-polish`; see
+[releases/v0.4.0.md](releases/v0.4.0.md)). Each mitigation called
+out below has both code and tests; the v0.4.0 implementation lives
+in [`apps/mcp-server/src/transports/http.ts`](../apps/mcp-server/src/transports/http.ts)
+and is verified by
+[`apps/mcp-server/src/tests/http-config.test.ts`](../apps/mcp-server/src/tests/http-config.test.ts),
+[`apps/mcp-server/src/tests/http-transport.test.ts`](../apps/mcp-server/src/tests/http-transport.test.ts),
+and
+[`scripts/http-mcp-smoke.mjs`](../scripts/http-mcp-smoke.mjs)
+(also wired into `npm run smoke:external`). Threats that apply
+when the HTTP transport runs:
 
-- **Unauthenticated access.** An open HTTP endpoint exposing
-  AgentBridge tools is equivalent to remote shell access for any
-  agent. Requires bearer-token auth from day one. The design
-  ([§6](designs/http-mcp-transport-auth.md#6-auth-model)) makes
-  auth mandatory and fails public bind without auth at startup.
-- **CSRF / cross-origin.** HTTP endpoints must reject requests from
-  unintended origins. The design
-  ([§7](designs/http-mcp-transport-auth.md#7-origin-and-cors-model))
-  requires exact-origin match against
-  `AGENTBRIDGE_HTTP_ALLOWED_ORIGINS`, no wildcard, no prefix match.
-- **TLS termination boundary.** A reverse proxy that terminates TLS
-  becomes a credential boundary. The design defaults to loopback
-  bind and requires operators to opt into public bind explicitly
-  ([§8](designs/http-mcp-transport-auth.md#8-host-binding-model)).
-- **Multi-tenant isolation.** A single HTTP server process serving
+- **Unauthenticated access.** ✅ **Mitigated.** An open HTTP
+  endpoint exposing AgentBridge tools would be equivalent to
+  remote shell access. v0.4.0 makes static bearer-token auth
+  mandatory; the server fails closed at startup if
+  `AGENTBRIDGE_HTTP_AUTH_TOKEN` is missing or shorter than 16
+  chars. Tokens are compared in constant time
+  ([`crypto.timingSafeEqual`](https://nodejs.org/api/crypto.html#cryptotimingsafeequala-b))
+  with length padding. Tokens never appear in stderr, stdout,
+  audit events, or HTTP error bodies.
+- **CSRF / cross-origin.** ✅ **Mitigated.** Inbound `Origin`
+  headers must exactly match an entry in
+  `AGENTBRIDGE_HTTP_ALLOWED_ORIGINS` (compared via
+  `URL.origin`; no prefix matching, no wildcard,
+  `Access-Control-Allow-Origin` echoes the exact origin and is
+  paired with `Access-Control-Allow-Credentials: true` only).
+  `OPTIONS` preflight respects the same allowlist.
+- **Token leakage via query string.** ✅ **Mitigated.** Tokens
+  presented as `?token=`, `?access_token=`, `?bearer=`,
+  `?auth=`, or `?authorization=` are rejected with HTTP `400`
+  before any tool runs. The 400 body never echoes the token.
+- **Loopback-by-default bind.** ✅ **Mitigated.** Default host
+  is `127.0.0.1`. Public bind (anything outside
+  `{127.0.0.1, ::1, localhost, 0.0.0.0}` and explicitly
+  `0.0.0.0` itself) requires both
+  `AGENTBRIDGE_HTTP_AUTH_TOKEN` and a non-empty
+  `AGENTBRIDGE_HTTP_ALLOWED_ORIGINS` — otherwise the server
+  exits non-zero with a clear stderr error before opening a
+  socket.
+- **Stdout hygiene preserved.** ✅ **Mitigated.** stdio's
+  invariant ("only JSON-RPC bytes on stdout") is unchanged for
+  v0.4.0; the HTTP adapter writes nothing to stdout. Verified
+  by [`stdio-hygiene.test.ts`](../apps/mcp-server/src/tests/stdio-hygiene.test.ts)
+  + [`scripts/http-mcp-smoke.mjs`](../scripts/http-mcp-smoke.mjs)
+  (which asserts stdout is empty across the HTTP run).
+- **TLS termination boundary.** ⚠️ **Operator responsibility.**
+  v0.4.0 ships the HTTP transport over plain HTTP. For any
+  non-loopback deployment, operators must terminate TLS at a
+  reverse proxy they control. Documented in
+  [`docs/security-configuration.md`](security-configuration.md)
+  and [`examples/http-client-config/`](../examples/http-client-config/).
+- **Multi-tenant isolation.** ⚠️ **Recommended pattern: one
+  process per tenant.** A single HTTP server process serving
   multiple tenants needs strict per-request scope checks and
-  per-tenant data-dir routing. The design preserves the v0.3.0
-  recommendation of one process per tenant; multi-tenant inside one
-  process is deferred to a later release.
-- **Token leakage via query string.** Tokens in URLs end up in
-  proxy logs, browser histories, and server access logs. The design
-  rejects query-string tokens with a `400` before any tool runs.
-- **Caller-identity attribution.** Audit events for HTTP calls
-  must record `transport: "http"` and a non-secret caller
-  identifier so post-incident review can tell HTTP from stdio
-  ([§11](designs/http-mcp-transport-auth.md#11-audit-model)). The
-  bearer token itself is never written to audit.
+  per-tenant data-dir routing. v0.4.0 preserves the v0.3.0
+  recommendation: one MCP server process per tenant with a
+  per-tenant `AGENTBRIDGE_DATA_DIR`. Multi-tenant inside one
+  process is deferred to a later release that lands
+  caller-identity propagation and pluggable storage.
+- **Caller-identity attribution.** ⚠️ **Partial.** v0.4.0 does
+  not yet extend audit events with `transport: "http"` or a
+  caller identifier; that audit-shape change is reserved for
+  v0.4.x / v0.5.0. The bearer token itself is never written to
+  audit, and access logs (when an operator deploys behind a
+  proxy) still show the request lifecycle.
 
-We documented these in v0.3.0 so the HTTP transport ships with
-mitigations rather than retrofitting them; v0.4.0's design now
-turns each into a concrete commitment.
+Remaining gaps for v1.0:
 
-- **v1.0 target (when HTTP ships).** Mandatory bearer-token auth,
-  scope-checked tools, per-tenant audit/confirmation/idempotency
-  segregation, signed-manifest verification.
-- **Test coverage.** Implementation PRs will deliver the tests
-  enumerated in
-  [designs/http-mcp-transport-auth.md §12](designs/http-mcp-transport-auth.md#12-testing-plan).
+- **OAuth 2.1 resource-server mode** with JWT verification and
+  scope-checked tools.
+- **Token rotation primitives** (today rotation is a server
+  restart with a new env var).
+- **Richer scopes** mapping to action `permissions[]`.
+- **Caller-identity propagation into audit events** so
+  post-incident review can tell HTTP calls apart from stdio
+  calls and attribute them to a token label.
+- **Deployment guides** for production-shaped reverse-proxy
+  topologies, certificate provisioning, and rate-limiting.
+
+- **Test coverage.**
+  - Auth: `http-transport.test.ts` →
+    "missing/malformed/wrong/valid bearer", "token in query
+    string", "token never in body/stderr".
+  - Origin: `http-transport.test.ts` → "unknown / prefix attack
+    / port mismatch / allowed / no Origin / OPTIONS preflight",
+    "wildcard CORS with credentials never used".
+  - Host binding: `http-transport.test.ts` → "loopback default
+    no warning", "non-loopback bind emits stderr notice",
+    "public bind without auth fails closed", "public bind
+    without origins fails closed".
+  - Endpoint routing: `http-transport.test.ts` → "404 for
+    non-/mcp paths", "400 for malformed JSON", "413 for
+    oversized body".
+  - Token hygiene: `scripts/http-mcp-smoke.mjs` → "TOKEN never
+    appears in stderr", "stdout empty across the run".
 
 ---
 

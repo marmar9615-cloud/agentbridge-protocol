@@ -1,7 +1,7 @@
 {
   "name": "@marmarlabs/agentbridge-mcp-server",
-  "version": "0.3.0",
-  "description": "stdio MCP server that exposes AgentBridge actions to AI agents with confirmation gates, origin pinning, and audit logging.",
+  "version": "0.4.0",
+  "description": "MCP server that exposes AgentBridge actions to AI agents with confirmation gates, origin pinning, and audit logging. Default stdio transport plus an opt-in Streamable HTTP transport with bearer auth.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -9,7 +9,7 @@
     "directory": "apps/mcp-server"
   },
   "homepage": "https://github.com/marmar9615-cloud/agentbridge-protocol",
-  "keywords": ["agentbridge", "mcp", "ai-agents", "model-context-protocol", "stdio"],
+  "keywords": ["agentbridge", "mcp", "ai-agents", "model-context-protocol", "stdio", "http"],
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -34,8 +34,8 @@
     "start": "tsx src/index.ts"
   },
   "dependencies": {
-    "@marmarlabs/agentbridge-core": "^0.3.0",
-    "@marmarlabs/agentbridge-scanner": "^0.3.0",
+    "@marmarlabs/agentbridge-core": "^0.4.0",
+    "@marmarlabs/agentbridge-scanner": "^0.4.0",
     "@modelcontextprotocol/sdk": "^1.0.0",
     "ajv": "^8.17.0"
   }

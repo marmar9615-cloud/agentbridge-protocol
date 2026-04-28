@@ -6,23 +6,103 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+_Nothing yet._
+
+## [0.4.0] — release-prepared — HTTP MCP Transport + Auth
+
+> Release-prepared on `release/v0.4.0-http-polish`. Not yet on npm
+> until the Trusted Publishing workflow is dispatched. See
+> [`docs/releases/v0.4.0.md`](docs/releases/v0.4.0.md) for the full
+> notes.
+
 ### Added
 
-- [`docs/adopter-quickstart.md`](docs/adopter-quickstart.md) - an
-  existing-app onboarding guide for adding AgentBridge manifests,
-  action endpoints, CLI validation, scanner checks, MCP client setup,
-  and production safety review.
-- [`docs/manifest-patterns.md`](docs/manifest-patterns.md) - reusable
-  manifest/action patterns for read actions, draft actions,
-  confirmation-required mutations, idempotent calls, resources, and
-  auth/contact metadata.
-- [`examples/adopter-quickstart/`](examples/adopter-quickstart/) -
-  static valid manifest examples for adopter onboarding, including a
-  minimal order manifest and a production-shaped safe fixture.
-- OpenAPI converter regression fixtures and tests covering action-name
-  normalization, method-risk inference, request/response schema
-  conversion, skipped methods, metadata inheritance, and current
-  unsupported security/example mapping behavior.
+- **Opt-in Streamable HTTP MCP transport.** New
+  [`apps/mcp-server/src/transports/http.ts`](apps/mcp-server/src/transports/http.ts)
+  wraps `StreamableHTTPServerTransport` from
+  `@modelcontextprotocol/sdk` behind:
+  - static bearer-token auth (`Authorization: Bearer <token>`,
+    constant-time compare via `crypto.timingSafeEqual`),
+  - exact-`URL.origin` allowlist for inbound `Origin` headers,
+  - loopback-by-default bind (`127.0.0.1`); public bind requires
+    both auth and a non-empty Origin allowlist or fails closed at
+    startup,
+  - query-string-token rejection with HTTP `400`,
+  - body size cap (reuses `AGENTBRIDGE_MAX_RESPONSE_BYTES`),
+  - `OPTIONS` preflight only for allowed origins; CORS responses
+    echo the exact origin and never use wildcard with credentials.
+  Endpoint `POST /mcp`. JSON responses (no SSE in v0.4.0).
+  Stateless mode.
+- **Transport abstraction.** New
+  [`apps/mcp-server/src/server.ts`](apps/mcp-server/src/server.ts)
+  with the `createMcpServer()` factory and shared `TOOLS` /
+  `dispatchTool` exports; both transports use the same factory so
+  every safety check, confirmation gate, target-origin allowlist,
+  idempotency, and audit redaction is shared.
+- **HTTP env vars.** `AGENTBRIDGE_TRANSPORT` (`stdio` default |
+  `http`), `AGENTBRIDGE_HTTP_HOST` (default `127.0.0.1`),
+  `AGENTBRIDGE_HTTP_PORT` (default `3333`),
+  `AGENTBRIDGE_HTTP_AUTH_TOKEN` (required for HTTP mode, ≥ 16
+  chars, never logged), `AGENTBRIDGE_HTTP_ALLOWED_ORIGINS`
+  (inbound Origin allowlist, independent from outbound
+  `AGENTBRIDGE_ALLOWED_TARGET_ORIGINS`). Full table:
+  [`docs/security-configuration.md`](docs/security-configuration.md).
+- **HTTP smoke.** New [`scripts/http-mcp-smoke.mjs`](scripts/http-mcp-smoke.mjs)
+  spawns the dist binary in HTTP mode on an ephemeral port and
+  exercises auth (missing/wrong/query-string), Origin allowlist,
+  valid `initialize` returning `serverInfo {agentbridge, 0.4.0}`,
+  and the public-bind / missing-token fail-closed paths. Wired
+  into `npm run smoke:external` and exposed as `npm run smoke:http`.
+- **HTTP client recipe.** New
+  [`examples/http-client-config/`](examples/http-client-config/)
+  with `curl` smoke tests, generic hosted-client JSON config, and
+  security warnings.
+- **CLI HTTP block.** `agentbridge mcp-config` now prints an
+  experimental HTTP transport block alongside the stdio snippets,
+  with placeholder env-var resolution (no literal tokens).
+- **Threat model T14 implemented.** [`docs/threat-model.md`](docs/threat-model.md)
+  T14 rewritten to enumerate the v0.4.0 mitigations (auth
+  required, no query tokens, exact Origin match,
+  loopback-by-default bind, public-bind fail-closed, stdout
+  hygiene preserved) and the remaining gaps (OAuth resource
+  server, token rotation, richer scopes, caller-identity
+  propagation into audit, deployment guides).
+- **Release docs.** New [`docs/releases/v0.4.0.md`](docs/releases/v0.4.0.md);
+  v1-readiness checklist updated; roadmap marks v0.4.0 as
+  release-prepared.
+- (From v0.4.0-line maintenance work, already on `main`)
+  [`docs/adopter-quickstart.md`](docs/adopter-quickstart.md),
+  [`docs/manifest-patterns.md`](docs/manifest-patterns.md),
+  [`examples/adopter-quickstart/`](examples/adopter-quickstart/),
+  OpenAPI converter regression fixtures and tests
+  ([`examples/openapi-regression/`](examples/openapi-regression/),
+  `packages/openapi/src/tests/openapi-fixtures.test.ts`).
+
+### Changed
+
+- All workspace packages bumped from `0.3.0` → `0.4.0`.
+- Workspace dependency ranges bumped from `^0.3.0` → `^0.4.0`.
+- `SERVER_VERSION` in
+  [`apps/mcp-server/src/server.ts`](apps/mcp-server/src/server.ts)
+  bumped from `0.3.0` → `0.4.0` so `serverInfo.version` reflects
+  the release.
+- `apps/mcp-server/src/index.ts` now picks transport via
+  `resolveTransport()` (defaults `stdio`); fatal-error format and
+  stdio behavior are bit-identical to v0.3.0 when
+  `AGENTBRIDGE_TRANSPORT` is unset.
+- `scripts/external-adopter-smoke.mjs` runs the HTTP smoke as a
+  final step against the freshly built dist.
+
+### Compatibility
+
+- **Existing stdio installs are unchanged.** No env var changes
+  required. `npx -y @marmarlabs/agentbridge-mcp-server` continues
+  to launch the stdio MCP server. `serverInfo` reads
+  `{ name: "agentbridge", version: "0.4.0" }`. Tools, resources,
+  prompts, and call shapes are byte-identical to v0.3.0.
+- Manifest schema unchanged (still `v0.1`).
+- CLI commands unchanged. `agentbridge mcp-config` adds an HTTP
+  block but keeps every existing snippet.
 
 ## [0.3.0] — 2026-04-28 — Production Foundations
 

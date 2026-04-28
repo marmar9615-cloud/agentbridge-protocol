@@ -49,22 +49,30 @@ the v1.0 release — it's the foundation.
       dry-run by default; activates once each npm package has a
       Trusted Publisher entry).
 
-### v0.4.0 — HTTP MCP transport + auth (in flight)
+### v0.4.0 — HTTP MCP transport + auth (release-prepared)
 
 - [x] Design doc + ADR
       ([designs/http-mcp-transport-auth.md](designs/http-mcp-transport-auth.md),
       [adr/0001-http-mcp-transport.md](adr/0001-http-mcp-transport.md)).
-- [ ] Authenticated HTTP MCP transport with the same confirmation
-      gate, origin pinning, and audit redaction as the stdio path.
+- [x] Authenticated HTTP MCP transport with the same confirmation
+      gate, origin pinning, and audit redaction as the stdio path
+      (PR #27 landed; reuses `createMcpServer()` factory).
+- [x] Static bearer-token auth (Phase 1 per the design).
+      Origin allowlist enforced. Loopback bind by default. Public
+      bind fails closed without auth + Origin allowlist.
+- [x] HTTP-transport-specific threat-model section updated
+      ([T14 in threat-model.md](threat-model.md#t14-future-http-transport-risks)).
+- [x] Lockstep `0.4.0` version bump, release notes
+      ([releases/v0.4.0.md](releases/v0.4.0.md)),
+      `examples/http-client-config/`, and HTTP smoke wired into
+      `npm run smoke:external` (release polish — this PR).
 - [ ] Caller-identity propagation into audit events (so events
       record *which agent / which user* invoked the action).
-- [ ] Static bearer-token auth (Phase 1 per the design).
-      Origin allowlist enforced. Loopback bind by default.
-- [ ] OAuth 2.1 resource-server design left in place; full
-      implementation deferred to a later v0.x release.
-- [ ] HTTP-transport-specific threat-model section
-      ([T14 in threat-model.md](threat-model.md#t14-future-http-transport-risks))
-      becomes the implementation work.
+      Audit-event extension reserved for v0.4.x or v0.5.0.
+- [ ] OAuth 2.1 resource-server mode. Designed-for, not yet
+      implemented; reserved for a later v0.x release.
+- [ ] Publish `@marmarlabs/agentbridge-*@0.4.0` via Trusted
+      Publishing (only after maintainer approval).
 
 ### v0.5.0 — Signed manifests
 

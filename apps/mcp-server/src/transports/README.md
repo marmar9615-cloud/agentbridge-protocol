@@ -28,11 +28,21 @@ Per [`docs/designs/http-mcp-transport-auth.md §13`](../../../../docs/designs/ht
    `AGENTBRIDGE_HTTP_*`) parsed in `../config.ts`. stdio path
    untouched and verified by the existing
    [`stdio-hygiene.test.ts`](../tests/stdio-hygiene.test.ts).
-3. **PR 3 — docs / examples / smoke tests.** Polishes
+3. **PR 3 — docs / examples / smoke / version bump.** ✅
+   release-prepared on `release/v0.4.0-http-polish`. Lockstep
+   bump to `0.4.0` (every workspace `package.json` plus
+   `SERVER_VERSION` in [`../server.ts`](../server.ts)). Adds
+   [`examples/http-client-config/`](../../../../examples/http-client-config/),
+   wires
+   [`scripts/http-mcp-smoke.mjs`](../../../../scripts/http-mcp-smoke.mjs)
+   into `npm run smoke:external`, and updates
+   [`docs/releases/v0.4.0.md`](../../../../docs/releases/v0.4.0.md),
    [`docs/security-configuration.md`](../../../../docs/security-configuration.md),
    [`docs/mcp-client-setup.md`](../../../../docs/mcp-client-setup.md),
-   adds an `examples/http-client-config/` directory, an external
-   smoke test, and bumps all six packages to `0.4.0`.
+   [`docs/threat-model.md`](../../../../docs/threat-model.md), and
+   [`packages/cli/src/commands/mcp-config.ts`](../../../../packages/cli/src/commands/mcp-config.ts)
+   to surface an HTTP block. Publishing happens through the
+   Trusted Publishing workflow only after maintainer approval.
 
 ## Hard rules for the implementation
 

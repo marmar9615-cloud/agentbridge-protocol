@@ -92,7 +92,7 @@ describe("CLI entry", () => {
 });
 
 describe("mcp-config command", () => {
-  it("prints snippets for Codex CLI, Codex config.toml, Claude Desktop, Cursor, and raw stdio", async () => {
+  it("prints snippets for Codex CLI, Codex config.toml, Claude Desktop, Cursor, raw stdio, and HTTP transport", async () => {
     const cap = captureStdio();
     const code = await runCli({ argv: ["mcp-config"] });
     cap.restore();
@@ -120,11 +120,26 @@ describe("mcp-config command", () => {
     expect(output).toContain('"command": "npx"');
     expect(output).toContain('"@marmarlabs/agentbridge-mcp-server"');
 
+    // HTTP transport block (v0.4.0).
+    expect(output).toContain("HTTP transport (experimental, v0.4.0");
+    expect(output).toContain("AGENTBRIDGE_TRANSPORT=http");
+    expect(output).toContain("AGENTBRIDGE_HTTP_AUTH_TOKEN");
+    expect(output).toContain("AGENTBRIDGE_HTTP_HOST=127.0.0.1");
+    expect(output).toContain("AGENTBRIDGE_HTTP_ALLOWED_ORIGINS");
+    // Generic HTTP-MCP JSON shape.
+    expect(output).toContain('"streamable-http"');
+    expect(output).toContain('"http://127.0.0.1:3333/mcp"');
+    // The example uses an env-var placeholder, NEVER a literal token.
+    expect(output).toContain("${AGENTBRIDGE_HTTP_AUTH_TOKEN}");
+    // Sanity: no real-looking token in the output.
+    expect(output).not.toMatch(/Bearer\s+[a-f0-9]{32,}/);
+
     // Safety reminder.
     expect(output).toContain("AGENTBRIDGE_ALLOW_REMOTE");
     expect(output).toContain("AGENTBRIDGE_ALLOWED_TARGET_ORIGINS");
     expect(output).toContain("confirmationToken");
     expect(output).toContain("docs/security-configuration.md");
+    expect(output).toContain("examples/http-client-config/");
   });
 });
 

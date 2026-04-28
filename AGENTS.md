@@ -24,14 +24,21 @@ The repo ships:
 - npm scope: **`@marmarlabs`** (do not change).
 - Latest published release: **v0.3.0** on npm and on GitHub
   (Latest, stable; published via npm Trusted Publishing with SLSA
-  build provenance). The v0.2.x line shipped first public release,
-  docs cleanup, and Codex onboarding; v0.3.0 added production
-  foundations (stricter remote allowlist, configurable bounds,
-  Trusted Publishing workflow, threat model, v1.0 readiness
-  checklist, stdout-hygiene test).
-- Currently in flight: **v0.4.0** — opt-in HTTP MCP transport with
-  authentication and Origin validation. stdio remains the default.
-  Design in [docs/designs/http-mcp-transport-auth.md](docs/designs/http-mcp-transport-auth.md);
+  build provenance).
+- **v0.4.0 is release-prepared on the `release/v0.4.0-http-polish`
+  branch** — all packages bumped to `0.4.0`, opt-in HTTP MCP
+  transport implemented (PR #27 landed), docs/examples updated,
+  HTTP smoke wired. **Not yet on npm**; publishing happens through
+  the Trusted Publishing workflow only after maintainer approval.
+  Predecessor PRs:
+  [#23](https://github.com/marmar9615-cloud/agentbridge-protocol/pull/23) (design),
+  [#24](https://github.com/marmar9615-cloud/agentbridge-protocol/pull/24) (transport abstraction),
+  [#25](https://github.com/marmar9615-cloud/agentbridge-protocol/pull/25) (adopter docs/examples),
+  [#26](https://github.com/marmar9615-cloud/agentbridge-protocol/pull/26) (OpenAPI regression fixtures),
+  [#27](https://github.com/marmar9615-cloud/agentbridge-protocol/pull/27) (HTTP transport + bearer auth).
+- Stdio remains the default and only-when-unset transport. HTTP is
+  **opt-in** via `AGENTBRIDGE_TRANSPORT=http`. Design in
+  [docs/designs/http-mcp-transport-auth.md](docs/designs/http-mcp-transport-auth.md);
   ADR in [docs/adr/0001-http-mcp-transport.md](docs/adr/0001-http-mcp-transport.md).
 - Manifest schema: v0.1, stable for the v0.x line. Will be frozen
   for v1.x per [docs/v1-readiness.md](docs/v1-readiness.md).
