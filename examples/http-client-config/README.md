@@ -184,6 +184,17 @@ before opening a socket. Even with both set, prefer:
 - rotating `AGENTBRIDGE_HTTP_AUTH_TOKEN` on every operator
   change.
 
+Outbound app targets are controlled separately. For production-like
+testing against a real app origin, prefer an exact target allowlist:
+
+```bash
+export AGENTBRIDGE_ALLOWED_TARGET_ORIGINS=https://app.example.com
+```
+
+This outbound allowlist is independent from
+`AGENTBRIDGE_HTTP_ALLOWED_ORIGINS`, which only checks inbound browser
+`Origin` headers for the HTTP MCP endpoint.
+
 ## Security warnings
 
 - The bearer token is the only credential the HTTP transport

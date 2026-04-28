@@ -17,6 +17,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - CLI regression coverage for example manifests, generated SDK output,
   OpenAPI-generated manifests, and public `mcp-config`/`version`
   behavior.
+- MCP client config regression coverage for checked-in Codex, Claude,
+  Cursor/generic, and HTTP examples.
 
 ## [0.4.0] — release-prepared — HTTP MCP Transport + Auth
 

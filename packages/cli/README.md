@@ -91,6 +91,7 @@ manually with:
 
 ```bash
 npm run validate:examples
+npm run validate:mcp-config-examples
 ```
 
 ## Exit codes
