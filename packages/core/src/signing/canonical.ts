@@ -105,8 +105,35 @@ function canon(value: unknown, path: string): string {
  * `\b`, `\f`, `\n`, `\r`, `\t`, and U+0000–U+001F as `\uXXXX`. It
  * leaves other Unicode code points as-is (UTF-8 in the resulting
  * UTF-8 string).
+ *
+ * One pre-check first: RFC 8259 (and therefore RFC 8785) defines a
+ * JSON string as a sequence of valid Unicode code points. A lone
+ * (unpaired) UTF-16 surrogate is *not* a valid code point. V8's
+ * `JSON.stringify` accepts such strings and emits `\udxxx`, which
+ * produces canonical bytes that strict JCS implementations in other
+ * languages will refuse to parse. Surfacing the bad input here keeps
+ * cross-language verification interoperable.
  */
 function canonString(s: string): string {
+  for (let i = 0; i < s.length; i++) {
+    const code = s.charCodeAt(i);
+    if (code >= 0xd800 && code <= 0xdbff) {
+      // High surrogate must be followed by a low surrogate (DC00–DFFF).
+      const next = i + 1 < s.length ? s.charCodeAt(i + 1) : 0;
+      if (next < 0xdc00 || next > 0xdfff) {
+        throw new CanonicalizationError(
+          `unpaired UTF-16 high surrogate at offset ${i} is not a valid Unicode code point`,
+          "",
+        );
+      }
+      i += 1; // skip the paired low surrogate
+    } else if (code >= 0xdc00 && code <= 0xdfff) {
+      throw new CanonicalizationError(
+        `unpaired UTF-16 low surrogate at offset ${i} is not a valid Unicode code point`,
+        "",
+      );
+    }
+  }
   return JSON.stringify(s);
 }
 
@@ -195,7 +222,19 @@ export function canonicalizeManifestForSigning(
   }
   // Shallow copy, drop signature. We don't deep-clone — `canon` doesn't
   // mutate input, and the canonicalization process re-walks the tree.
-  const copy: Record<string, unknown> = {};
+  //
+  // Use `Object.create(null)` so the copy has no prototype. This is
+  // critical for `__proto__`: a literal property named `__proto__`
+  // (legal JSON, e.g. produced by `JSON.parse('{"__proto__": "x"}')`)
+  // assigned via `copy[k] = ...` on a normal object would invoke the
+  // `__proto__` setter and *re-parent the copy*, silently dropping that
+  // field from the signed payload. With a null prototype, the same
+  // assignment produces an ordinary own property, preserving the
+  // signed-vs-canonical-bytes invariant.
+  const copy: Record<string, unknown> = Object.create(null) as Record<
+    string,
+    unknown
+  >;
   for (const k of Object.keys(manifest)) {
     if (k === "signature") continue;
     copy[k] = manifest[k];

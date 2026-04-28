@@ -69,6 +69,32 @@ describe("canonicalizeJson — primitives", () => {
   it("rejects BigInt", () => {
     expect(() => canonicalizeJson(BigInt(1))).toThrow(/BigInt/);
   });
+
+  it("rejects strings with a lone high UTF-16 surrogate", () => {
+    // U+D800 is a high surrogate; nothing follows.
+    const lone = "before\uD800after";
+    expect(() => canonicalizeJson(lone)).toThrow(/unpaired UTF-16 high surrogate/);
+  });
+
+  it("rejects strings with a lone low UTF-16 surrogate", () => {
+    // U+DC00 appears without a preceding high surrogate.
+    const lone = "before\uDC00after";
+    expect(() => canonicalizeJson(lone)).toThrow(/unpaired UTF-16 low surrogate/);
+  });
+
+  it("accepts valid surrogate pairs (Unicode supplementary plane)", () => {
+    // U+1F4A1 (LIGHT BULB) = D83D DCA1 surrogate pair.
+    const supplementary = "💡";
+    expect(() => canonicalizeJson(supplementary)).not.toThrow();
+    expect(canonicalizeJson(supplementary)).toBe('"💡"');
+  });
+
+  it("rejects lone surrogates inside object keys", () => {
+    // The keysort step calls canonString on the key, which guards.
+    expect(() =>
+      canonicalizeJson({ ["bad\uD800key"]: 1 }),
+    ).toThrow(/unpaired UTF-16/);
+  });
 });
 
 describe("canonicalizeJson — arrays", () => {
@@ -315,5 +341,21 @@ describe("canonicalizeManifestForSigning", () => {
     expect(() =>
       canonicalizeManifestForSigning([] as unknown as Record<string, unknown>),
     ).toThrow(/manifest object/);
+  });
+
+  it("preserves a literal __proto__ property in the signed payload", () => {
+    // JSON.parse of `{"__proto__": "x"}` yields an object with __proto__
+    // as a real own enumerable data property — not a prototype change.
+    // Stripping the signature must NOT reparent the copy and silently
+    // drop that field, which would let two manifests with different
+    // __proto__ values produce identical canonical bytes.
+    const m1 = JSON.parse('{"name":"a","__proto__":"v1"}') as Record<string, unknown>;
+    const m2 = JSON.parse('{"name":"a","__proto__":"v2"}') as Record<string, unknown>;
+    const c1 = canonicalizeManifestForSigning(m1);
+    const c2 = canonicalizeManifestForSigning(m2);
+    expect(c1).not.toBe(c2);
+    // Both must include the __proto__ field at the canonical position.
+    expect(c1).toContain('"__proto__":"v1"');
+    expect(c2).toContain('"__proto__":"v2"');
   });
 });
