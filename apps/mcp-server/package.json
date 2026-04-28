@@ -1,6 +1,6 @@
 {
   "name": "@marmarlabs/agentbridge-mcp-server",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "stdio MCP server that exposes AgentBridge actions to AI agents with confirmation gates, origin pinning, and audit logging.",
   "license": "Apache-2.0",
   "repository": {

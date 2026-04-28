@@ -2,7 +2,7 @@
 
 A living document. Anything in here is a direction, not a commitment.
 
-## Phase 3A — Public beta release hardening (shipped 0.2.0-beta)
+## Phase 3A — npm release hardening (shipped 0.2.0 / 0.2.1)
 
 - [x] Publishable npm packages on `@marmarlabs/agentbridge-*` scope
 - [x] tsup build pipeline producing `dist/` outputs for all publishable packages
@@ -10,6 +10,7 @@ A living document. Anything in here is a direction, not a commitment.
 - [x] External-adopter smoke script (`npm run smoke:external`)
 - [x] Release-check workflow, issue/PR templates, dependabot
 - [x] Per-package READMEs and release docs
+- [x] First public stable release on npm at v0.2.0; docs-cleanup patch at v0.2.1
 
 ## Phase 2 — Developer tooling (shipped 0.2.0)
 

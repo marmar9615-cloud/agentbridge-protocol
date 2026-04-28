@@ -4,8 +4,10 @@ How to publish the six AgentBridge packages once
 [docs/release-checklist.md](release-checklist.md) is fully green.
 
 **Do not run any of these commands until the release checklist is
-checked off and you intend to ship.** The repo as of v0.2.0-beta has
-NOT published anything to npm yet.
+checked off and you intend to ship.** v0.2.0 was the first public
+release on npm under the `@marmarlabs` scope; v0.2.1 is the
+README-cleanup patch on top of v0.2.0. The instructions below are the
+flow for any future bump.
 
 ## Order matters
 
@@ -31,15 +33,20 @@ Publish:
 ## Authenticate
 
 ```bash
-npm login --scope=@marmar9615-cloud
+npm login --scope=@marmarlabs
 ```
 
 Verify:
 
 ```bash
 npm whoami        # should print your npm username
-npm config get @marmar9615-cloud:registry  # should be https://registry.npmjs.org
+npm config get @marmarlabs:registry  # should be https://registry.npmjs.org
 ```
+
+For non-interactive 2FA-bypass publishes (CI, scripted releases), use a
+granular access token with `bypass 2FA` enabled, write it to a file like
+`/tmp/agentbridge-npmrc` (do not commit), and pass `--userconfig` on
+each publish command. Delete the file after the publish completes.
 
 ## Build and validate
 
@@ -91,7 +98,7 @@ old. To recover:
 - **If the failure is `EPUBLISHCONFLICT`:** that exact `name@version`
   was already published (probably by an earlier attempt). Either bump
   the version or skip that package.
-- **If the failure is auth:** re-run `npm login --scope=@marmar9615-cloud`.
+- **If the failure is auth:** re-run `npm login --scope=@marmarlabs`.
 
 `npm unpublish` only works within 72 hours of publish and only for
 packages with no public dependents. Plan to bump-and-fix instead of
@@ -99,20 +106,21 @@ unpublishing.
 
 ## Tag and create the GitHub release
 
-After all six packages are published successfully:
+After all six packages are published successfully (substitute your own
+version — example uses `v0.2.1`):
 
 ```bash
-git tag v0.2.0-beta
-git push origin v0.2.0-beta
+git tag v0.2.1
+git push origin v0.2.1
 
-gh release create v0.2.0-beta \
-    --title "v0.2.0-beta — Public Beta" \
-    --notes-file docs/releases/v0.2.0-beta.md \
-    --prerelease
+gh release create v0.2.1 \
+    --title "v0.2.1 — README Cleanup Patch" \
+    --notes-file docs/releases/v0.2.1.md
 ```
 
-`--prerelease` keeps the release out of "latest" until we're ready to
-graduate to a non-beta version.
+Add `--prerelease` only when shipping a beta/RC tag (e.g.
+`v0.3.0-beta`); stable patches and minors should not be marked
+prerelease.
 
 ## Post-publish verification
 

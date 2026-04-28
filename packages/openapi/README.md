@@ -54,7 +54,13 @@ Risk levels can be overridden per-operation via
 
 ## Status
 
-Public beta (v0.2.0). Risk heuristics may evolve; always review
+Public release. v0.2.1 is a docs-only patch over v0.2.0 that cleans up
+package README wording — no code or behavior changes. AgentBridge is
+suitable for local development, manifest authoring, scanner workflows,
+OpenAPI import, and MCP experiments. It is not yet production security
+infrastructure.
+
+Risk heuristics may evolve between v0.x releases; always review
 generated manifests before publishing.
 
 ## License

@@ -1,6 +1,6 @@
 {
   "name": "@marmarlabs/agentbridge-core",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Core types, schemas, validation, and audit utilities for AgentBridge — an AI-native action layer for web apps.",
   "license": "Apache-2.0",
   "repository": {

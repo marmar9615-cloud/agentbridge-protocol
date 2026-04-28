@@ -1,6 +1,6 @@
 {
   "name": "@marmarlabs/agentbridge-scanner",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Scan any URL for AgentBridge readiness — 0–100 score, structured checks, and grouped recommendations.",
   "license": "Apache-2.0",
   "repository": {

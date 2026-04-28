@@ -44,8 +44,16 @@ console.log(`${result.manifest.name} v${result.manifest.version}`);
 
 ## Status
 
-Public beta (v0.2.0). The manifest schema is stable for v0.x but may
-change in v1.0. See the [project roadmap](https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/docs/roadmap.md).
+Public release. v0.2.1 is a docs-only patch over v0.2.0 that cleans up
+package README wording — no code or behavior changes. AgentBridge is
+suitable for local development, manifest authoring, scanner workflows,
+OpenAPI import, and MCP experiments. It is not yet production security
+infrastructure.
+
+The manifest schema is stable for the v0.x line; field additions are
+non-breaking, field removals or shape changes will bump to v1.0. See
+the [project roadmap](https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/docs/roadmap.md)
+for what's planned beyond v0.2.x.
 
 ## License
 

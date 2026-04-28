@@ -4,6 +4,43 @@ All notable changes to AgentBridge are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] — 2026-04-27 — README cleanup patch
+
+### Changed
+
+- Per-package READMEs (`@marmarlabs/agentbridge-core`,
+  `@marmarlabs/agentbridge-sdk`, `@marmarlabs/agentbridge-scanner`,
+  `@marmarlabs/agentbridge-openapi`, `@marmarlabs/agentbridge-cli`,
+  `@marmarlabs/agentbridge-mcp-server`) now describe AgentBridge as a
+  public npm release rather than a "Public beta (v0.2.0)". The Status
+  blocks make the v0.x stability boundary explicit and call out that
+  v0.2.x is suitable for local development, manifest authoring, scanner
+  workflows, OpenAPI import, and MCP experiments — but not yet
+  production security infrastructure.
+- `examples/nextjs-basic/README.md` no longer carries the
+  "not yet published to npm" / "source-only" callout. The walkthrough
+  installs the published `@marmarlabs/*` packages directly.
+- `docs/roadmap.md` Phase 3A heading reframed from "Public beta release
+  hardening (shipped 0.2.0-beta)" to "npm release hardening (shipped
+  0.2.0 / 0.2.1)" with an extra bullet recording the stable release.
+- `docs/npm-publishing.md` updated to use `@marmarlabs` everywhere
+  (login scope, registry config, recovery commands), document the
+  `--userconfig` token flow used for non-interactive 2FA-bypass
+  publishes, and use a non-prerelease `gh release create` example.
+
+### Added
+
+- `docs/releases/v0.2.1.md` release notes.
+
+### Compatibility
+
+- **Docs-only patch.** No code, behavior, schema, or build-output
+  changes. All 86 tests still pass on Node 20.x and 22.x.
+- All safety invariants preserved (confirmation gate, origin pinning,
+  URL allowlist, audit redaction, simulated destructive demo actions).
+- Workspace dependency ranges remain `^0.2.0` — `0.2.1` satisfies them,
+  no consumer migration required.
+
 ## [0.2.0] — 2026-04-27 — First public release
 
 ### Added
