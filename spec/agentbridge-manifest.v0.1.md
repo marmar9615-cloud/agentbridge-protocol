@@ -124,6 +124,56 @@ Resources are documentation. They tell an agent "this app has orders, customers,
 
 The MVP serves manifests as `auth: { type: "none" }`. Production deployments should declare the real auth surface so agents and operators can configure credentials.
 
+## Signature field (optional, v0.5.0+)
+
+A manifest MAY carry an inline `signature` block proving the publisher
+authored the bytes. The signed payload is the canonical-JSON
+([RFC 8785, JCS](https://www.rfc-editor.org/rfc/rfc8785)) of the
+manifest **with the `signature` field stripped**. Adding the field is
+non-breaking — readers that don't understand `signature` still validate
+the rest of the manifest against this v0.1 spec, and unsigned manifests
+remain valid.
+
+```json
+"signature": {
+  "alg": "EdDSA",
+  "kid": "acme-orders-2026-04",
+  "iss": "https://orders.acme.example",
+  "signedAt": "2026-04-28T12:00:00Z",
+  "expiresAt": "2026-04-29T12:00:00Z",
+  "value": "BASE64URL(...)"
+}
+```
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `alg` | enum | yes | `EdDSA` (Ed25519, default) or `ES256` (ECDSA on P-256). |
+| `kid` | string | yes | Key id matching an entry in the publisher's key set. |
+| `iss` | URL | yes | Canonical publisher origin (`scheme://host[:port]`, no path/query/fragment). MUST equal the manifest's `baseUrl` origin. |
+| `signedAt` | ISO datetime | yes | When the signature was produced. UTC recommended. |
+| `expiresAt` | ISO datetime | yes | When the signature becomes stale. MUST be > `signedAt`. |
+| `value` | base64url | yes | Signature bytes per `alg`, base64url-encoded ([RFC 4648 §5](https://www.rfc-editor.org/rfc/rfc4648#section-5)). |
+
+**Optional in v0.5.0.** Sign / verify runtime APIs ship in subsequent
+v0.5.0 PRs. Until then, the manifest schema simply accepts the field
+when present. Unsigned manifests continue to validate exactly as in
+v0.4.x.
+
+**Verification is additive.** Even when a manifest is verified, it is
+still subject to the existing AgentBridge controls — confirmation gate
+for risky actions, origin pinning to `baseUrl`, the outbound
+target-origin allowlist (`AGENTBRIDGE_ALLOWED_TARGET_ORIGINS`), audit
+redaction, stdio stdout hygiene, and the HTTP transport's auth /
+Origin allowlist. A signature confirms publisher; it never authorizes
+an action on its own.
+
+The publisher hosts a key set at `/.well-known/agentbridge-keys.json`
+(canonical schema lives in
+[`packages/core/src/signing/schemas.ts`](../packages/core/src/signing/schemas.ts)
+and the full design is in
+[`docs/designs/signed-manifests.md`](../docs/designs/signed-manifests.md)).
+A formal JSON Schema for the key set will land alongside the verifier.
+
 ## Security considerations
 
 | Threat | Mitigation declared by manifest | Enforcement |
