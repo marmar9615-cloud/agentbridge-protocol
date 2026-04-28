@@ -177,3 +177,6 @@ Every new feature ships with a test. Categories of tests we currently maintain:
   — v0.4.0 HTTP MCP transport + auth design.
 - [docs/adr/0001-http-mcp-transport.md](docs/adr/0001-http-mcp-transport.md)
   — ADR for adding the opt-in HTTP MCP transport.
+- [docs/releases/v0.4.0.md](docs/releases/v0.4.0.md) — v0.4.0
+  release notes (release-prepared on
+  `release/v0.4.0-http-polish`; not yet on npm).

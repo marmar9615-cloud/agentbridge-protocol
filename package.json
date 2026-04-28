@@ -1,6 +1,6 @@
 {
   "name": "agentbridge",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "description": "Workspace root for AgentBridge — an AI-native action layer for web apps.",
@@ -28,7 +28,8 @@
     "typecheck:clean": "node scripts/clean-dist.mjs && npm run typecheck",
     "clean:dist": "node scripts/clean-dist.mjs",
     "pack:dry-run": "node scripts/pack-check.mjs",
-    "smoke:external": "node scripts/external-adopter-smoke.mjs"
+    "smoke:external": "node scripts/external-adopter-smoke.mjs",
+    "smoke:http": "node scripts/http-mcp-smoke.mjs"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

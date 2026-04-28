@@ -82,7 +82,7 @@ as follows:
 | `HEAD` | no | low from `inferRiskFromMethod`, skipped by generator | n/a |
 | `OPTIONS` / `TRACE` | no | skipped by generator | n/a |
 
-Risk inference is method-based in v0.3.0. Path-based overrides,
+Risk inference is method-based in v0.4.0. Path-based overrides,
 `x-agentbridge-*` extensions, and security-scope mapping are future
 stabilization work, not current behavior.
 

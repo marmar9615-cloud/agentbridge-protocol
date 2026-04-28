@@ -1,8 +1,11 @@
 # @marmarlabs/agentbridge-mcp-server
 
-stdio MCP server that exposes [AgentBridge](https://github.com/marmar9615-cloud/agentbridge-protocol)
+MCP server that exposes [AgentBridge](https://github.com/marmar9615-cloud/agentbridge-protocol)
 actions to MCP clients (OpenAI Codex, Claude Desktop, Cursor, custom)
-with confirmation gates, origin pinning, and audit logging.
+with confirmation gates, origin pinning, and audit logging. Default
+**stdio** transport for local desktop clients; opt-in **Streamable
+HTTP** transport (v0.4.0) with bearer-token auth for hosted /
+centralized clients.
 
 ## Install
 
@@ -138,17 +141,22 @@ example manifests) and pre-canned prompts for common workflows.
 
 ## Status
 
-Public release. **v0.3.0** is the "Production Foundations" release:
-stricter remote-target allowlist, configurable timeouts/TTLs, an
-MCP stdout-hygiene test, a threat model, a v1.0 readiness checklist,
-a draft npm Trusted Publishing workflow, and updated docs. **Not
-yet v1.0** — see the
+Public release. **v0.3.0** shipped Production Foundations
+(stricter remote-target allowlist, configurable timeouts/TTLs,
+MCP stdout-hygiene test, threat model, v1.0 readiness checklist,
+Trusted Publishing workflow). **v0.4.0** is release-prepared
+on the `release/v0.4.0-http-polish` branch and adds an opt-in
+Streamable HTTP transport with static bearer-token auth, exact-
+origin allowlist, loopback-by-default bind, and HTTP smoke wired
+into the local pre-publish flow. Stdio remains the default; HTTP
+is opt-in via `AGENTBRIDGE_TRANSPORT=http`. **Not yet v1.0** —
+see the
 [v1-readiness checklist](https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/docs/v1-readiness.md)
 for what we still owe before declaring production-ready.
 
 AgentBridge is suitable for local development, manifest authoring,
 scanner workflows, OpenAPI import, and MCP experiments. With the
-v0.3.0 controlled-staging configuration (see
+v0.3.0+ controlled-staging configuration (see
 [production-readiness.md](https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/docs/production-readiness.md))
 it is also suitable for internal staging deployments behind an
 explicit origin allowlist. It is not yet production security

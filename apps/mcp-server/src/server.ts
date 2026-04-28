@@ -34,7 +34,7 @@ import { STATIC_RESOURCES, readResource } from "./resources";
 // Server identity. Bumps in lockstep with @marmarlabs/agentbridge-mcp-server's
 // package version on every release.
 export const SERVER_NAME = "agentbridge";
-export const SERVER_VERSION = "0.3.0";
+export const SERVER_VERSION = "0.4.0";
 
 // ── Tool descriptors ─────────────────────────────────────────────────
 //

@@ -73,12 +73,53 @@ export function runMcpConfig(): number {
   out.write(`${c.dim("Local checkout (development; run `npm run build` first):")}\n`);
   out.write(indentBlock(JSON.stringify(localCheckoutConfig, null, 2)) + "\n\n");
 
+  // ── HTTP transport (experimental, v0.4.0) ───────────────────────
+  // Stdio is the recommended default for local desktop clients; HTTP
+  // is for hosted/centralized MCP clients that cannot launch a local
+  // subprocess. We print the env-var recipe and a generic JSON shape
+  // that hosted clients can adapt. The placeholder token here is
+  // documentation only — operators must generate their own.
+  const httpClientConfig = {
+    mcpServers: {
+      agentbridge: {
+        transport: "streamable-http",
+        url: "http://127.0.0.1:3333/mcp",
+        headers: {
+          Authorization: "Bearer ${AGENTBRIDGE_HTTP_AUTH_TOKEN}",
+        },
+      },
+    },
+  };
+
+  out.write(`${c.bold("HTTP transport (experimental, v0.4.0 — opt-in)")}\n`);
+  out.write(
+    `${c.dim("Use only when your MCP client cannot launch a local subprocess (hosted/centralized clients).")}\n`,
+  );
+  out.write(`${c.dim("Stdio remains the recommended default for Codex / Claude Desktop / Cursor.")}\n\n`);
+
+  out.write(`${c.dim("Env vars to start the server in HTTP mode:")}\n`);
+  out.write(`  AGENTBRIDGE_TRANSPORT=http\n`);
+  out.write(`  AGENTBRIDGE_HTTP_AUTH_TOKEN=$(openssl rand -hex 32)\n`);
+  out.write(`  AGENTBRIDGE_HTTP_HOST=127.0.0.1            ${c.dim("# loopback default; non-loopback bind requires Origin allowlist")}\n`);
+  out.write(`  AGENTBRIDGE_HTTP_PORT=3333\n`);
+  out.write(`  AGENTBRIDGE_HTTP_ALLOWED_ORIGINS=http://localhost:5173   ${c.dim("# inbound Origin allowlist (browser clients only)")}\n`);
+  out.write(`  npx -y @marmarlabs/agentbridge-mcp-server\n`);
+  out.write(`  ${c.dim("# stderr: [agentbridge-mcp-http] listening on http://127.0.0.1:3333/mcp")}\n\n`);
+
+  out.write(`${c.dim("Generic hosted-MCP-client config (adapt to your client):")}\n`);
+  out.write(indentBlock(JSON.stringify(httpClientConfig, null, 2)) + "\n");
+  out.write(`  ${c.dim("# Resolve ${AGENTBRIDGE_HTTP_AUTH_TOKEN} via your client's secrets manager — never commit the literal token.")}\n\n`);
+
   out.write(
     `${c.bold("Safety reminder")}\n` +
-      `  ${c.dim("Loopback-only by default. Production-recommended: set AGENTBRIDGE_ALLOWED_TARGET_ORIGINS=https://app.example.com,https://admin.example.com.")}\n` +
-      `  ${c.dim("Broad escape hatch: AGENTBRIDGE_ALLOW_REMOTE=true (emits a stderr warning).")}\n` +
+      `  ${c.dim("Outbound: loopback-only by default. Production-recommended: set AGENTBRIDGE_ALLOWED_TARGET_ORIGINS=https://app.example.com,https://admin.example.com.")}\n` +
+      `  ${c.dim("Outbound broad escape hatch: AGENTBRIDGE_ALLOW_REMOTE=true (emits a stderr warning).")}\n` +
+      `  ${c.dim("Inbound HTTP: AGENTBRIDGE_HTTP_ALLOWED_ORIGINS gates Origin headers — independent from outbound AGENTBRIDGE_ALLOWED_TARGET_ORIGINS.")}\n` +
+      `  ${c.dim("HTTP requires AGENTBRIDGE_HTTP_AUTH_TOKEN; tokens in URL query strings are rejected with 400.")}\n` +
+      `  ${c.dim("Public bind (host other than 127.0.0.1/::1/localhost) requires both auth and Origin allowlist or fails closed at startup.")}\n` +
       `  ${c.dim("Medium/high-risk actions require confirmationApproved + a single-use confirmationToken.")}\n` +
-      `  ${c.dim("See docs/security-configuration.md for the full env-var reference.")}\n`,
+      `  ${c.dim("See docs/security-configuration.md for the full env-var reference.")}\n` +
+      `  ${c.dim("HTTP recipe: examples/http-client-config/ (curl smoke for auth/origin/query-token).")}\n`,
   );
 
   return 0;

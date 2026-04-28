@@ -11,7 +11,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js&logoColor=white)](https://nextjs.org/)
 [![MCP](https://img.shields.io/badge/MCP-1.0-orange)](https://modelcontextprotocol.io)
-[![Status: v0.3.0](https://img.shields.io/badge/Status-v0.3.0-blue)]()
+[![Status: v0.4.0-rc](https://img.shields.io/badge/Status-v0.4.0--rc-blue)]()
 [![npm](https://img.shields.io/npm/v/@marmarlabs/agentbridge-sdk?label=%40marmarlabs%2Fagentbridge-sdk)](https://www.npmjs.com/package/@marmarlabs/agentbridge-sdk)
 
 </div>
@@ -22,19 +22,36 @@
 
 **AgentBridge v0.3.0 is live on npm under the `@marmarlabs` scope**
 (published via npm Trusted Publishing with SLSA build provenance).
-The v0.2.x line shipped the first public release, a docs cleanup
-patch, and OpenAI Codex onboarding; v0.3.0 added production-
-foundation work — a stricter remote-target allowlist, configurable
-timeouts/TTLs, an MCP stdout-hygiene test, the Trusted Publishing
-workflow, a security threat model, and the v1.0 readiness
-checklist (see [docs/v1-readiness.md](docs/v1-readiness.md)).
-**v0.4.0 (in flight)** adds an opt-in HTTP MCP transport with
-authentication and Origin validation while preserving stdio as the
-default — see
-[docs/designs/http-mcp-transport-auth.md](docs/designs/http-mcp-transport-auth.md)
-and [docs/adr/0001-http-mcp-transport.md](docs/adr/0001-http-mcp-transport.md).
+**v0.4.0 is release-prepared** on the `release/v0.4.0-http-polish`
+branch — all packages bumped to `0.4.0`, the opt-in HTTP MCP
+transport implemented, docs and examples updated, and HTTP smoke
+wired into the local pre-publish flow. **Not yet on npm**;
+publishing happens through the existing Trusted Publishing
+workflow only after maintainer approval. See
+[docs/releases/v0.4.0.md](docs/releases/v0.4.0.md) for the full
+release notes.
+
+The v0.4.0 line adds:
+- An **opt-in Streamable HTTP MCP transport** with static
+  bearer-token auth, exact-origin allowlist, and loopback-by-
+  default bind. **stdio remains the default** for local desktop
+  clients — nothing about the existing stdio behavior changes.
+  HTTP is opt-in via `AGENTBRIDGE_TRANSPORT=http` and **fails
+  closed** on missing token, missing Origin allowlist for
+  public bind, or token-in-query-string. Design:
+  [docs/designs/http-mcp-transport-auth.md](docs/designs/http-mcp-transport-auth.md);
+  ADR: [docs/adr/0001-http-mcp-transport.md](docs/adr/0001-http-mcp-transport.md).
+- An **adopter quickstart** ([docs/adopter-quickstart.md](docs/adopter-quickstart.md))
+  and **manifest-pattern catalogue**
+  ([docs/manifest-patterns.md](docs/manifest-patterns.md)) for
+  existing-app onboarding.
+- **OpenAPI converter regression fixtures**
+  ([examples/openapi-regression](examples/openapi-regression))
+  pinning stable mapping behavior.
+
 Neither v0.3.0 nor v0.4.0 alone is v1.0 production readiness;
-both are steps toward it.
+both are steps toward it. The HTTP transport is **experimental**
+in v0.4.0.
 
 ```bash
 npm install @marmarlabs/agentbridge-sdk @marmarlabs/agentbridge-core
@@ -50,8 +67,10 @@ distributed audit storage are roadmap items (see
 [docs/roadmap.md](docs/roadmap.md)). Destructive demo actions remain
 simulated.
 
-For release notes, see [docs/releases/v0.3.0.md](docs/releases/v0.3.0.md)
-for the current release,
+For release notes, see [docs/releases/v0.4.0.md](docs/releases/v0.4.0.md)
+for the in-flight release,
+[docs/releases/v0.3.0.md](docs/releases/v0.3.0.md) for the latest
+shipped release,
 [docs/releases/v0.2.2.md](docs/releases/v0.2.2.md) for the Codex
 onboarding release,
 [docs/releases/v0.2.1.md](docs/releases/v0.2.1.md) for the docs
@@ -886,7 +905,7 @@ Near-term, in rough priority order:
 - **Signed manifests.** A published manifest carries a publisher signature an agent can verify offline. Removes the need to trust the host you're talking to.
 - **Standardized risk taxonomy.** Move from `low | medium | high` to a richer model: `read`, `write-self`, `write-others`, `financial`, `irreversible`. Lets agents reason about action consequences more precisely.
 - **Policy primitives.** First-class support for cost caps, rate limits, business-hours gating, and N-of-M approver workflows declared *in the manifest*.
-- **HTTP MCP transport.** stdio works for desktop clients; production agents need an authenticated HTTP transport. The v0.4.0 design is in [docs/designs/http-mcp-transport-auth.md](docs/designs/http-mcp-transport-auth.md).
+- **HTTP MCP transport.** Stdio works for desktop clients; hosted/centralized agents need an authenticated HTTP transport. **Implemented as opt-in in v0.4.0** behind `AGENTBRIDGE_TRANSPORT=http` with bearer-token auth, exact-origin allowlist, and loopback-by-default bind. Design: [docs/designs/http-mcp-transport-auth.md](docs/designs/http-mcp-transport-auth.md). Recipe: [examples/http-client-config](examples/http-client-config).
 - **Cross-app workflows.** Let an agent compose actions from multiple AgentBridge surfaces with consistent confirmation semantics across them.
 - **Browser fallback + auto-generation.** When a site doesn't publish a manifest, run a Playwright probe and *generate* a starter manifest from visible buttons and forms — give app teams a one-click on-ramp.
 - **Manifest registry.** Optional public index of manifests so agents can discover what surfaces exist for a given task ("find me an app that can refund a Stripe charge").
