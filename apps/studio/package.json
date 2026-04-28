@@ -10,8 +10,8 @@
     "start": "next start -p 3001"
   },
   "dependencies": {
-    "@marmar9615-cloud/agentbridge-core": "^0.2.0",
-    "@marmar9615-cloud/agentbridge-scanner": "^0.2.0",
+    "@marmarlabs/agentbridge-core": "^0.2.0",
+    "@marmarlabs/agentbridge-scanner": "^0.2.0",
     "marked": "^14.1.0",
     "next": "^15.0.0",
     "react": "^19.0.0",

@@ -1,4 +1,4 @@
-# @marmar9615-cloud/agentbridge-cli
+# @marmarlabs/agentbridge-cli
 
 Command-line interface for [AgentBridge](https://github.com/marmar9615-cloud/agentbridge-protocol).
 Scan, validate, scaffold, and generate manifests from your terminal.
@@ -6,9 +6,9 @@ Scan, validate, scaffold, and generate manifests from your terminal.
 ## Install
 
 ```bash
-npm install -g @marmar9615-cloud/agentbridge-cli
+npm install -g @marmarlabs/agentbridge-cli
 # or invoke directly:
-npx @marmar9615-cloud/agentbridge-cli scan http://localhost:3000
+npx @marmarlabs/agentbridge-cli scan http://localhost:3000
 ```
 
 ## Commands

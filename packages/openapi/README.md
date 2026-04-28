@@ -1,4 +1,4 @@
-# @marmar9615-cloud/agentbridge-openapi
+# @marmarlabs/agentbridge-openapi
 
 Convert OpenAPI 3.x documents into [AgentBridge](https://github.com/marmar9615-cloud/agentbridge-protocol)
 manifests. Risk levels are inferred from HTTP method, path patterns, and
@@ -7,14 +7,14 @@ operation IDs — and you can override them.
 ## Install
 
 ```bash
-npm install @marmar9615-cloud/agentbridge-openapi
+npm install @marmarlabs/agentbridge-openapi
 ```
 
-For most users, the [CLI wrapper](https://www.npmjs.com/package/@marmar9615-cloud/agentbridge-cli)
+For most users, the [CLI wrapper](https://www.npmjs.com/package/@marmarlabs/agentbridge-cli)
 is more ergonomic:
 
 ```bash
-npx @marmar9615-cloud/agentbridge-cli generate openapi store.openapi.json --out agentbridge.json
+npx @marmarlabs/agentbridge-cli generate openapi store.openapi.json --out agentbridge.json
 ```
 
 ## What's inside
@@ -29,7 +29,7 @@ npx @marmar9615-cloud/agentbridge-cli generate openapi store.openapi.json --out 
 
 ```ts
 import { readFileSync } from "node:fs";
-import { convertOpenApiToManifest } from "@marmar9615-cloud/agentbridge-openapi";
+import { convertOpenApiToManifest } from "@marmarlabs/agentbridge-openapi";
 
 const doc = JSON.parse(readFileSync("store.openapi.json", "utf8"));
 const manifest = convertOpenApiToManifest(doc, {

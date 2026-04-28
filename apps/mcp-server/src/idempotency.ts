@@ -1,6 +1,6 @@
 import { promises as fs } from "node:fs";
 import path from "node:path";
-import { getAuditFilePath } from "@marmar9615-cloud/agentbridge-core";
+import { getAuditFilePath } from "@marmarlabs/agentbridge-core";
 import { hashInput } from "./confirmations";
 
 /* Idempotency-key store.

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { scanUrl, type ScanResult } from "@marmar9615-cloud/agentbridge-scanner";
+import { scanUrl, type ScanResult } from "@marmarlabs/agentbridge-scanner";
 import { CopyButton } from "../../components/CopyButton";
 
 export const dynamic = "force-dynamic";

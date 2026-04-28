@@ -1,5 +1,5 @@
 {
-  "name": "@marmar9615-cloud/agentbridge-openapi",
+  "name": "@marmarlabs/agentbridge-openapi",
   "version": "0.2.0",
   "description": "Convert OpenAPI 3.x documents into AgentBridge manifests.",
   "license": "Apache-2.0",
@@ -29,6 +29,6 @@
     "build": "tsup"
   },
   "dependencies": {
-    "@marmar9615-cloud/agentbridge-core": "^0.2.0"
+    "@marmarlabs/agentbridge-core": "^0.2.0"
   }
 }

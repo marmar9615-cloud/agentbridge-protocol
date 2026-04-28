@@ -11,35 +11,34 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js&logoColor=white)](https://nextjs.org/)
 [![MCP](https://img.shields.io/badge/MCP-1.0-orange)](https://modelcontextprotocol.io)
-[![Status: Public Beta](https://img.shields.io/badge/Status-Public_Beta-blue)]()
+[![Status: v0.2.0](https://img.shields.io/badge/Status-v0.2.0-blue)]()
+[![npm](https://img.shields.io/npm/v/@marmarlabs/agentbridge-sdk?label=%40marmarlabs%2Fagentbridge-sdk)](https://www.npmjs.com/package/@marmarlabs/agentbridge-sdk)
 
 </div>
 
 ---
 
-## Public beta status
+## Status
 
-This is **v0.2.0 beta** — the first cut intended for outside developers to evaluate. It is suitable for local experimentation, prototyping, and reading. It is **not** yet a production security infrastructure: signed manifests, OAuth scope enforcement, HTTP MCP transport, and distributed audit storage are roadmap items (see [docs/roadmap.md](docs/roadmap.md)). Destructive demo actions remain simulated.
-
-**Distribution: source-only.** The `@marmar9615-cloud/agentbridge-*` packages are *prepared* for npm publishing (CI builds them, `npm pack --dry-run` validates each tarball) but **have not been published to npm yet**. The way to use AgentBridge today is to clone this repo:
-
-```bash
-git clone https://github.com/marmar9615-cloud/agentbridge-protocol.git
-cd agentbridge-protocol
-npm install
-npm run dev      # demo on :3000, Studio on :3001
-```
-
-npm publishing is a separate manual step (see [docs/npm-publishing.md](docs/npm-publishing.md)). After it happens, the equivalent commands will be:
+**AgentBridge v0.2.0 is the first public release.** The publishable
+packages are available on npm under the `@marmarlabs` scope.
 
 ```bash
-# Available only after the packages are published — not today.
-npm install @marmar9615-cloud/agentbridge-sdk @marmar9615-cloud/agentbridge-core
-npx @marmar9615-cloud/agentbridge-cli scan http://localhost:3000
-npx @marmar9615-cloud/agentbridge-mcp-server
+npm install @marmarlabs/agentbridge-sdk @marmarlabs/agentbridge-core
+npx @marmarlabs/agentbridge-cli scan http://localhost:3000
+npx @marmarlabs/agentbridge-mcp-server
 ```
 
-See [docs/public-beta.md](docs/public-beta.md) for what is and isn't in 0.2.0-beta, and [docs/releases/v0.2.0-beta.md](docs/releases/v0.2.0-beta.md) for full release notes.
+AgentBridge is usable today for local development, app prototyping,
+manifest authoring, scanner workflows, OpenAPI import, and MCP
+experiments. It is **not yet production security infrastructure** —
+signed manifests, OAuth scope enforcement, HTTP MCP transport, and
+distributed audit storage are roadmap items (see
+[docs/roadmap.md](docs/roadmap.md)). Destructive demo actions remain
+simulated.
+
+For the v0.2.0 release notes, see
+[docs/releases/v0.2.0.md](docs/releases/v0.2.0.md).
 
 ---
 
@@ -266,7 +265,7 @@ agentbridge-protocol/
 │   ├── sdk/              # 📦 defineAgentAction, manifest builder
 │   ├── scanner/          # 📦 readiness scoring + structured checks
 │   ├── openapi/          # 📦 OpenAPI 3.x → AgentBridge manifest converter
-│   └── cli/              # 📦 @marmar9615-cloud/agentbridge-cli — scan, validate, init, generate
+│   └── cli/              # 📦 @marmarlabs/agentbridge-cli — scan, validate, init, generate
 ├── apps/
 │   ├── demo-app/         # 🛒 Next.js order-management demo (port 3000)
 │   ├── studio/           # 🎛 Next.js dashboard (port 3001)
@@ -301,7 +300,7 @@ import {
   summarizeAction,
   createAuditEvent,
   appendAuditEvent,
-} from "@marmar9615-cloud/agentbridge-core";
+} from "@marmarlabs/agentbridge-core";
 
 const result = validateManifest(rawJson);
 if (result.ok) {
@@ -325,7 +324,7 @@ Key exports:
 The author's interface. Define actions ergonomically with Zod, get JSON Schema for free.
 
 ```typescript
-import { defineAgentAction, createAgentBridgeManifest, z } from "@marmar9615-cloud/agentbridge-sdk";
+import { defineAgentAction, createAgentBridgeManifest, z } from "@marmarlabs/agentbridge-sdk";
 
 const refundAction = defineAgentAction({
   name: "draft_refund_order",
@@ -370,7 +369,7 @@ The SDK converts Zod → JSON Schema (via `zod-to-json-schema`) automatically, s
 Audit any URL for agent readiness. Returns a 0–100 score plus actionable recommendations.
 
 ```typescript
-import { scanUrl } from "@marmar9615-cloud/agentbridge-scanner";
+import { scanUrl } from "@marmarlabs/agentbridge-scanner";
 
 const report = await scanUrl("http://localhost:3000");
 // {
@@ -447,7 +446,7 @@ The `agentbridge` command. See [The CLI](#the-cli) below.
 npm run dev:cli -- scan http://localhost:3000
 
 # After installing the published package, or via npx without install:
-npx @marmar9615-cloud/agentbridge-cli scan http://localhost:3000
+npx @marmarlabs/agentbridge-cli scan http://localhost:3000
 ```
 
 | Command | What it does |
@@ -462,7 +461,7 @@ npx @marmar9615-cloud/agentbridge-cli scan http://localhost:3000
 Example: take an existing OpenAPI document and turn it into a draft manifest in one shot:
 
 ```bash
-npx @marmar9615-cloud/agentbridge-cli generate openapi ./your-api.openapi.json \
+npx @marmarlabs/agentbridge-cli generate openapi ./your-api.openapi.json \
   --base-url https://api.acme.com \
   --out ./public/.well-known/agentbridge.json
 ```
@@ -473,7 +472,7 @@ See [docs/openapi-import.md](docs/openapi-import.md) for the full guide.
 
 ## OpenAPI import
 
-The CLI's `generate openapi` command and the `@marmar9615-cloud/agentbridge-openapi` package
+The CLI's `generate openapi` command and the `@marmarlabs/agentbridge-openapi` package
 turn an existing OpenAPI 3.x document into a draft AgentBridge manifest.
 
 | OpenAPI method | Risk inferred | requiresConfirmation |
@@ -495,7 +494,7 @@ intent. See the [example](examples/openapi-store/) and
 ## Manifest spec
 
 The manifest format is a stable, versioned spec — not just whatever
-`@marmar9615-cloud/agentbridge-core` happens to validate.
+`@marmarlabs/agentbridge-core` happens to validate.
 
 | Artifact | Path |
 |---|---|
@@ -551,7 +550,7 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
   "mcpServers": {
     "agentbridge": {
       "command": "npx",
-      "args": ["@marmar9615-cloud/agentbridge-mcp-server"]
+      "args": ["@marmarlabs/agentbridge-mcp-server"]
     }
   }
 }

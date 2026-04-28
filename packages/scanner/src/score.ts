@@ -1,4 +1,4 @@
-import type { AgentBridgeManifest, AgentAction } from "@marmar9615-cloud/agentbridge-core";
+import type { AgentBridgeManifest, AgentAction } from "@marmarlabs/agentbridge-core";
 
 export type CheckSeverity = "info" | "warning" | "error";
 export type RecommendationCategory =

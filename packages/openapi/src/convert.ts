@@ -1,4 +1,4 @@
-import type { AgentAction } from "@marmar9615-cloud/agentbridge-core";
+import type { AgentAction } from "@marmarlabs/agentbridge-core";
 import type {
   HttpMethod,
   OpenApiDocument,

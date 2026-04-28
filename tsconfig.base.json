@@ -17,11 +17,11 @@
     "incremental": true,
     "baseUrl": ".",
     "paths": {
-      "@marmar9615-cloud/agentbridge-core": ["packages/core/src/index.ts"],
-      "@marmar9615-cloud/agentbridge-sdk": ["packages/sdk/src/index.ts"],
-      "@marmar9615-cloud/agentbridge-scanner": ["packages/scanner/src/index.ts"],
-      "@marmar9615-cloud/agentbridge-openapi": ["packages/openapi/src/index.ts"],
-      "@marmar9615-cloud/agentbridge-cli": ["packages/cli/src/index.ts"]
+      "@marmarlabs/agentbridge-core": ["packages/core/src/index.ts"],
+      "@marmarlabs/agentbridge-sdk": ["packages/sdk/src/index.ts"],
+      "@marmarlabs/agentbridge-scanner": ["packages/scanner/src/index.ts"],
+      "@marmarlabs/agentbridge-openapi": ["packages/openapi/src/index.ts"],
+      "@marmarlabs/agentbridge-cli": ["packages/cli/src/index.ts"]
     }
   }
 }

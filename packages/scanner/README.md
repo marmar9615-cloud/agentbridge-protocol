@@ -1,16 +1,16 @@
-# @marmar9615-cloud/agentbridge-scanner
+# @marmarlabs/agentbridge-scanner
 
 Score how agent-ready a URL is. Returns a 0–100 readiness score,
 structured `checks[]`, and grouped recommendations.
 
-Used by the [AgentBridge CLI](https://www.npmjs.com/package/@marmar9615-cloud/agentbridge-cli),
+Used by the [AgentBridge CLI](https://www.npmjs.com/package/@marmarlabs/agentbridge-cli),
 [AgentBridge Studio](https://github.com/marmar9615-cloud/agentbridge-protocol/tree/main/apps/studio),
-and the [MCP server](https://www.npmjs.com/package/@marmar9615-cloud/agentbridge-mcp-server).
+and the [MCP server](https://www.npmjs.com/package/@marmarlabs/agentbridge-mcp-server).
 
 ## Install
 
 ```bash
-npm install @marmar9615-cloud/agentbridge-scanner
+npm install @marmarlabs/agentbridge-scanner
 ```
 
 `playwright` is an optional dependency — install it separately if you
@@ -30,7 +30,7 @@ npm install playwright
 ## Quick example
 
 ```ts
-import { scanUrl } from "@marmar9615-cloud/agentbridge-scanner";
+import { scanUrl } from "@marmarlabs/agentbridge-scanner";
 
 const result = await scanUrl("http://localhost:3000");
 console.log(`score: ${result.score}/100`);

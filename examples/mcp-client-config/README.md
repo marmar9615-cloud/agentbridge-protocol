@@ -17,7 +17,7 @@ client.
   "mcpServers": {
     "agentbridge": {
       "command": "npx",
-      "args": ["@marmar9615-cloud/agentbridge-mcp-server"],
+      "args": ["@marmarlabs/agentbridge-mcp-server"],
       "env": {
         "AGENTBRIDGE_ALLOW_REMOTE": "false"
       }
@@ -70,7 +70,7 @@ behind an MCP HTTP transport adapter. See [`docs/mcp-client-setup.md`](../../doc
 You don't have to write any of this by hand:
 
 ```bash
-npx @marmar9615-cloud/agentbridge-cli mcp-config
+npx @marmarlabs/agentbridge-cli mcp-config
 ```
 
 prints copy-pasteable config snippets for direct invocation and for a

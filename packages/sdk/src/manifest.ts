@@ -3,7 +3,7 @@ import {
   type AgentBridgeManifest,
   type AgentResource,
   type ManifestAuth,
-} from "@marmar9615-cloud/agentbridge-core";
+} from "@marmarlabs/agentbridge-core";
 import type { DefinedAction } from "./action";
 
 export interface CreateAgentBridgeManifestConfig {

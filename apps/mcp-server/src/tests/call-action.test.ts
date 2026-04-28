@@ -5,7 +5,7 @@ import os from "node:os";
 import { callAction } from "../tools";
 import { _resetConfirmations } from "../confirmations";
 import { _resetIdempotency } from "../idempotency";
-import type { AgentBridgeManifest } from "@marmar9615-cloud/agentbridge-core";
+import type { AgentBridgeManifest } from "@marmarlabs/agentbridge-core";
 
 const TMP_DIR = path.join(os.tmpdir(), `agentbridge-mcp-test-${process.pid}`);
 

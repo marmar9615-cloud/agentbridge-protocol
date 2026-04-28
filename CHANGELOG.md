@@ -4,6 +4,38 @@ All notable changes to AgentBridge are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] — 2026-04-27 — First public release
+
+### Added
+
+- All six publishable packages are now on npm under the `@marmarlabs`
+  scope:
+  - [`@marmarlabs/agentbridge-core`](https://www.npmjs.com/package/@marmarlabs/agentbridge-core)
+  - [`@marmarlabs/agentbridge-sdk`](https://www.npmjs.com/package/@marmarlabs/agentbridge-sdk)
+  - [`@marmarlabs/agentbridge-scanner`](https://www.npmjs.com/package/@marmarlabs/agentbridge-scanner)
+  - [`@marmarlabs/agentbridge-openapi`](https://www.npmjs.com/package/@marmarlabs/agentbridge-openapi)
+  - [`@marmarlabs/agentbridge-cli`](https://www.npmjs.com/package/@marmarlabs/agentbridge-cli)
+  - [`@marmarlabs/agentbridge-mcp-server`](https://www.npmjs.com/package/@marmarlabs/agentbridge-mcp-server)
+- [`docs/releases/v0.2.0.md`](docs/releases/v0.2.0.md) release notes.
+
+### Changed
+
+- Renamed publishable packages from `@marmar9615-cloud/agentbridge-*`
+  to `@marmarlabs/agentbridge-*`. Rationale: the `@marmar9615-cloud`
+  npm scope was never created on npm; `@marmarlabs` is the actual
+  owned scope of the publisher. See
+  [docs/npm-scope.md](docs/npm-scope.md).
+- README, docs, and per-package READMEs updated to use the
+  `@marmarlabs` scope and the now-published install commands.
+- The 0.2.0-beta GitHub prerelease is superseded by this release.
+
+### Compatibility
+
+- No code or behavior changes from 0.2.0-beta. The packages are the
+  same shape, the same APIs, the same safety invariants. Only the npm
+  scope changed.
+- All 86 tests pass on Node 20.x and 22.x.
+
 ## [0.2.0-beta] — 2026-04-26 — Phase 3A: Public Beta Release Hardening
 
 ### Changed (potentially breaking for any pre-existing imports)

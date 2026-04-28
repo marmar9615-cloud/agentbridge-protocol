@@ -8,8 +8,8 @@
     "start": "next start -p 3000"
   },
   "dependencies": {
-    "@marmar9615-cloud/agentbridge-core": "^0.2.0",
-    "@marmar9615-cloud/agentbridge-sdk": "^0.2.0",
+    "@marmarlabs/agentbridge-core": "^0.2.0",
+    "@marmarlabs/agentbridge-sdk": "^0.2.0",
     "next": "^15.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
