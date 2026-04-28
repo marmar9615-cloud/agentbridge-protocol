@@ -9,6 +9,7 @@ Self-contained examples showing how to integrate AgentBridge in different contex
 | [`adopter-quickstart/`](./adopter-quickstart) | Static manifest examples for adding AgentBridge to an existing app. |
 | [`openapi-store/`](./openapi-store) | OpenAPI document → AgentBridge manifest via the CLI. |
 | [`openapi-regression/`](./openapi-regression) | OpenAPI converter regression fixtures for stable v1.0 mapping behavior. |
+| [`scanner-regression/`](./scanner-regression) | Scanner readiness fixtures for public API and scoring regression tests. |
 | [`mcp-client-config/`](./mcp-client-config) | Wiring AgentBridge MCP into Claude Desktop / Cursor / custom clients. |
 | [`codex-config/`](./codex-config) | OpenAI Codex `config.toml` snippets — global and project-scoped. |
 | [`codex-plugin/`](./codex-plugin) | **Experimental** local Codex plugin skeleton (plugin.json + .mcp.json + skill). Not a published plugin. |

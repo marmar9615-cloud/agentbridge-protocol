@@ -1,0 +1,18 @@
+{
+  "name": "Scanner Regression Invalid",
+  "version": "0.1.0",
+  "baseUrl": "not-a-url",
+  "actions": [
+    {
+      "name": "broken_action",
+      "title": "Broken action",
+      "description": "This fixture intentionally omits required action fields.",
+      "method": "POST",
+      "endpoint": "/api/agentbridge/actions/broken_action",
+      "risk": "medium",
+      "inputSchema": {
+        "type": "object"
+      }
+    }
+  ]
+}

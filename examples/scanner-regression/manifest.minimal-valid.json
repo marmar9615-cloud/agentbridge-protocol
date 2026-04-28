@@ -1,0 +1,20 @@
+{
+  "name": "Scanner Regression Minimal",
+  "version": "0.1.0",
+  "baseUrl": "https://support.example.com",
+  "actions": [
+    {
+      "name": "list_notes",
+      "title": "List notes",
+      "description": "List notes.",
+      "method": "GET",
+      "endpoint": "/api/agentbridge/actions/list_notes",
+      "risk": "low",
+      "requiresConfirmation": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  ]
+}

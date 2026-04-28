@@ -1,0 +1,65 @@
+{
+  "name": "Scanner Regression Missing Confirmation",
+  "description": "Fixture with a medium-risk mutation that intentionally lacks confirmation.",
+  "version": "1.0.0",
+  "baseUrl": "https://support.example.com",
+  "contact": "platform@example.com",
+  "auth": {
+    "type": "bearer",
+    "description": "Use short-lived bearer tokens scoped to the current operator."
+  },
+  "resources": [
+    {
+      "name": "support_tickets",
+      "description": "Support tickets and staff-only notes.",
+      "url": "/support/tickets"
+    }
+  ],
+  "actions": [
+    {
+      "name": "add_internal_note",
+      "title": "Add internal note",
+      "description": "Adds a staff-only note to a support ticket for human review.",
+      "method": "POST",
+      "endpoint": "/api/agentbridge/actions/add_internal_note",
+      "risk": "medium",
+      "requiresConfirmation": false,
+      "inputSchema": {
+        "type": "object",
+        "required": ["ticketId", "body"],
+        "properties": {
+          "ticketId": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "noteId": {
+            "type": "string"
+          }
+        }
+      },
+      "permissions": [
+        {
+          "scope": "tickets:comment"
+        }
+      ],
+      "examples": [
+        {
+          "description": "Staff-only update",
+          "input": {
+            "ticketId": "T-1001",
+            "body": "Customer retried checkout and still sees the same error."
+          }
+        }
+      ],
+      "humanReadableSummaryTemplate": "Add internal note to ticket {{ticketId}}: {{body}}"
+    }
+  ]
+}
