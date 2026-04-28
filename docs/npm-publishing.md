@@ -3,11 +3,18 @@
 How to publish the six AgentBridge packages once
 [docs/release-checklist.md](release-checklist.md) is fully green.
 
+> **The preferred path is npm Trusted Publishing**, executed via
+> the [`release-publish.yml`](../.github/workflows/release-publish.yml)
+> workflow. See [docs/trusted-publishing.md](trusted-publishing.md)
+> for setup. The manual flow below is the fallback that v0.2.0,
+> v0.2.1, and v0.2.2 used; expect to use it less and less as v1.0
+> approaches.
+
 **Do not run any of these commands until the release checklist is
 checked off and you intend to ship.** v0.2.0 was the first public
-release on npm under the `@marmarlabs` scope; v0.2.1 is the
-README-cleanup patch on top of v0.2.0. The instructions below are the
-flow for any future bump.
+release on npm under the `@marmarlabs` scope; v0.2.1 was the
+README-cleanup patch and v0.2.2 added Codex onboarding. The
+instructions below are the manual fallback flow for any future bump.
 
 ## Order matters
 

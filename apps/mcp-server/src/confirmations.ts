@@ -2,6 +2,7 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { createHash, randomBytes } from "node:crypto";
 import { getAuditFilePath } from "@marmarlabs/agentbridge-core";
+import { resolveConfig } from "./config";
 
 /* Pending-confirmation store.
  *
@@ -13,15 +14,22 @@ import { getAuditFilePath } from "@marmarlabs/agentbridge-core";
  *      same `confirmationToken`. The token only matches if the input hash
  *      still matches — preventing reuse with different input.
  *
- * Tokens expire after CONFIRMATION_TTL_MS. Expired entries are pruned on
- * every read so the store doesn't grow unbounded.
+ * Tokens expire after the configured TTL (default 5 minutes; configurable
+ * via AGENTBRIDGE_CONFIRMATION_TTL_SECONDS within [30, 3600]). Expired
+ * entries are pruned on every read so the store doesn't grow unbounded.
  *
  * Persistence is a JSON file alongside the audit log so it survives a
  * server restart (handy when an agent's call/respond cycle takes longer
  * than the lifetime of one stdio process).
  */
 
-export const CONFIRMATION_TTL_MS = 5 * 60 * 1000; // 5 minutes
+// Legacy constant kept for backwards compatibility with any external imports;
+// runtime code should call resolveConfirmationTtlMs() so env-var changes apply.
+export const CONFIRMATION_TTL_MS = 5 * 60 * 1000;
+
+export function resolveConfirmationTtlMs(): number {
+  return resolveConfig().confirmationTtlMs;
+}
 
 export interface PendingConfirmation {
   token: string;
@@ -83,7 +91,7 @@ export async function createPendingConfirmation(args: {
   ttlMs?: number;
 }): Promise<PendingConfirmation> {
   const token = randomBytes(16).toString("hex");
-  const ttl = args.ttlMs ?? CONFIRMATION_TTL_MS;
+  const ttl = args.ttlMs ?? resolveConfirmationTtlMs();
   const now = Date.now();
   const entry: PendingConfirmation = {
     token,

@@ -101,9 +101,13 @@ npm run dev
 ```
 
 The demo app boots on `http://localhost:3000` (and Studio on `:3001`).
-By default the AgentBridge MCP server only allows **loopback** URLs;
-set `AGENTBRIDGE_ALLOW_REMOTE=true` in the server's environment to talk
-to a non-localhost surface.
+By default the AgentBridge MCP server only allows **loopback** URLs.
+For production-style deployments, set
+`AGENTBRIDGE_ALLOWED_TARGET_ORIGINS=https://your-app.example.com`
+(comma-separated for multiple). The broader
+`AGENTBRIDGE_ALLOW_REMOTE=true` escape hatch still works for ad-hoc
+testing but emits a stderr warning. Full env-var reference:
+[docs/security-configuration.md](security-configuration.md).
 
 In Codex, try a prompt like:
 
@@ -150,9 +154,14 @@ the demo, but `discover_manifest` calls against
 run `npm run dev` (or `npm run dev:demo`) in the cloned repo.
 
 **`Only loopback URLs allowed`.** This is the default safety policy.
-Set `AGENTBRIDGE_ALLOW_REMOTE=true` in the server's environment (an
-`env` block in JSON configs, or via your shell when launching Codex)
-to permit non-loopback hosts.
+Production-recommended: set
+`AGENTBRIDGE_ALLOWED_TARGET_ORIGINS=https://app.example.com,https://admin.example.com`
+in the server's environment (an `env` block in JSON configs or
+`[mcp_servers.agentbridge.env]` in `config.toml`). Loopback URLs
+remain allowed even when the allowlist is set. The broader
+`AGENTBRIDGE_ALLOW_REMOTE=true` escape hatch still works but
+permits *all* remote http(s) origins and emits a stderr warning. See
+[docs/security-configuration.md](security-configuration.md).
 
 **A risky action returned `confirmationRequired`.** This is expected.
 Re-call `call_action` with the same input plus

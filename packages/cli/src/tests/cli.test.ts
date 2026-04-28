@@ -122,7 +122,9 @@ describe("mcp-config command", () => {
 
     // Safety reminder.
     expect(output).toContain("AGENTBRIDGE_ALLOW_REMOTE");
+    expect(output).toContain("AGENTBRIDGE_ALLOWED_TARGET_ORIGINS");
     expect(output).toContain("confirmationToken");
+    expect(output).toContain("docs/security-configuration.md");
   });
 });
 

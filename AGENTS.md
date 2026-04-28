@@ -22,9 +22,12 @@ The repo ships:
 ## Current state
 
 - npm scope: **`@marmarlabs`** (do not change).
-- Latest published release: **v0.2.1** on npm and on GitHub
-  (Latest, stable). v0.2.2 is in progress on this branch.
-- Manifest schema: v0.1, stable for the v0.x line.
+- Latest published release: **v0.2.2** on npm and on GitHub
+  (Latest, stable). v0.3.0 is in progress on this branch
+  ("Production Foundations" — docs, stricter remote allowlist,
+  configurable bounds, draft Trusted Publishing workflow).
+- Manifest schema: v0.1, stable for the v0.x line. Will be frozen
+  for v1.x per [docs/v1-readiness.md](docs/v1-readiness.md).
 
 ## Layout
 
@@ -70,8 +73,12 @@ pack-check, and Next.js builds on Node 20.x and 22.x.
 2. **Origin pinning.** `apps/mcp-server/src/safety.ts:assertSameOrigin`
    runs before every outbound call. Action endpoints must share
    origin with `manifest.baseUrl`.
-3. **Loopback-only by default.** Setting `AGENTBRIDGE_ALLOW_REMOTE=true`
-   is the only escape.
+3. **Loopback-only by default.** Two opt-in escapes:
+   `AGENTBRIDGE_ALLOWED_TARGET_ORIGINS=<comma-separated origins>`
+   (strict, exact-origin allowlist; production-recommended) and
+   `AGENTBRIDGE_ALLOW_REMOTE=true` (broad, emits a one-time stderr
+   warning). The strict allowlist always wins. See
+   [docs/security-configuration.md](docs/security-configuration.md).
 4. **Audit redaction.** `packages/core/src/audit.ts:redact` is the
    chokepoint for stripping `authorization`, `cookie`, `password`,
    `token`, `secret`, `api_key`. Extend the redact set, do not
@@ -146,7 +153,17 @@ If a change weakens any of these, stop and ask before continuing.
 - [docs/codex-setup.md](docs/codex-setup.md) — Codex onboarding.
 - [docs/mcp-client-setup.md](docs/mcp-client-setup.md) — every other
   MCP client.
-- [docs/roadmap.md](docs/roadmap.md) — what's planned beyond v0.2.x
+- [docs/v1-readiness.md](docs/v1-readiness.md) — what
+  "production-ready v1.0" means for this project.
+- [docs/production-readiness.md](docs/production-readiness.md) —
+  practical "what is AgentBridge safe for today?" guidance.
+- [docs/threat-model.md](docs/threat-model.md) — known threats,
+  current mitigations, v1.0 targets.
+- [docs/security-configuration.md](docs/security-configuration.md)
+  — every env var the MCP server honors.
+- [docs/trusted-publishing.md](docs/trusted-publishing.md) — npm
+  Trusted Publishing plan and draft workflow.
+- [docs/roadmap.md](docs/roadmap.md) — what's planned beyond v0.3.x
   (signed manifests, HTTP MCP transport, OAuth scope enforcement,
   distributed audit storage, …).
 - [SECURITY.md](SECURITY.md) — how to report security issues.

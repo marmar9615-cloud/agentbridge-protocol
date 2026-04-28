@@ -62,9 +62,18 @@ Manual checks:
 
 ## Publish
 
-Once everything above is checked, follow [docs/npm-publishing.md](npm-publishing.md)
-for the publish commands. Do not run them until each box above is
-checked.
+Once everything above is checked, two paths exist depending on
+whether npm Trusted Publishing is configured for all six packages
+(see [docs/trusted-publishing.md](trusted-publishing.md)):
+
+- **Preferred (v1.0 path):** trigger `release-publish.yml` from
+  the GitHub Actions UI. Run it once with `dry_run=true` to verify
+  the plan, then re-run with `dry_run=false`. No NPM_TOKEN
+  required.
+- **Manual fallback:** follow [docs/npm-publishing.md](npm-publishing.md)
+  for the manual `npm publish` commands. Use only when the
+  workflow is unavailable. Document the reason in the release
+  notes.
 
 After publishing, the GitHub release commands are at the bottom of
 [npm-publishing.md](npm-publishing.md).

@@ -1,0 +1,207 @@
+name: Release publish (Trusted Publishing)
+
+# Manual-dispatch publish workflow for AgentBridge.
+#
+# This workflow is the v1.0 release path. Until each of the six packages
+# has a Trusted Publisher entry configured in the npm web UI, the
+# `dry_run=false` path will fail with a 403. See:
+#   docs/trusted-publishing.md
+#
+# It NEVER runs on push or PR. It does not use NPM_TOKEN — Trusted
+# Publishing exchanges a short-lived OIDC token for a one-shot publish
+# credential, scoped to this workflow on this repo.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Exact version being published, e.g. 0.3.0. Must match every workspace package.json."
+        required: true
+        type: string
+      dry_run:
+        description: "If true, run every step short of `npm publish` and print the plan."
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  # Required for Trusted Publishing OIDC exchange. Even in dry-run mode we
+  # request it so the workflow signature stays consistent across runs and
+  # so the workflow file matches the npm-side trusted publisher record.
+  id-token: write
+  contents: read
+
+jobs:
+  publish:
+    name: Publish (or dry-run) all six packages
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          # npm Trusted Publishing requires Node 24+ on the runner so the
+          # bundled npm CLI (>=11) supports OIDC. Node 22 here boots the job;
+          # the publish steps install a newer npm explicitly below.
+          node-version: 22.x
+          registry-url: "https://registry.npmjs.org/"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck (with cleaned dist, mirrors fresh-clone state)
+        run: npm run typecheck:clean
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build publishable packages
+        run: npm run build
+
+      - name: Pack dry-run
+        run: npm run pack:dry-run
+
+      - name: Assert every workspace package.json matches the requested version
+        env:
+          REQUESTED: ${{ inputs.version }}
+        run: |
+          set -eu
+          fail=0
+          for f in \
+            package.json \
+            packages/core/package.json \
+            packages/sdk/package.json \
+            packages/scanner/package.json \
+            packages/openapi/package.json \
+            packages/cli/package.json \
+            apps/mcp-server/package.json \
+            apps/demo-app/package.json \
+            apps/studio/package.json
+          do
+            v=$(node -e "console.log(require('./'+process.argv[1]).version)" "$f")
+            if [ "$v" != "$REQUESTED" ]; then
+              echo "::error file=$f::version is $v, expected $REQUESTED"
+              fail=1
+            else
+              echo "ok  $f -> $v"
+            fi
+          done
+          if [ "$fail" -ne 0 ]; then
+            echo "::error::One or more package.json files do not match inputs.version=$REQUESTED. Bump them and push to main first."
+            exit 1
+          fi
+
+      - name: Print publish plan
+        env:
+          REQUESTED: ${{ inputs.version }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -eu
+          echo "Plan: publish AgentBridge $REQUESTED"
+          echo "  dry_run: $DRY_RUN"
+          echo "  registry: https://registry.npmjs.org/"
+          echo "  Trusted Publisher OIDC: yes (no NPM_TOKEN required)"
+          echo "  Provenance: --provenance"
+          echo
+          echo "  1. @marmarlabs/agentbridge-core@$REQUESTED"
+          echo "  2. @marmarlabs/agentbridge-sdk@$REQUESTED"
+          echo "  3. @marmarlabs/agentbridge-scanner@$REQUESTED"
+          echo "  4. @marmarlabs/agentbridge-openapi@$REQUESTED"
+          echo "  5. @marmarlabs/agentbridge-cli@$REQUESTED"
+          echo "  6. @marmarlabs/agentbridge-mcp-server@$REQUESTED"
+
+      - name: Publish — core (dry-run)
+        if: ${{ inputs.dry_run == true }}
+        working-directory: packages/core
+        run: npm publish --access public --provenance --dry-run
+
+      - name: Publish — sdk (dry-run)
+        if: ${{ inputs.dry_run == true }}
+        working-directory: packages/sdk
+        run: npm publish --access public --provenance --dry-run
+
+      - name: Publish — scanner (dry-run)
+        if: ${{ inputs.dry_run == true }}
+        working-directory: packages/scanner
+        run: npm publish --access public --provenance --dry-run
+
+      - name: Publish — openapi (dry-run)
+        if: ${{ inputs.dry_run == true }}
+        working-directory: packages/openapi
+        run: npm publish --access public --provenance --dry-run
+
+      - name: Publish — cli (dry-run)
+        if: ${{ inputs.dry_run == true }}
+        working-directory: packages/cli
+        run: npm publish --access public --provenance --dry-run
+
+      - name: Publish — mcp-server (dry-run)
+        if: ${{ inputs.dry_run == true }}
+        working-directory: apps/mcp-server
+        run: npm publish --access public --provenance --dry-run
+
+      # Real publish steps — only run when explicitly requested.
+      # Trusted Publishing requires an npm CLI new enough to do the OIDC
+      # exchange. We install the latest npm globally before publishing so
+      # this works regardless of the runner image's bundled version.
+
+      - name: Bump npm to latest (Trusted Publishing requires npm >=11)
+        if: ${{ inputs.dry_run == false }}
+        run: npm install -g npm@latest
+
+      - name: Publish — core
+        if: ${{ inputs.dry_run == false }}
+        working-directory: packages/core
+        run: npm publish --access public --provenance
+
+      - name: Publish — sdk
+        if: ${{ inputs.dry_run == false }}
+        working-directory: packages/sdk
+        run: npm publish --access public --provenance
+
+      - name: Publish — scanner
+        if: ${{ inputs.dry_run == false }}
+        working-directory: packages/scanner
+        run: npm publish --access public --provenance
+
+      - name: Publish — openapi
+        if: ${{ inputs.dry_run == false }}
+        working-directory: packages/openapi
+        run: npm publish --access public --provenance
+
+      - name: Publish — cli
+        if: ${{ inputs.dry_run == false }}
+        working-directory: packages/cli
+        run: npm publish --access public --provenance
+
+      - name: Publish — mcp-server
+        if: ${{ inputs.dry_run == false }}
+        working-directory: apps/mcp-server
+        run: npm publish --access public --provenance
+
+      - name: Verify published versions
+        if: ${{ inputs.dry_run == false }}
+        env:
+          REQUESTED: ${{ inputs.version }}
+        run: |
+          set -eu
+          for pkg in \
+            @marmarlabs/agentbridge-core \
+            @marmarlabs/agentbridge-sdk \
+            @marmarlabs/agentbridge-scanner \
+            @marmarlabs/agentbridge-openapi \
+            @marmarlabs/agentbridge-cli \
+            @marmarlabs/agentbridge-mcp-server
+          do
+            actual=$(npm view "$pkg" version)
+            echo "$pkg  npm reports: $actual"
+            if [ "$actual" != "$REQUESTED" ]; then
+              echo "::warning::$pkg expected $REQUESTED, got $actual (npm may take a moment to propagate)"
+            fi
+          done

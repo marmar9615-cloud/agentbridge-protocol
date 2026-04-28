@@ -23,21 +23,96 @@ A living document. Anything in here is a direction, not a commitment.
 - [x] Studio search/filter, JSON editor, summary preview, spec page
 - [x] Release docs: CHANGELOG, CONTRIBUTING, SECURITY, CODE_OF_CONDUCT, CLAUDE.md
 
-## Phase 3 — Production readiness
+## Path to v1.0
 
-- [ ] **Signed manifests.** Publishers sign their manifest with a key
-      committed to a `.well-known/agentbridge-keys.json`. Agents verify the
+Each line below is a release; the bar for declaring `v1.0.0` is the
+checklist in [v1-readiness.md](v1-readiness.md). v0.3.0 is in flight
+on the `feature/v030-production-foundations` branch and is **not**
+the v1.0 release — it's the foundation.
+
+### v0.3.0 — Production Foundations (in flight)
+
+- [x] Stricter remote-target allowlist (`AGENTBRIDGE_ALLOWED_TARGET_ORIGINS`,
+      exact-origin match, prefix-attack tests).
+- [x] Configurable bounds (`AGENTBRIDGE_ACTION_TIMEOUT_MS`,
+      `AGENTBRIDGE_MAX_RESPONSE_BYTES`,
+      `AGENTBRIDGE_CONFIRMATION_TTL_SECONDS`) within safe ranges.
+- [x] Stdout-hygiene test for the MCP server (subprocess test that
+      asserts every stdout line is parseable JSON-RPC and that
+      warnings stay on stderr).
+- [x] [docs/v1-readiness.md](v1-readiness.md),
+      [docs/production-readiness.md](production-readiness.md),
+      [docs/threat-model.md](threat-model.md),
+      [docs/security-configuration.md](security-configuration.md),
+      [docs/trusted-publishing.md](trusted-publishing.md).
+- [x] Draft `release-publish.yml` workflow (manual-dispatch,
+      dry-run by default; activates once each npm package has a
+      Trusted Publisher entry).
+
+### v0.4.0 — HTTP MCP transport + auth design/implementation
+
+- [ ] Authenticated HTTP MCP transport with the same confirmation
+      gate, origin pinning, and audit redaction as the stdio path.
+- [ ] Caller-identity propagation into audit events (so events
+      record *which agent / which user* invoked the action).
+- [ ] OAuth/bearer auth design completed; reference implementation
+      lands.
+- [ ] HTTP-transport-specific threat-model section
+      ([T14 in threat-model.md](threat-model.md#t14-future-http-transport-risks)).
+
+### v0.5.0 — Signed manifests
+
+- [ ] Publishers sign their manifest with a key committed to
+      `/.well-known/agentbridge-keys.json`. Agents verify the
       signature offline before trusting any action.
-- [ ] **HTTP MCP transport.** stdio is great for desktop clients;
-      production agents need an authenticated HTTP transport.
-- [ ] **Per-action OAuth scopes.** Wire `permissions[]` into a real
-      enforcement check — the MCP server validates the agent's bearer
-      token against the action's required scopes before invoking.
-- [ ] **Policy engine integration.** OPA / Cedar hook so customers can
-      declare per-tenant policies (cost caps, rate limits, business hours,
-      N-of-M approver workflows).
-- [ ] **Distributed audit storage.** Replace the JSON file with a
-      pluggable adapter (Postgres, S3, Datadog).
+- [ ] Scanner reports unsigned manifests as a downgrade. Backwards
+      compatible: unsigned manifests still work in `v0.x` mode.
+- [ ] CLI command to generate / rotate / verify keys.
+
+### v0.6.0 — Policy engine + rate limits
+
+- [ ] Pluggable policy hook accepting
+      `(callerIdentity, action, input) → allow | deny | requireApprover`.
+- [ ] Reference integrations for OPA and Cedar.
+- [ ] First-class rate-limit and cost-cap primitives that policy
+      can reference.
+- [ ] `permissions[]` becomes authoritative — MCP server checks
+      caller's scopes against the action's `permissions[]`.
+
+### v0.7.0 — Persistent storage adapters
+
+- [ ] `StorageAdapter` interface in `core` covering audit /
+      confirmations / idempotency.
+- [ ] Reference Postgres adapter (separate package).
+- [ ] Reference S3 / object-store adapter (separate package).
+- [ ] Local-JSON adapter remains the default for development;
+      production deployments use a real adapter.
+- [ ] Migration path from local JSON documented.
+
+### v0.8.0 — SDK / API stabilization
+
+- [ ] Every exported symbol in every `@marmarlabs/agentbridge-*`
+      package annotated `@stable` or `@experimental`.
+- [ ] TypeDoc-generated reference for every package.
+- [ ] `MANIFEST_SPEC_VERSION` exported from `core`.
+- [ ] Compatibility-policy section formalized in
+      [v1-readiness.md §13](v1-readiness.md).
+
+### v0.9.0 — Release-candidate hardening
+
+- [ ] CodeQL or equivalent SAST in CI.
+- [ ] Dependency vulnerability scan with a meaningful failure gate.
+- [ ] Trusted Publishing exercised end-to-end (real publish via
+      `release-publish.yml`, provenance verified).
+- [ ] Final spec freeze for the v1 manifest.
+
+### v1.0.0 — Stable production release
+
+- [ ] All v1.0 release criteria in
+      [docs/v1-readiness.md §3](v1-readiness.md) green.
+- [ ] Stable manifest spec frozen at
+      `agentbridge-manifest.v1.0.md`.
+- [ ] Compatibility guarantees documented and in force.
 
 ## Phase 4 — Richer expressivity
 

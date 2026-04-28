@@ -99,8 +99,13 @@ Every new feature ships with a test. Categories of tests we currently maintain:
 2. **Origin pinning**: `mcp-server/src/safety.ts:assertSameOrigin` MUST run
    before every outbound action call. Action endpoints must share origin
    with `manifest.baseUrl`.
-3. **URL allowlist**: loopback only by default. Setting
-   `AGENTBRIDGE_ALLOW_REMOTE=true` is the only escape.
+3. **URL allowlist**: loopback only by default. Two opt-in escapes:
+   `AGENTBRIDGE_ALLOWED_TARGET_ORIGINS=<comma-separated origins>` (strict
+   exact-origin allowlist, production-recommended) and
+   `AGENTBRIDGE_ALLOW_REMOTE=true` (broad, emits a one-time stderr
+   warning). The strict allowlist always wins. See
+   [`apps/mcp-server/src/safety.ts`](apps/mcp-server/src/safety.ts) and
+   [docs/security-configuration.md](docs/security-configuration.md).
 4. **Audit redaction**: never log secrets. `core/src/audit.ts:redact` is the
    chokepoint — extend the redact set, don't bypass it.
 5. **Simulated destructive actions**: the demo app never touches real
@@ -157,3 +162,14 @@ Every new feature ships with a test. Categories of tests we currently maintain:
 - Don't force-push to `main`.
 - Reference the issue or roadmap item this addresses.
 - Update `CHANGELOG.md` for user-facing changes.
+
+## Production / v1.0 references
+
+- [docs/v1-readiness.md](docs/v1-readiness.md) — what the v1.0 bar is.
+- [docs/production-readiness.md](docs/production-readiness.md) — what
+  AgentBridge is/isn't safe for today.
+- [docs/threat-model.md](docs/threat-model.md) — full threat catalogue.
+- [docs/security-configuration.md](docs/security-configuration.md) —
+  every MCP server env var.
+- [docs/trusted-publishing.md](docs/trusted-publishing.md) — the npm
+  publishing path toward v1.0 (Trusted Publishing + provenance).

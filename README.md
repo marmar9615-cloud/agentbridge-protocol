@@ -22,9 +22,13 @@
 
 **AgentBridge v0.2.2 is live on npm under the `@marmarlabs` scope.**
 v0.2.0 was the first public release, v0.2.1 was a docs-only cleanup
-patch, and v0.2.2 adds first-class OpenAI Codex onboarding (CLI
-one-liner, `~/.codex/config.toml` snippets, project-scoped
-`.mcp.json`, and a Codex plugin example).
+patch, and v0.2.2 adds first-class OpenAI Codex onboarding.
+**v0.3.0 (in flight)** adds production-foundation work — a stricter
+remote-target allowlist, configurable timeouts/TTLs, an MCP stdout
+hygiene test, a draft npm Trusted Publishing workflow, and a v1.0
+readiness checklist (see [docs/v1-readiness.md](docs/v1-readiness.md)).
+v0.3.0 is **not** v1.0 production readiness — it's the foundation
+for it.
 
 ```bash
 npm install @marmarlabs/agentbridge-sdk @marmarlabs/agentbridge-core
@@ -788,7 +792,9 @@ This is an MVP — but security is not an afterthought, because the entire value
 
 | Control | Where it lives | What it does |
 |---|---|---|
-| **URL allowlist** | `mcp-server/src/safety.ts`, `scanner/src/scanner.ts` | Only loopback URLs by default. Override with `AGENTBRIDGE_ALLOW_REMOTE=true`. |
+| **URL allowlist** | `mcp-server/src/safety.ts`, `scanner/src/scanner.ts` | Loopback only by default. Production-recommended: set `AGENTBRIDGE_ALLOWED_TARGET_ORIGINS` to a comma-separated list of exact origins. Broad escape hatch: `AGENTBRIDGE_ALLOW_REMOTE=true` (with a one-time stderr warning). |
+| **Configurable bounds** | `mcp-server/src/config.ts` | `AGENTBRIDGE_ACTION_TIMEOUT_MS`, `AGENTBRIDGE_MAX_RESPONSE_BYTES`, `AGENTBRIDGE_CONFIRMATION_TTL_SECONDS` — out-of-range values are clamped with a stderr warning. See [docs/security-configuration.md](docs/security-configuration.md). |
+| **Stdout hygiene** | `apps/mcp-server/src/tests/stdio-hygiene.test.ts` | Stdout carries only JSON-RPC. Warnings/diagnostics go to stderr. Verified by an MCP subprocess test. |
 | **Origin pinning** | `mcp-server/src/safety.ts:assertSameOrigin` | Action endpoints must share origin with `manifest.baseUrl`. A poisoned manifest cannot redirect calls elsewhere. |
 | **Confirmation gate** | `mcp-server/src/tools.ts:callAction`, `studio/api/call/route.ts` | Risky actions return `confirmationRequired` unless caller passes `confirmationApproved: true`. |
 | **Confirmation tokens** | `mcp-server/src/confirmations.ts` | Tokens are bound to `(url, actionName, hash(input))`, single-use, expire in 5 minutes. Reuse with different input is rejected. |
@@ -849,6 +855,11 @@ CI runs `npm install`, typecheck, all tests, and Next.js builds on Node 20.x and
 | [docs/codex-setup.md](docs/codex-setup.md) | Hooking AgentBridge MCP into OpenAI Codex (CLI + config.toml + project-scoped). |
 | [docs/mcp-client-setup.md](docs/mcp-client-setup.md) | Hooking AgentBridge MCP into Codex, Claude Desktop, Cursor, custom clients. |
 | [docs/openapi-import.md](docs/openapi-import.md) | Generating manifests from OpenAPI 3.x. |
+| [docs/v1-readiness.md](docs/v1-readiness.md) | The v1.0.0 readiness checklist — what "production-ready" means and where we stand. |
+| [docs/production-readiness.md](docs/production-readiness.md) | Practical "what is AgentBridge safe for today?" assessment plus a pre-flight checklist. |
+| [docs/threat-model.md](docs/threat-model.md) | Full threat catalogue with current mitigations and v1.0 targets. |
+| [docs/security-configuration.md](docs/security-configuration.md) | Every env var the MCP server honors, with defaults, ranges, and recipes. |
+| [docs/trusted-publishing.md](docs/trusted-publishing.md) | npm Trusted Publishing plan and the draft `release-publish.yml` workflow. |
 | [docs/roadmap.md](docs/roadmap.md) | What's shipped, what's next. |
 | [spec/agentbridge-manifest.v0.1.md](spec/agentbridge-manifest.v0.1.md) | The manifest specification. |
 | [AGENTS.md](AGENTS.md) | Short, model-neutral working notes for any AI coding agent (Codex, Claude, Cursor, custom). |

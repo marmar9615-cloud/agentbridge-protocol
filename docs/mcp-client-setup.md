@@ -148,9 +148,17 @@ which client is talking to it:
   (single-use, input-bound, default 5-minute TTL) to actually run.
 - **Origin pinning.** Action endpoints must share origin with the
   manifest's `baseUrl`. A poisoned manifest cannot redirect calls.
-- **Loopback-only by default.** Only `localhost` / `127.0.0.1` / `::1`
-  URLs are allowed unless `AGENTBRIDGE_ALLOW_REMOTE=true` is set in
-  the server's environment.
+- **Loopback-only by default.** Only `localhost` / `127.0.0.1` /
+  `::1` URLs are allowed by default. To permit other hosts you have
+  two opt-ins:
+  - **Production-recommended:** set
+    `AGENTBRIDGE_ALLOWED_TARGET_ORIGINS=https://app.example.com,https://admin.example.com`
+    — strict, exact-origin allowlist. Prefix attacks
+    (`https://example.com.evil.test`) are rejected.
+  - **Broad escape hatch:** `AGENTBRIDGE_ALLOW_REMOTE=true` permits
+    any remote http(s) origin and emits a one-time stderr warning.
+  - The strict allowlist always wins when both are set. Full
+    reference: [docs/security-configuration.md](security-configuration.md).
 - **Audit redaction.** `authorization`, `cookie`, `password`, `token`,
   `secret`, and `api_key` keys are stripped recursively before any
   audit event is persisted.
@@ -193,9 +201,19 @@ You should see the agent:
   directly.
 
 **`Only loopback URLs allowed` errors**
-- Default behaviour. To talk to a remote AgentBridge surface, set
-  `AGENTBRIDGE_ALLOW_REMOTE=true` in the `env` block of your MCP
-  config (or your shell when launching the client).
+- Default behaviour. To talk to a remote AgentBridge surface, the
+  recommended option is to set
+  `AGENTBRIDGE_ALLOWED_TARGET_ORIGINS=https://your-app.example.com`
+  in the `env` block of your MCP config (or your shell when
+  launching the client). For ad-hoc testing you can use the
+  broader `AGENTBRIDGE_ALLOW_REMOTE=true`, which also permits
+  remote URLs and emits a stderr warning.
+
+**`Target origin … is not in AGENTBRIDGE_ALLOWED_TARGET_ORIGINS`**
+- The strict allowlist rejected the origin. Add the exact origin
+  (scheme + host + port) to the comma-separated value, or fall
+  back to the broader `AGENTBRIDGE_ALLOW_REMOTE=true` for testing.
+  See [docs/security-configuration.md](security-configuration.md).
 
 **Confirmation tokens "expired" too quickly**
 - Default TTL is 5 minutes. Tokens are stored at

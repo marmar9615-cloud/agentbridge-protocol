@@ -4,6 +4,126 @@ All notable changes to AgentBridge are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] — 2026-04-28 — Production Foundations
+
+### Added
+
+- **Stricter remote-target allowlist.** New
+  `AGENTBRIDGE_ALLOWED_TARGET_ORIGINS` env var on the MCP server
+  enforces an exact-`URL.origin` allowlist (comma-separated). Loopback
+  remains allowed by default. The strict allowlist takes precedence
+  when both `AGENTBRIDGE_ALLOWED_TARGET_ORIGINS` and the broader
+  `AGENTBRIDGE_ALLOW_REMOTE=true` are set. Prefix attacks
+  (`https://example.com.evil.test`) are rejected. Non-http(s) schemes
+  (`javascript:`, `file:`, `data:`, `ftp:`) are rejected even with the
+  broad escape hatch on. See
+  [`apps/mcp-server/src/safety.ts`](apps/mcp-server/src/safety.ts) and
+  [docs/security-configuration.md](docs/security-configuration.md).
+- **Configurable bounds with safe ranges.** New env vars on the MCP
+  server, parsed once per process and clamped to safe ranges with a
+  stderr warning on out-of-range / non-integer input:
+  - `AGENTBRIDGE_ACTION_TIMEOUT_MS` — default `10000`, range `1000`–`120000`.
+  - `AGENTBRIDGE_MAX_RESPONSE_BYTES` — default `1000000`, range `1024`–`10485760`.
+  - `AGENTBRIDGE_CONFIRMATION_TTL_SECONDS` — default `300`, range `30`–`3600`.
+  See [`apps/mcp-server/src/config.ts`](apps/mcp-server/src/config.ts).
+- **Stdout hygiene test.** New
+  [`apps/mcp-server/src/tests/stdio-hygiene.test.ts`](apps/mcp-server/src/tests/stdio-hygiene.test.ts)
+  spawns the built MCP server as a subprocess and asserts that
+  every stdout line is parseable JSON-RPC and that the broad-remote
+  warning is routed to stderr only.
+- **AGENTBRIDGE_ALLOW_REMOTE warning.** When the broad escape hatch
+  is active, the server emits a one-time stderr warning per process
+  pointing the operator at `AGENTBRIDGE_ALLOWED_TARGET_ORIGINS` for
+  production.
+- **New documentation:**
+  - [docs/v1-readiness.md](docs/v1-readiness.md) — defines what
+    "production-ready v1.0.0" means, with a 17-item release-criterion
+    checklist and a 15-section breakdown.
+  - [docs/production-readiness.md](docs/production-readiness.md) —
+    practical "what is AgentBridge safe for today?" assessment plus
+    a pre-flight checklist for using AgentBridge with real customer /
+    admin / financial actions.
+  - [docs/threat-model.md](docs/threat-model.md) — full catalogue of
+    15 threats, with current mitigations, remaining gaps, v1.0
+    targets, and test coverage pointers per threat.
+  - [docs/security-configuration.md](docs/security-configuration.md) —
+    every env var the MCP server honors, with defaults, ranges, and
+    recipes for local / staging / production-like.
+  - [docs/trusted-publishing.md](docs/trusted-publishing.md) — the
+    npm Trusted Publishing plan, what manual setup is required per
+    package, and how to use the new draft workflow.
+- **Draft `release-publish.yml` workflow.** New
+  [`.github/workflows/release-publish.yml`](.github/workflows/release-publish.yml)
+  is `workflow_dispatch`-only, defaults to `dry_run=true`, and uses
+  npm Trusted Publishing OIDC (no `NPM_TOKEN`). Each package needs a
+  Trusted Publisher record in the npm UI before the
+  `dry_run=false` path will succeed (see docs).
+
+### Changed
+
+- **`agentbridge mcp-config` CLI output** now mentions
+  `AGENTBRIDGE_ALLOWED_TARGET_ORIGINS` and points at
+  `docs/security-configuration.md`. Test in
+  [`packages/cli/src/tests/cli.test.ts`](packages/cli/src/tests/cli.test.ts)
+  asserts the new strings.
+- **Workspace dep ranges bumped to `^0.3.0`.** The seven workspace
+  consumers (`sdk`, `scanner`, `openapi`, `cli`, `mcp-server`,
+  `demo-app`, `studio`) now request `@marmarlabs/agentbridge-*@^0.3.0`
+  so a future v0.3.0 publish actually flows through.
+- **Existing docs updated** to reference the new doc set:
+  [README.md](README.md), [SECURITY.md](SECURITY.md),
+  [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md),
+  [docs/roadmap.md](docs/roadmap.md),
+  [docs/release-checklist.md](docs/release-checklist.md),
+  [docs/npm-publishing.md](docs/npm-publishing.md),
+  [docs/codex-setup.md](docs/codex-setup.md),
+  [docs/mcp-client-setup.md](docs/mcp-client-setup.md), and
+  [`apps/mcp-server/README.md`](apps/mcp-server/README.md).
+- **MCP server identity string** in
+  [`apps/mcp-server/src/index.ts`](apps/mcp-server/src/index.ts)
+  bumped from a stale `0.2.0` to `0.3.0`.
+- **Roadmap reorganized** as a version-by-version path to v1.0
+  (`v0.4.0` HTTP transport, `v0.5.0` signed manifests, …,
+  `v1.0.0` stable production release).
+- All 9 workspace `package.json` files bumped 0.2.2 → 0.3.0.
+
+### Compatibility
+
+- **No safety invariant was changed.** Confirmation gate, origin
+  pinning, audit redaction, and the simulated-destructive-actions
+  posture in the demo app all behave exactly as in v0.2.2.
+- **The default behavior is identical** to v0.2.2. With no new env
+  vars set, the MCP server is loopback-only, has the same 10s timeout,
+  the same 1MB cap, and the same 5-minute confirmation TTL.
+- The new `AGENTBRIDGE_ALLOW_REMOTE=true` warning is on stderr only;
+  stdout (the MCP protocol stream) is unchanged and remains pure
+  JSON-RPC.
+- `CONFIRMATION_TTL_MS` is still exported from
+  `apps/mcp-server/src/confirmations.ts` for any external import; the
+  runtime now also has `resolveConfirmationTtlMs()` which honors the
+  env var.
+- Workspace dep ranges moved from `^0.2.0` to `^0.3.0`. This is a
+  consumer-visible change for any *future* publish: `npm install
+  @marmarlabs/agentbridge-cli@0.3.0` will pull in `^0.3.0` of `core`
+  / `scanner` / `openapi`. v0.2.0 / v0.2.1 / v0.2.2 on npm are
+  unaffected.
+- All existing tests still pass; new tests cover the allowlist, the
+  config bounds, and the stdio hygiene contract.
+
+### Not in this release (deliberately)
+
+- **No npm publish.** v0.3.0 is not on npm yet. The only published
+  versions of `@marmarlabs/agentbridge-*` remain 0.2.0 / 0.2.1 /
+  0.2.2.
+- **No GitHub release** for v0.3.0 yet.
+- **No git tag** for v0.3.0 yet.
+- **No Trusted Publisher records** on npm yet — that's the manual
+  setup step blocking the new workflow's `dry_run=false` path. See
+  [docs/trusted-publishing.md](docs/trusted-publishing.md).
+- **HTTP MCP transport, signed manifests, OAuth scopes, pluggable
+  storage, policy engine** are all still on the roadmap and are
+  *not* delivered in v0.3.0. v0.3.0 documents and prepares for them.
+
 ## [0.2.2] — 2026-04-27 — OpenAI Codex onboarding
 
 ### Added

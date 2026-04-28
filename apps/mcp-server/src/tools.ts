@@ -27,16 +27,26 @@ import {
 import { scanUrl } from "@marmarlabs/agentbridge-scanner";
 import { assertAllowedUrl, assertSameOrigin } from "./safety";
 import {
-  CONFIRMATION_TTL_MS,
   consumeConfirmation,
   createPendingConfirmation,
+  resolveConfirmationTtlMs,
 } from "./confirmations";
 import { lookupIdempotent, recordIdempotent } from "./idempotency";
+import { resolveConfig } from "./config";
 
 const ajv = new Ajv({ allErrors: true, strict: false });
 
-const ACTION_TIMEOUT_MS = 10_000;
-const MAX_RESPONSE_BYTES = 1_000_000; // 1MB cap on action responses to keep MCP payloads reasonable.
+// Defaults clamped by resolveConfig. Operators can tune via:
+//   AGENTBRIDGE_ACTION_TIMEOUT_MS    — outbound action timeout (1s–120s)
+//   AGENTBRIDGE_MAX_RESPONSE_BYTES   — response body size cap (1KB–10MB)
+// See docs/security-configuration.md for the full table.
+function currentLimits() {
+  const cfg = resolveConfig();
+  return {
+    actionTimeoutMs: cfg.actionTimeoutMs,
+    maxResponseBytes: cfg.maxResponseBytes,
+  };
+}
 
 async function fetchManifest(
   url: string,
@@ -203,7 +213,7 @@ export async function callAction(
           requiresConfirmation: action.requiresConfirmation,
         },
         confirmationToken: pending.token,
-        confirmationExpiresInSeconds: Math.round(CONFIRMATION_TTL_MS / 1000),
+        confirmationExpiresInSeconds: Math.round(resolveConfirmationTtlMs() / 1000),
         hint:
           "Re-call this tool with confirmationApproved: true AND the same confirmationToken after a human reviews the summary.",
       };
@@ -225,6 +235,7 @@ export async function callAction(
   // Origin-pin: never call out beyond the manifest's baseUrl.
   const target = assertSameOrigin(manifest.baseUrl, action.endpoint);
 
+  const limits = currentLimits();
   let upstreamBody: unknown = null;
   let auditStatus: "completed" | "error" = "completed";
   let auditError: string | undefined;
@@ -233,9 +244,9 @@ export async function callAction(
       method: action.method,
       headers: { "content-type": "application/json" },
       body: action.method === "GET" ? undefined : JSON.stringify(args.input ?? {}),
-      signal: AbortSignal.timeout(ACTION_TIMEOUT_MS),
+      signal: AbortSignal.timeout(limits.actionTimeoutMs),
     });
-    const text = await readWithCap(res, MAX_RESPONSE_BYTES);
+    const text = await readWithCap(res, limits.maxResponseBytes);
     try {
       upstreamBody = text === "" ? null : JSON.parse(text);
     } catch {
