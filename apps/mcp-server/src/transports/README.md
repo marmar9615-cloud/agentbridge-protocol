@@ -1,27 +1,31 @@
 # `apps/mcp-server/src/transports/`
 
-Reserved landing pad for the v0.4.0 HTTP MCP transport
-implementation. Empty on purpose.
+Transport adapters for the AgentBridge MCP server. Each adapter is
+a thin wrapper that builds the shared MCP server via
+[`createMcpServer()`](../server.ts) and connects it to a wire
+transport. **Auth, Origin validation, and host binding (when HTTP
+lands) live in the adapter, not in the dispatcher.**
 
-## Why this directory exists now
+## Current adapters
 
-The v0.4.0 design PR (docs-only) creates this directory so the
-follow-up implementation PRs have an obvious home and reviewers
-have a concrete file path to look for. **Nothing in here is
-imported from `index.ts`. There is no runtime effect.**
+| File | Status | Notes |
+|---|---|---|
+| [`stdio.ts`](stdio.ts) | shipping | Default. Wraps `StdioServerTransport`. Stdout = JSON-RPC; stderr = diagnostics. Verified by [`stdio-hygiene.test.ts`](../tests/stdio-hygiene.test.ts). |
+| `http.ts` | not yet | Lands in v0.4.0 implementation PR 2. Will wrap `StreamableHTTPServerTransport` behind bearer auth + Origin allowlist + loopback-by-default bind. |
 
-## What lands here
+## Migration plan
 
-Per [`docs/designs/http-mcp-transport-auth.md`](../../../../docs/designs/http-mcp-transport-auth.md):
+Per [`docs/designs/http-mcp-transport-auth.md §13`](../../../../docs/designs/http-mcp-transport-auth.md#13-migration-plan):
 
-1. **PR 1 — transport abstraction.** A `createMcpServer()` factory
-   in `../server.ts` (or similar). The two transport entry points
-   (`stdio.ts` and `http.ts`) live here. stdio is refactored to
-   call the factory; behavior unchanged.
-2. **PR 2 — HTTP transport + bearer auth.** `http.ts` wires
-   `StreamableHTTPServerTransport` from `@modelcontextprotocol/sdk`
-   behind an auth + Origin + bind check. New env vars
-   (`AGENTBRIDGE_HTTP_*`) parsed in `../config.ts`.
+1. **PR 1 — transport abstraction.** ✅ landed. `createMcpServer()`
+   factory in `../server.ts`; this directory holds the stdio
+   adapter; `index.ts` is now a thin entry that calls
+   `runStdioServer()`. Zero behavior change.
+2. **PR 2 — HTTP transport + bearer auth.** Adds `http.ts` here,
+   wires `StreamableHTTPServerTransport` from
+   `@modelcontextprotocol/sdk` behind an auth + Origin + bind
+   check. New env vars (`AGENTBRIDGE_HTTP_*`) parsed in
+   `../config.ts`.
 3. **PR 3 — docs / examples / smoke tests.** Updates
    [`docs/security-configuration.md`](../../../../docs/security-configuration.md),
    [`docs/mcp-client-setup.md`](../../../../docs/mcp-client-setup.md),
