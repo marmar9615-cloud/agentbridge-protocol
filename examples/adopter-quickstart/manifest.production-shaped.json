@@ -1,0 +1,288 @@
+{
+  "name": "Acme Operations",
+  "description": "Production-shaped example manifest for order, ticket, and project workflows. Safe documentation fixture only.",
+  "version": "1.4.0",
+  "baseUrl": "https://app.example.com",
+  "contact": "platform@example.com",
+  "auth": {
+    "type": "bearer",
+    "description": "Use short-lived bearer tokens scoped per operator role. Do not place tokens in query strings."
+  },
+  "resources": [
+    {
+      "name": "orders",
+      "description": "Customer orders, fulfillment state, internal notes, and refund drafts.",
+      "url": "/orders"
+    },
+    {
+      "name": "support_tickets",
+      "description": "Customer support cases and staff-only comments.",
+      "url": "/support/tickets"
+    },
+    {
+      "name": "agentbridge_runbook",
+      "description": "Internal runbook for reviewing AgentBridge confirmations and audit events.",
+      "url": "/docs/agentbridge"
+    }
+  ],
+  "actions": [
+    {
+      "name": "list_orders",
+      "title": "List orders",
+      "description": "Returns recent orders, optionally filtered by status or customer.",
+      "method": "GET",
+      "endpoint": "/api/agentbridge/actions/list_orders",
+      "risk": "low",
+      "requiresConfirmation": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["pending", "shipped", "delivered", "refunded", "cancelled"]
+          },
+          "customerId": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "orders": {
+            "type": "array"
+          }
+        }
+      },
+      "permissions": [
+        {
+          "scope": "orders:read",
+          "description": "Read orders visible to the current operator."
+        }
+      ],
+      "examples": [
+        {
+          "description": "Recent shipped orders",
+          "input": {
+            "status": "shipped",
+            "limit": 25
+          }
+        }
+      ],
+      "humanReadableSummaryTemplate": "List orders (status: {{status}}, customer: {{customerId}}, limit: {{limit}})"
+    },
+    {
+      "name": "get_order",
+      "title": "Get order",
+      "description": "Returns full details for a single order, including fulfillment status, notes, and refund history.",
+      "method": "GET",
+      "endpoint": "/api/agentbridge/actions/get_order",
+      "risk": "low",
+      "requiresConfirmation": false,
+      "inputSchema": {
+        "type": "object",
+        "required": ["orderId"],
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "order": {
+            "type": "object"
+          }
+        }
+      },
+      "permissions": [
+        {
+          "scope": "orders:read"
+        }
+      ],
+      "examples": [
+        {
+          "description": "Known order",
+          "input": {
+            "orderId": "ORD-1001"
+          }
+        }
+      ],
+      "humanReadableSummaryTemplate": "Get order {{orderId}}"
+    },
+    {
+      "name": "add_internal_note",
+      "title": "Add internal note",
+      "description": "Adds a staff-only note to a support ticket or order. This changes app state but is reversible by staff.",
+      "method": "POST",
+      "endpoint": "/api/agentbridge/actions/add_internal_note",
+      "risk": "medium",
+      "requiresConfirmation": true,
+      "inputSchema": {
+        "type": "object",
+        "required": ["objectType", "objectId", "body"],
+        "properties": {
+          "objectType": {
+            "type": "string",
+            "enum": ["order", "support_ticket"]
+          },
+          "objectId": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "noteId": {
+            "type": "string"
+          }
+        }
+      },
+      "permissions": [
+        {
+          "scope": "notes:create"
+        }
+      ],
+      "examples": [
+        {
+          "description": "Staff-only order note",
+          "input": {
+            "objectType": "order",
+            "objectId": "ORD-1001",
+            "body": "Customer asked for a replacement after delivery."
+          }
+        }
+      ],
+      "humanReadableSummaryTemplate": "Add internal note to {{objectType}} {{objectId}}: {{body}}"
+    },
+    {
+      "name": "draft_refund_order",
+      "title": "Draft refund order",
+      "description": "Creates a refund draft for human review. It does not execute a real refund.",
+      "method": "POST",
+      "endpoint": "/api/agentbridge/actions/draft_refund_order",
+      "risk": "medium",
+      "requiresConfirmation": true,
+      "inputSchema": {
+        "type": "object",
+        "required": ["orderId", "amount", "reason"],
+        "properties": {
+          "orderId": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number",
+            "minimum": 0.01
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "draftId": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "simulated": {
+            "type": "boolean"
+          }
+        }
+      },
+      "permissions": [
+        {
+          "scope": "refunds:draft"
+        }
+      ],
+      "examples": [
+        {
+          "description": "Damaged item refund draft",
+          "input": {
+            "orderId": "ORD-1001",
+            "amount": 24,
+            "reason": "Damaged on arrival"
+          },
+          "output": {
+            "draftId": "draft_123",
+            "summary": "Refund draft for ORD-1001",
+            "simulated": true
+          }
+        }
+      ],
+      "humanReadableSummaryTemplate": "Draft a ${{amount}} refund on order {{orderId}} (reason: {{reason}})"
+    },
+    {
+      "name": "execute_refund_order",
+      "title": "Execute refund order",
+      "description": "High-risk example that executes a previously reviewed refund draft. This fixture is documentation only and performs no real payment behavior.",
+      "method": "POST",
+      "endpoint": "/api/agentbridge/actions/execute_refund_order",
+      "risk": "high",
+      "requiresConfirmation": true,
+      "inputSchema": {
+        "type": "object",
+        "required": ["draftId", "confirmationText"],
+        "properties": {
+          "draftId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "confirmationText": {
+            "type": "string",
+            "const": "CONFIRM"
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "simulated": {
+            "type": "boolean"
+          },
+          "simulatedTransactionId": {
+            "type": "string"
+          }
+        }
+      },
+      "permissions": [
+        {
+          "scope": "refunds:execute",
+          "description": "Privileged high-risk scope. Require human review and audit."
+        }
+      ],
+      "examples": [
+        {
+          "description": "Execute reviewed refund draft",
+          "input": {
+            "draftId": "draft_123",
+            "confirmationText": "CONFIRM"
+          },
+          "output": {
+            "simulated": true,
+            "simulatedTransactionId": "sim_refund_123"
+          }
+        }
+      ],
+      "humanReadableSummaryTemplate": "EXECUTE refund draft {{draftId}} (confirmation: {{confirmationText}})"
+    }
+  ],
+  "generatedAt": "2026-04-28T00:00:00.000Z"
+}
