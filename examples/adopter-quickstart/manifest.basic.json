@@ -1,0 +1,159 @@
+{
+  "name": "Adopter Quickstart Orders",
+  "description": "Minimal example manifest for adding AgentBridge to an order-management app.",
+  "version": "1.0.0",
+  "baseUrl": "http://localhost:3000",
+  "contact": "platform@example.com",
+  "auth": {
+    "type": "none",
+    "description": "Local development example only. Use your app's real auth model outside localhost."
+  },
+  "resources": [
+    {
+      "name": "orders",
+      "description": "Customer orders with status, line items, notes, and refund drafts.",
+      "url": "/orders"
+    }
+  ],
+  "actions": [
+    {
+      "name": "list_orders",
+      "title": "List orders",
+      "description": "Returns recent orders, optionally filtered by status.",
+      "method": "POST",
+      "endpoint": "/api/agentbridge/actions/list_orders",
+      "risk": "low",
+      "requiresConfirmation": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["pending", "shipped", "delivered", "refunded"]
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "orders": {
+            "type": "array"
+          }
+        }
+      },
+      "permissions": [
+        {
+          "scope": "orders:read"
+        }
+      ],
+      "examples": [
+        {
+          "description": "All orders",
+          "input": {}
+        },
+        {
+          "description": "Only shipped orders",
+          "input": {
+            "status": "shipped"
+          }
+        }
+      ],
+      "humanReadableSummaryTemplate": "List orders (status: {{status}})"
+    },
+    {
+      "name": "get_order",
+      "title": "Get order",
+      "description": "Returns full details for a single order, including notes and refund history.",
+      "method": "POST",
+      "endpoint": "/api/agentbridge/actions/get_order",
+      "risk": "low",
+      "requiresConfirmation": false,
+      "inputSchema": {
+        "type": "object",
+        "required": ["orderId"],
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "order": {
+            "type": "object"
+          }
+        }
+      },
+      "permissions": [
+        {
+          "scope": "orders:read"
+        }
+      ],
+      "examples": [
+        {
+          "description": "Known order",
+          "input": {
+            "orderId": "ORD-1001"
+          }
+        }
+      ],
+      "humanReadableSummaryTemplate": "Get order {{orderId}}"
+    },
+    {
+      "name": "draft_refund_order",
+      "title": "Draft refund order",
+      "description": "Creates a refund draft for review. This example does not execute money movement.",
+      "method": "POST",
+      "endpoint": "/api/agentbridge/actions/draft_refund_order",
+      "risk": "medium",
+      "requiresConfirmation": true,
+      "inputSchema": {
+        "type": "object",
+        "required": ["orderId", "amount", "reason"],
+        "properties": {
+          "orderId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "amount": {
+            "type": "number",
+            "minimum": 0.01
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "draftId": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          }
+        }
+      },
+      "permissions": [
+        {
+          "scope": "refunds:draft"
+        }
+      ],
+      "examples": [
+        {
+          "description": "Damaged item draft",
+          "input": {
+            "orderId": "ORD-1001",
+            "amount": 24,
+            "reason": "Damaged on arrival"
+          }
+        }
+      ],
+      "humanReadableSummaryTemplate": "Draft a ${{amount}} refund on order {{orderId}} (reason: {{reason}})"
+    }
+  ]
+}

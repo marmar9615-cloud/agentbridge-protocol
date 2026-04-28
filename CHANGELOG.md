@@ -4,6 +4,22 @@ All notable changes to AgentBridge are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- [`docs/adopter-quickstart.md`](docs/adopter-quickstart.md) - an
+  existing-app onboarding guide for adding AgentBridge manifests,
+  action endpoints, CLI validation, scanner checks, MCP client setup,
+  and production safety review.
+- [`docs/manifest-patterns.md`](docs/manifest-patterns.md) - reusable
+  manifest/action patterns for read actions, draft actions,
+  confirmation-required mutations, idempotent calls, resources, and
+  auth/contact metadata.
+- [`examples/adopter-quickstart/`](examples/adopter-quickstart/) -
+  static valid manifest examples for adopter onboarding, including a
+  minimal order manifest and a production-shaped safe fixture.
+
 ## [0.3.0] — 2026-04-28 — Production Foundations
 
 ### Added
