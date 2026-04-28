@@ -190,6 +190,30 @@ describe("verifyManifestSignature — signature presence & shape", () => {
     if (!r.ok) expect(r.reason).toBe("malformed-signature");
   });
 
+  it("returns malformed-signature when signature.expiresAt is not strictly after signedAt", () => {
+    // Inverted window — without an explicit guard this can pass the
+    // freshness check (e.g. expiresAt 30s before signedAt with 60s
+    // skew satisfies both inequalities). Reject up front.
+    const { publicKey, privateKey } = generateKeyPairSync("ed25519");
+    const { manifest, keySet } = buildSignedManifest("EdDSA", privateKey, publicKey, "k1");
+    (manifest.signature as { expiresAt: string }).expiresAt = "2026-04-28T11:59:30.000Z"; // 30s before signedAt
+    const r = verifyManifestSignature(manifest, keySet, {
+      now: NOW_INSIDE_WINDOW,
+      clockSkewSeconds: 60,
+    });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe("malformed-signature");
+  });
+
+  it("returns malformed-signature when signature.expiresAt equals signedAt", () => {
+    const { publicKey, privateKey } = generateKeyPairSync("ed25519");
+    const { manifest, keySet } = buildSignedManifest("EdDSA", privateKey, publicKey, "k1");
+    (manifest.signature as { expiresAt: string }).expiresAt = SIGNED_AT;
+    const r = verifyManifestSignature(manifest, keySet, { now: NOW_INSIDE_WINDOW });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe("malformed-signature");
+  });
+
   it("returns malformed-signature when signature.value is not base64url", () => {
     const { publicKey, privateKey } = generateKeyPairSync("ed25519");
     const { manifest, keySet } = buildSignedManifest("EdDSA", privateKey, publicKey, "k1");
@@ -267,6 +291,56 @@ describe("verifyManifestSignature — issuer enforcement", () => {
       now: NOW_INSIDE_WINDOW,
       expectedIssuer: "https://different.example",
     });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe("issuer-mismatch");
+  });
+
+  it("returns issuer-mismatch when signature.iss differs from manifest.baseUrl origin", () => {
+    // Bind signature.iss to manifest.baseUrl. A signature whose
+    // issuer points elsewhere — even when paired with a key set
+    // whose own `issuer` matches the signature — does not authorize
+    // actions on the manifest's declared origin.
+    const { publicKey, privateKey } = generateKeyPairSync("ed25519");
+    const attackerOrigin = "https://attacker.example";
+    const attackerKeySet: AgentBridgeKeySet = {
+      issuer: attackerOrigin,
+      version: "1",
+      keys: [
+        {
+          kid: "k1",
+          alg: "EdDSA",
+          use: "manifest-sign",
+          publicKey: publicKey.export({ format: "jwk" }) as never,
+        },
+      ],
+      revokedKids: [],
+    };
+    // Sign a fresh manifest payload that claims attackerOrigin as its
+    // signature.iss while keeping baseUrl=ISSUER. Self-consistent on
+    // signature.iss vs keySet.issuer; inconsistent vs manifest.baseUrl.
+    const manifest = JSON.parse(JSON.stringify(baseManifest)) as Record<string, unknown>;
+    const value = sign("EdDSA", privateKey, manifest);
+    manifest.signature = {
+      alg: "EdDSA",
+      kid: "k1",
+      iss: attackerOrigin,
+      signedAt: SIGNED_AT,
+      expiresAt: EXPIRES_AT,
+      value,
+    };
+    const r = verifyManifestSignature(manifest, attackerKeySet, {
+      now: NOW_INSIDE_WINDOW,
+    });
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.reason).toBe("issuer-mismatch");
+  });
+
+  it("returns issuer-mismatch when manifest.baseUrl is unparseable", () => {
+    const { publicKey, privateKey } = generateKeyPairSync("ed25519");
+    const { manifest, keySet } = buildSignedManifest("EdDSA", privateKey, publicKey, "k1");
+    // Replace baseUrl with something URL() refuses.
+    (manifest as Record<string, unknown>).baseUrl = "::not a url::";
+    const r = verifyManifestSignature(manifest, keySet, { now: NOW_INSIDE_WINDOW });
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.reason).toBe("issuer-mismatch");
   });

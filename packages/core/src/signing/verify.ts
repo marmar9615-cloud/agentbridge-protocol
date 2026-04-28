@@ -166,6 +166,22 @@ export function verifyManifestSignature(
   }
   const signature: ManifestSignature = sigParse.data;
 
+  // Inverted-window guard: the schema accepts both dates independently,
+  // but a signature whose expiresAt isn't strictly after signedAt is
+  // logically malformed and would otherwise sneak through the
+  // freshness window (e.g. expiresAt 30s before signedAt with a 60s
+  // skew satisfies *both* `now ≥ signedAt − skew` and
+  // `now ≤ expiresAt + skew`). Rejecting here catches buggy or
+  // hostile signers up front.
+  const signedAtMsEarly = Date.parse(signature.signedAt);
+  const expiresAtMsEarly = Date.parse(signature.expiresAt);
+  if (!(expiresAtMsEarly > signedAtMsEarly)) {
+    return failure(
+      "malformed-signature",
+      `signature.expiresAt (${signature.expiresAt}) must be strictly after signature.signedAt (${signature.signedAt})`,
+    );
+  }
+
   // ── malformed-key-set ────────────────────────────────────────────
   const ksParse = AgentBridgeKeySetSchema.safeParse(keySet);
   if (!ksParse.success) {
@@ -210,10 +226,35 @@ export function verifyManifestSignature(
   }
 
   // ── issuer-mismatch ──────────────────────────────────────────────
+  // Three issuer-binding checks combined under one reason:
+  //   1. signature.iss === keySet.issuer (which key set authored the
+  //      signature).
+  //   2. signature.iss === new URL(manifest.baseUrl).origin (the
+  //      signed publisher identity matches the action origin the
+  //      manifest itself declares; a verified signature whose iss
+  //      points elsewhere doesn't authorize cross-origin actions).
+  //   3. signature.iss === options.expectedIssuer (the runtime
+  //      caller's view of where this manifest came from).
+  // All three must hold; failure of any is `issuer-mismatch`.
   if (signature.iss !== keys.issuer) {
     return failure(
       "issuer-mismatch",
       `signature.iss (${signature.iss}) does not equal keySet.issuer (${keys.issuer})`,
+    );
+  }
+  let manifestBaseUrlOrigin: string;
+  try {
+    manifestBaseUrlOrigin = new URL(String(manifestObj.baseUrl)).origin;
+  } catch {
+    return failure(
+      "issuer-mismatch",
+      `manifest.baseUrl (${JSON.stringify(manifestObj.baseUrl)}) is not a parseable URL — cannot bind signature.iss to a manifest origin`,
+    );
+  }
+  if (signature.iss !== manifestBaseUrlOrigin) {
+    return failure(
+      "issuer-mismatch",
+      `signature.iss (${signature.iss}) does not equal manifest.baseUrl origin (${manifestBaseUrlOrigin})`,
     );
   }
   if (
