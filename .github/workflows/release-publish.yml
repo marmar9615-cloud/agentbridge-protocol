@@ -42,22 +42,32 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node 22
+      - name: Setup Node 24
         uses: actions/setup-node@v4
         with:
           # npm Trusted Publishing requires npm CLI >= 11.5.1 to perform the
-          # OIDC exchange and `--provenance` attestations. Node 22.x ships a
-          # 10.x npm; we bump npm globally below before any publish step so
-          # both dry-run and real publish exercise the same modern npm.
-          node-version: 22.x
+          # OIDC exchange and `--provenance` attestations. Node 24 LTS ships
+          # with npm 11.x bundled, so we don't need to self-upgrade npm
+          # (self-upgrade on Node 22's runner has a known
+          # `Cannot find module 'promise-retry'` failure mode).
+          node-version: 24.x
           registry-url: "https://registry.npmjs.org/"
           cache: npm
 
-      - name: Install latest npm (Trusted Publishing requires npm >= 11.5.1)
+      - name: Verify npm is new enough for Trusted Publishing
         run: |
           set -eu
-          npm install -g npm@latest
-          npm --version
+          echo "node $(node --version)"
+          echo "npm  $(npm --version)"
+          # Fail loudly if the bundled npm is somehow older than 11.5.1.
+          node -e '
+            const v = require("child_process").execSync("npm --version").toString().trim();
+            const [maj, min] = v.split(".").map(Number);
+            if (maj < 11 || (maj === 11 && min < 5)) {
+              console.error("npm " + v + " is too old for Trusted Publishing (need >= 11.5.1)");
+              process.exit(1);
+            }
+          '
 
       - name: Install dependencies
         run: npm ci
