@@ -1,18 +1,43 @@
 # @marmarlabs/agentbridge-mcp-server
 
 stdio MCP server that exposes [AgentBridge](https://github.com/marmar9615-cloud/agentbridge-protocol)
-actions to AI agents (Claude Desktop, Cursor, custom clients) with
-confirmation gates, origin pinning, and audit logging.
+actions to MCP clients (OpenAI Codex, Claude Desktop, Cursor, custom)
+with confirmation gates, origin pinning, and audit logging.
 
 ## Install
 
 ```bash
 npm install -g @marmarlabs/agentbridge-mcp-server
 # or run directly:
-npx @marmarlabs/agentbridge-mcp-server
+npx -y @marmarlabs/agentbridge-mcp-server
 ```
 
 ## Wire it up
+
+The server speaks **stdio**. The same launcher
+(`npx -y @marmarlabs/agentbridge-mcp-server`) works in every client
+below — only the surrounding config syntax differs.
+
+### OpenAI Codex
+
+```bash
+codex mcp add agentbridge -- npx -y @marmarlabs/agentbridge-mcp-server
+```
+
+Verify with `/mcp` inside Codex. Or paste this into
+`~/.codex/config.toml` (global) or `.codex/config.toml` (per-repo):
+
+```toml
+[mcp_servers.agentbridge]
+command = "npx"
+args = ["-y", "@marmarlabs/agentbridge-mcp-server"]
+startup_timeout_sec = 20
+tool_timeout_sec = 60
+enabled = true
+```
+
+Full Codex walkthrough:
+[docs/codex-setup.md](https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/docs/codex-setup.md).
 
 ### Claude Desktop
 
@@ -23,7 +48,7 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json`:
   "mcpServers": {
     "agentbridge": {
       "command": "npx",
-      "args": ["@marmarlabs/agentbridge-mcp-server"]
+      "args": ["-y", "@marmarlabs/agentbridge-mcp-server"]
     }
   }
 }
@@ -33,7 +58,20 @@ Restart Claude Desktop. AgentBridge tools will appear in the tools panel.
 
 ### Cursor
 
-Settings → MCP → Add server. Same `command`/`args` as above.
+Settings → MCP → Add server. Same `command`/`args` shape as Claude
+Desktop.
+
+### Custom or other MCP clients
+
+Anything that can launch a stdio MCP server runs AgentBridge as-is:
+
+```bash
+npx -y @marmarlabs/agentbridge-mcp-server
+```
+
+See
+[docs/mcp-client-setup.md](https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/docs/mcp-client-setup.md)
+for everything else.
 
 ## Tools exposed
 
@@ -68,8 +106,10 @@ example manifests) and pre-canned prompts for common workflows.
 
 ## Status
 
-Public release. v0.2.1 is a docs-only patch over v0.2.0 that cleans up
-package README wording — no code or behavior changes. AgentBridge is
+Public release. v0.2.2 is a docs-only release that adds OpenAI Codex
+onboarding (CLI + `config.toml` examples, project-scoped config,
+[AGENTS.md](https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/AGENTS.md))
+on top of v0.2.1 — no code or behavior changes. AgentBridge is
 suitable for local development, manifest authoring, scanner workflows,
 OpenAPI import, and MCP experiments. It is not yet production security
 infrastructure.

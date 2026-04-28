@@ -1,0 +1,22 @@
+{
+  "name": "agentbridge",
+  "version": "0.2.2",
+  "description": "Use AgentBridge MCP tools to scan and interact with agent-ready web apps.",
+  "author": {
+    "name": "Marmar Labs"
+  },
+  "homepage": "https://github.com/marmar9615-cloud/agentbridge-protocol",
+  "repository": "https://github.com/marmar9615-cloud/agentbridge-protocol",
+  "license": "Apache-2.0",
+  "keywords": ["mcp", "agents", "agentbridge", "codex"],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "AgentBridge",
+    "shortDescription": "MCP tools for agent-ready web apps",
+    "longDescription": "Scan AgentBridge manifests, list structured actions, and safely call app actions through confirmation-gated MCP tools.",
+    "developerName": "Marmar Labs",
+    "category": "Developer Tools",
+    "capabilities": ["Read", "Write"]
+  }
+}

@@ -110,7 +110,7 @@ The manifest declares every action the app supports, with:
 | `permissions[]` | Document required scopes |
 | `examples[]` | Teach agents the correct call shape |
 
-An MCP server bridges any AgentBridge-enabled site to MCP-speaking agents (Claude Desktop, custom agents, etc.) with **enforcement built in**: risky actions never execute without explicit `confirmationApproved: true`, every call is audited, and outbound requests are pinned to the manifest's origin.
+An MCP server bridges any AgentBridge-enabled site to MCP-speaking agents (OpenAI Codex, Claude Desktop, Cursor, custom MCP clients) with **enforcement built in**: risky actions never execute without explicit `confirmationApproved: true`, every call is audited, and outbound requests are pinned to the manifest's origin.
 
 ---
 
@@ -119,7 +119,7 @@ An MCP server bridges any AgentBridge-enabled site to MCP-speaking agents (Claud
 ```mermaid
 flowchart LR
     A["🧑 Human user"] --> B["Web app UI<br/>orders.acme.com"]
-    C["🤖 AI agent"] --> D["MCP client<br/>Claude Desktop / custom"]
+    C["🤖 AI agent"] --> D["MCP client<br/>Codex / Claude Desktop / Cursor / custom"]
     D <--> E["AgentBridge<br/>MCP server"]
     E -->|fetch manifest| F["/.well-known/<br/>agentbridge.json"]
     E -->|invoke action| G["/api/agentbridge/<br/>actions/:name"]
@@ -277,11 +277,12 @@ agentbridge-protocol/
 │   ├── agentbridge-manifest.schema.json   # JSON Schema for the manifest
 │   ├── agentbridge-manifest.v0.1.md       # human-readable spec
 │   └── examples/                          # 3 example manifests
-├── examples/             # nextjs-basic · openapi-store · mcp-client-config
-├── docs/                 # quickstart, mcp-client-setup, openapi-import, roadmap
+├── examples/             # nextjs-basic · openapi-store · mcp-client-config · codex-config · codex-plugin
+├── docs/                 # quickstart, mcp-client-setup, codex-setup, openapi-import, roadmap
 ├── data/                 # 📁 local audit/confirmations/idempotency (gitignored)
 ├── .github/workflows/    # CI
-├── CLAUDE.md             # working notes for AI agents
+├── AGENTS.md             # model-neutral working notes for AI coding agents
+├── CLAUDE.md             # deeper Claude-Code-specific working notes
 ├── CONTRIBUTING.md / SECURITY.md / CODE_OF_CONDUCT.md / CHANGELOG.md
 ├── README.md
 └── LICENSE               # Apache 2.0
@@ -458,7 +459,7 @@ npx @marmarlabs/agentbridge-cli scan http://localhost:3000
 | `agentbridge validate <file-or-url>` | Validate a manifest from disk or a URL against the schema. `--json`. |
 | `agentbridge init` | Scaffold an `agentbridge.config.ts` and a starter `/.well-known/agentbridge.json`. `--force` to overwrite, `--format json` for JSON config. |
 | `agentbridge generate openapi <src>` | Generate a draft manifest from an OpenAPI 3.x doc. `--out PATH`, `--base-url URL`, `--json`. |
-| `agentbridge mcp-config` | Print copy-pasteable MCP client configs for Claude Desktop / Cursor / others. |
+| `agentbridge mcp-config` | Print copy-pasteable MCP client configs for OpenAI Codex (CLI + config.toml), Claude Desktop, Cursor, and any other MCP-compatible client. |
 | `agentbridge version` | Print CLI version. |
 
 Example: take an existing OpenAPI document and turn it into a draft manifest in one shot:
@@ -544,6 +545,32 @@ will pick it up automatically.
 
 ## Wire it to an MCP client
 
+The AgentBridge MCP server speaks **stdio**. Same launcher
+(`npx -y @marmarlabs/agentbridge-mcp-server`) works in every
+MCP-compatible client below — only the surrounding config syntax
+differs. For everything beyond the snippets below see
+[docs/mcp-client-setup.md](docs/mcp-client-setup.md) and (for Codex
+specifically) [docs/codex-setup.md](docs/codex-setup.md).
+
+### Works with MCP clients
+
+- **OpenAI Codex** — CLI (`codex mcp add`) or `~/.codex/config.toml`. See [docs/codex-setup.md](docs/codex-setup.md).
+- **Claude Desktop** — JSON config under `~/Library/Application Support/Claude/`.
+- **Cursor** — Settings → MCP, same JSON shape as Claude Desktop.
+- **Custom or other MCP clients** — anything that can launch a stdio MCP server runs the same `npx -y @marmarlabs/agentbridge-mcp-server` entry.
+
+`npx @marmarlabs/agentbridge-cli mcp-config` prints copy-pasteable
+snippets for all of the above.
+
+### OpenAI Codex (one-liner)
+
+```bash
+codex mcp add agentbridge -- npx -y @marmarlabs/agentbridge-mcp-server
+```
+
+Verify with `/mcp` inside Codex. Walkthrough, project-scoped config,
+and troubleshooting are in [docs/codex-setup.md](docs/codex-setup.md).
+
 ### Claude Desktop
 
 Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
@@ -553,7 +580,7 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
   "mcpServers": {
     "agentbridge": {
       "command": "npx",
-      "args": ["@marmarlabs/agentbridge-mcp-server"]
+      "args": ["-y", "@marmarlabs/agentbridge-mcp-server"]
     }
   }
 }
@@ -561,19 +588,39 @@ Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS):
 
 Restart Claude Desktop. You should see `agentbridge` show up in the tools panel with 5 tools available.
 
+### Cursor
+
+Settings → MCP → Add server. Same `command`/`args` shape as Claude
+Desktop. Or paste:
+
+```json
+{
+  "mcpServers": {
+    "agentbridge": {
+      "command": "npx",
+      "args": ["-y", "@marmarlabs/agentbridge-mcp-server"]
+    }
+  }
+}
+```
+
 ### Conversation example
+
+The dialogue below uses Claude Desktop, but the same flow works with
+Codex, Cursor, or any other MCP-compatible client — only the
+surrounding chrome differs.
 
 > **You:** What can the app at http://localhost:3000 do?
 >
-> **Claude:** *(uses `discover_manifest`)* It's a Demo Order Manager v0.1.0 with 5 actions: list_orders (low risk), get_order (low), draft_refund_order (medium, needs confirmation), execute_refund_order (high, needs confirmation), and add_internal_note (medium, needs confirmation).
+> **Agent:** *(uses `discover_manifest`)* It's a Demo Order Manager v0.1.0 with 5 actions: list_orders (low risk), get_order (low), draft_refund_order (medium, needs confirmation), execute_refund_order (high, needs confirmation), and add_internal_note (medium, needs confirmation).
 >
 > **You:** Refund order ORD-1001 for $24 because the customer reported damage.
 >
-> **Claude:** *(uses `call_action` for `draft_refund_order`)* I've drafted the refund. Draft id `draft_xxx`. To execute it, I need explicit approval — should I proceed?
+> **Agent:** *(uses `call_action` for `draft_refund_order`)* I've drafted the refund. Draft id `draft_xxx`. To execute it, I need explicit approval — should I proceed?
 >
 > **You:** Yes, go ahead.
 >
-> **Claude:** *(uses `call_action` for `execute_refund_order` with `confirmationApproved: true`)* Done. Simulated transaction `sim_tx_yyy`. Order ORD-1001 is now in `refunded` status.
+> **Agent:** *(uses `call_action` for `execute_refund_order` with `confirmationApproved: true`)* Done. Simulated transaction `sim_tx_yyy`. Order ORD-1001 is now in `refunded` status.
 
 ---
 
@@ -796,11 +843,13 @@ CI runs `npm install`, typecheck, all tests, and Next.js builds on Node 20.x and
 | Doc | What it covers |
 |---|---|
 | [docs/quickstart.md](docs/quickstart.md) | Five-minute walkthrough from clone to running stack. |
-| [docs/mcp-client-setup.md](docs/mcp-client-setup.md) | Hooking AgentBridge MCP into Claude Desktop, Cursor, custom clients. |
+| [docs/codex-setup.md](docs/codex-setup.md) | Hooking AgentBridge MCP into OpenAI Codex (CLI + config.toml + project-scoped). |
+| [docs/mcp-client-setup.md](docs/mcp-client-setup.md) | Hooking AgentBridge MCP into Codex, Claude Desktop, Cursor, custom clients. |
 | [docs/openapi-import.md](docs/openapi-import.md) | Generating manifests from OpenAPI 3.x. |
 | [docs/roadmap.md](docs/roadmap.md) | What's shipped, what's next. |
 | [spec/agentbridge-manifest.v0.1.md](spec/agentbridge-manifest.v0.1.md) | The manifest specification. |
-| [CLAUDE.md](CLAUDE.md) | Working notes for AI agents operating on this codebase. |
+| [AGENTS.md](AGENTS.md) | Short, model-neutral working notes for any AI coding agent (Codex, Claude, Cursor, custom). |
+| [CLAUDE.md](CLAUDE.md) | Deeper Claude-Code-specific working notes for this repo. |
 | [CONTRIBUTING.md](CONTRIBUTING.md), [SECURITY.md](SECURITY.md), [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) | Community + reporting. |
 | [CHANGELOG.md](CHANGELOG.md) | Per-release notes. |
 

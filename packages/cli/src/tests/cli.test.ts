@@ -91,6 +91,41 @@ describe("CLI entry", () => {
   });
 });
 
+describe("mcp-config command", () => {
+  it("prints snippets for Codex CLI, Codex config.toml, Claude Desktop, Cursor, and raw stdio", async () => {
+    const cap = captureStdio();
+    const code = await runCli({ argv: ["mcp-config"] });
+    cap.restore();
+    expect(code).toBe(0);
+    const output = cap.out.join("");
+
+    // Codex CLI one-liner.
+    expect(output).toContain("codex mcp add agentbridge");
+    expect(output).toContain("npx -y @marmarlabs/agentbridge-mcp-server");
+
+    // Codex config.toml block.
+    expect(output).toContain("[mcp_servers.agentbridge]");
+    expect(output).toContain('command = "npx"');
+    expect(output).toContain('args = ["-y","@marmarlabs/agentbridge-mcp-server"]');
+    expect(output).toContain("startup_timeout_sec = 20");
+    expect(output).toContain("tool_timeout_sec = 60");
+    expect(output).toContain("enabled = true");
+
+    // Claude Desktop + Cursor labels are still present (we did not drop them).
+    expect(output).toContain("Claude Desktop");
+    expect(output).toContain("Cursor");
+
+    // Generic MCP JSON object shape.
+    expect(output).toContain('"mcpServers"');
+    expect(output).toContain('"command": "npx"');
+    expect(output).toContain('"@marmarlabs/agentbridge-mcp-server"');
+
+    // Safety reminder.
+    expect(output).toContain("AGENTBRIDGE_ALLOW_REMOTE");
+    expect(output).toContain("confirmationToken");
+  });
+});
+
 describe("validate command (file path)", () => {
   let tmpDir: string;
 

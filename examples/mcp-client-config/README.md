@@ -4,6 +4,33 @@ Example configurations for hooking the AgentBridge MCP server into common
 MCP clients. Pick the client you use, copy the snippet, restart the
 client.
 
+The same launcher (`npx -y @marmarlabs/agentbridge-mcp-server`) works in
+every client below — only the surrounding config syntax differs.
+
+## OpenAI Codex
+
+One-line setup with the Codex CLI:
+
+```bash
+codex mcp add agentbridge -- npx -y @marmarlabs/agentbridge-mcp-server
+```
+
+Or via `~/.codex/config.toml` (global) / `.codex/config.toml`
+(project-scoped):
+
+```toml
+[mcp_servers.agentbridge]
+command = "npx"
+args = ["-y", "@marmarlabs/agentbridge-mcp-server"]
+startup_timeout_sec = 20
+tool_timeout_sec = 60
+enabled = true
+```
+
+Copy-pasteable files: [`../codex-config/`](../codex-config/). Full
+walkthrough and troubleshooting:
+[`docs/codex-setup.md`](../../docs/codex-setup.md).
+
 ## Claude Desktop (macOS / Windows)
 
 **macOS:** edit `~/Library/Application Support/Claude/claude_desktop_config.json`
@@ -17,7 +44,7 @@ client.
   "mcpServers": {
     "agentbridge": {
       "command": "npx",
-      "args": ["@marmarlabs/agentbridge-mcp-server"],
+      "args": ["-y", "@marmarlabs/agentbridge-mcp-server"],
       "env": {
         "AGENTBRIDGE_ALLOW_REMOTE": "false"
       }
