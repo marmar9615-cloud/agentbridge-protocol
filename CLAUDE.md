@@ -178,5 +178,9 @@ Every new feature ships with a test. Categories of tests we currently maintain:
 - [docs/adr/0001-http-mcp-transport.md](docs/adr/0001-http-mcp-transport.md)
   — ADR for adding the opt-in HTTP MCP transport.
 - [docs/releases/v0.4.0.md](docs/releases/v0.4.0.md) — v0.4.0
-  release notes (release-prepared on
-  `release/v0.4.0-http-polish`; not yet on npm).
+  release notes. Published on npm via Trusted Publishing with SLSA
+  build provenance.
+- [docs/designs/signed-manifests.md](docs/designs/signed-manifests.md)
+  — v0.5.0 signed-manifest design (in progress; no runtime yet).
+- [docs/adr/0002-signed-manifests.md](docs/adr/0002-signed-manifests.md)
+  — ADR for adding optional signed AgentBridge manifests.

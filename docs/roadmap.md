@@ -49,7 +49,7 @@ the v1.0 release — it's the foundation.
       dry-run by default; activates once each npm package has a
       Trusted Publisher entry).
 
-### v0.4.0 — HTTP MCP transport + auth (release-prepared)
+### v0.4.0 — HTTP MCP transport + auth (shipped)
 
 - [x] Design doc + ADR
       ([designs/http-mcp-transport-auth.md](designs/http-mcp-transport-auth.md),
@@ -61,27 +61,44 @@ the v1.0 release — it's the foundation.
       Origin allowlist enforced. Loopback bind by default. Public
       bind fails closed without auth + Origin allowlist.
 - [x] HTTP-transport-specific threat-model section updated
-      ([T14 in threat-model.md](threat-model.md#t14-future-http-transport-risks)).
+      ([T14 in threat-model.md](threat-model.md#t14-http-transport-risks-implemented-in-v040)).
 - [x] Lockstep `0.4.0` version bump, release notes
       ([releases/v0.4.0.md](releases/v0.4.0.md)),
       `examples/http-client-config/`, and HTTP smoke wired into
-      `npm run smoke:external` (release polish — this PR).
+      `npm run smoke:external`.
+- [x] Published `@marmarlabs/agentbridge-*@0.4.0` via Trusted
+      Publishing with SLSA build provenance.
 - [ ] Caller-identity propagation into audit events (so events
       record *which agent / which user* invoked the action).
       Audit-event extension reserved for v0.4.x or v0.5.0.
 - [ ] OAuth 2.1 resource-server mode. Designed-for, not yet
       implemented; reserved for a later v0.x release.
-- [ ] Publish `@marmarlabs/agentbridge-*@0.4.0` via Trusted
-      Publishing (only after maintainer approval).
 
-### v0.5.0 — Signed manifests
+### v0.5.0 — Signed manifests (in design)
 
+Design-first PR underway. Tracking issue
+[#31](https://github.com/marmar9615-cloud/agentbridge-protocol/issues/31)
+/ [docs/issues/v0.5.0-signed-manifests.md](issues/v0.5.0-signed-manifests.md).
+Design doc: [designs/signed-manifests.md](designs/signed-manifests.md).
+ADR: [adr/0002-signed-manifests.md](adr/0002-signed-manifests.md).
+
+- [x] Design doc + ADR. No runtime change yet.
 - [ ] Publishers sign their manifest with a key committed to
       `/.well-known/agentbridge-keys.json`. Agents verify the
       signature offline before trusting any action.
-- [ ] Scanner reports unsigned manifests as a downgrade. Backwards
-      compatible: unsigned manifests still work in `v0.x` mode.
-- [ ] CLI command to generate / rotate / verify keys.
+- [ ] Inline `signature` block on the manifest (additive optional
+      schema field). RFC 8785 (JCS) canonicalization. Default
+      algorithm Ed25519 (`alg: "EdDSA"`); ES256 also accepted.
+- [ ] Scanner reports unsigned manifests as a downgrade and signed-
+      but-invalid manifests as `error`. Backwards compatible:
+      unsigned manifests still work in v0.5.0 mode.
+- [ ] CLI commands `agentbridge sign`, `agentbridge verify`,
+      `agentbridge keys (generate|list|rotate)`.
+- [ ] MCP server verifies when present, refuses verified-invalid
+      manifests, and adds an opt-in `AGENTBRIDGE_REQUIRE_SIGNATURE`
+      mode for high-assurance deployments.
+- [ ] Audit events gain `signatureStatus` / `signatureKid` /
+      `signatureIssuer`; signature `value` is never logged.
 
 ### v0.6.0 — Policy engine + rate limits
 

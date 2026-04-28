@@ -324,6 +324,31 @@ broader trust boundary.
 > See [production-readiness.md](production-readiness.md) for
 > what AgentBridge is and isn't safe for today.
 
+## Signed manifests (v0.5.0 — design only, not yet runtime)
+
+Signed manifests are the next release line. The design is
+landing now; the runtime code, env vars, and CLI commands will
+follow in subsequent PRs against the same v0.5.0 line. Until
+then, the env vars below are **specified, not yet enforced** —
+do not set them on a v0.4.x server expecting them to do
+anything.
+
+When v0.5.0 implementation lands, this section will gain its
+own table. Today the proposed env-var surface is:
+
+| Env var (v0.5.0 design) | Proposed default | Proposed range | Purpose |
+|---|---|---|---|
+| `AGENTBRIDGE_REQUIRE_SIGNATURE` | unset | `true` / unset | Refuse unsigned/invalid manifests at fetch time. |
+| `AGENTBRIDGE_KEYS_CACHE_TTL_SECONDS` | `300` | `60`–`3600` | TTL on cached `agentbridge-keys.json`. |
+| `AGENTBRIDGE_SIGN_SKEW_SECONDS` | `60` | `0`–`600` | Allowed clock skew when checking `signedAt` / `expiresAt`. |
+| `AGENTBRIDGE_MAX_MANIFEST_AGE_SECONDS` | `86400` | `3600`–`604800` | Upper bound enforced on `expiresAt - signedAt`. |
+| `AGENTBRIDGE_PINNED_KIDS` | unset | comma-separated | Production pinning: only accept these `kid`s for the matching publisher. |
+
+For the rationale, schema, verification failure-mode matrix, and
+test plan, see
+[designs/signed-manifests.md](designs/signed-manifests.md) and
+[adr/0002-signed-manifests.md](adr/0002-signed-manifests.md).
+
 ## See also
 
 - [production-readiness.md](production-readiness.md) — the
@@ -336,4 +361,8 @@ broader trust boundary.
 - [designs/http-mcp-transport-auth.md](designs/http-mcp-transport-auth.md)
   — the v0.4.0 HTTP transport design.
 - [adr/0001-http-mcp-transport.md](adr/0001-http-mcp-transport.md)
-  — the ADR.
+  — the v0.4.0 transport ADR.
+- [designs/signed-manifests.md](designs/signed-manifests.md)
+  — the v0.5.0 signed-manifest design (in progress).
+- [adr/0002-signed-manifests.md](adr/0002-signed-manifests.md)
+  — the v0.5.0 signed-manifest ADR (in progress).
