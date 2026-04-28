@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { ManifestSignatureSchema } from "./signing/schemas";
 
 export const ActionRiskLevel = z.enum(["low", "medium", "high"]);
 export type ActionRiskLevel = z.infer<typeof ActionRiskLevel>;
@@ -61,6 +62,12 @@ export const AgentBridgeManifestSchema = z.object({
   auth: ManifestAuthSchema.optional(),
   contact: z.string().optional(),
   generatedAt: z.string().optional(),
+  // v0.5.0: optional signed-manifest envelope. Absent for unsigned
+  // manifests (the v0.4.x default and still the v0.5.0 default).
+  // Sign/verify APIs and runtime enforcement land in subsequent
+  // v0.5.0 PRs; this schema field is the contract they target.
+  // See [docs/designs/signed-manifests.md].
+  signature: ManifestSignatureSchema.optional(),
 });
 
 export const AuditEventStatus = z.enum([

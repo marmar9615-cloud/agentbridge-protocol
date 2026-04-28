@@ -28,6 +28,24 @@ npm install @marmarlabs/agentbridge-core
   passwords, etc.) before logging.
 - All Zod schemas (`actionSchema`, `manifestSchema`, …) for callers that
   want to validate at the schema level.
+- **Signed-manifest schema surface (v0.5.0, additive).**
+  - `ManifestSignatureSchema` — the optional inline `signature` block
+    on a manifest. Unsigned manifests continue to validate exactly as
+    in v0.4.x.
+  - `AgentBridgeKeySchema` / `AgentBridgeKeySetSchema` /
+    `validateKeySet` — the publisher's key set served at
+    `/.well-known/agentbridge-keys.json`.
+  - `PublicKeyJwkSchema` — strict JWK shape that **rejects** any
+    field other than the published public-key material (e.g. `d`).
+  - `canonicalizeJson` / `canonicalizeManifestForSigning` — RFC 8785
+    (JCS) canonicalizer used by the verifier and by `signManifest`.
+    No new runtime dependency.
+  - **Sign / verify runtime APIs are not in this package yet.**
+    `signManifest` / `verifyManifestSignature` ship in subsequent
+    v0.5.0 PRs (planned to live in
+    `@marmarlabs/agentbridge-sdk`). The schemas and canonicalizer
+    here are the contract those follow-ups target. See the
+    [signed-manifest design](https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/docs/designs/signed-manifests.md).
 
 ## Quick example
 

@@ -56,9 +56,52 @@
       "type": "string",
       "format": "date-time",
       "description": "Optional ISO timestamp of when the manifest was last generated."
+    },
+    "signature": {
+      "$ref": "#/$defs/Signature",
+      "description": "Optional inline signature block (v0.5.0+). Absent for unsigned manifests, which remain valid against this v0.1 spec."
     }
   },
   "$defs": {
+    "Signature": {
+      "type": "object",
+      "description": "Optional inline manifest signature block introduced in v0.5.0. The signed payload is the canonical-JSON (RFC 8785) of the manifest with the `signature` field stripped. Verification is additive — a verified manifest is still subject to the confirmation gate, origin pinning, target-origin allowlist, audit redaction, and HTTP transport auth/origin checks. See docs/designs/signed-manifests.md.",
+      "required": ["alg", "kid", "iss", "signedAt", "expiresAt", "value"],
+      "additionalProperties": true,
+      "properties": {
+        "alg": {
+          "type": "string",
+          "enum": ["EdDSA", "ES256"],
+          "description": "Signature algorithm. EdDSA = Ed25519 (RFC 8037, default). ES256 = ECDSA on P-256 (RFC 7518)."
+        },
+        "kid": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Key id matching an entry in the publisher's key set (/.well-known/agentbridge-keys.json)."
+        },
+        "iss": {
+          "type": "string",
+          "format": "uri",
+          "description": "Canonical publisher origin (scheme://host[:port], no path/query/fragment/trailing slash). Must equal the manifest's baseUrl origin."
+        },
+        "signedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 datetime when the signature was produced."
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 datetime after which the signature is stale. Must be > signedAt."
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9_-]+={0,2}$",
+          "description": "Signature bytes encoded base64url (RFC 4648 §5)."
+        }
+      }
+    },
     "Resource": {
       "type": "object",
       "required": ["name"],
