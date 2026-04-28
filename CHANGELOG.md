@@ -19,6 +19,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   behavior.
 - MCP client config regression coverage for checked-in Codex, Claude,
   Cursor/generic, and HTTP examples.
+- Signed-manifest example and validation coverage using the SDK
+  publisher-side signing helpers.
 
 ## [0.4.0] — release-prepared — HTTP MCP Transport + Auth
 

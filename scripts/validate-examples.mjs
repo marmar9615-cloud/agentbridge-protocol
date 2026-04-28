@@ -23,6 +23,12 @@ const openApiFixtures = [
   "examples/openapi-regression/catalog-regression.openapi.json",
 ];
 
+const testPrivateKeyMarkers = [
+  "BEGIN PRIVATE KEY",
+  "END PRIVATE KEY",
+  "MC4CAQAwBQYDK2VwBCIEIKSXsEXyAP3O1L5RImgZcGDzbiKurlmgrrmR6AojVA7U",
+];
+
 function run(args, opts = {}) {
   const res = spawnSync(process.execPath, [cli, ...args], {
     cwd: root,
@@ -40,6 +46,29 @@ function printResult(label, res) {
   }
 }
 
+function runTsxExample(label, source, outName) {
+  const res = spawnSync(process.execPath, ["--import", "tsx", source], {
+    cwd: root,
+    encoding: "utf8",
+  });
+  if (res.status !== 0) {
+    if (res.stdout) process.stdout.write(res.stdout);
+    if (res.stderr) process.stderr.write(res.stderr);
+    throw new Error(`generate ${label} manifest failed with exit ${res.status}`);
+  }
+  const out = join(tmp, outName);
+  writeFileSync(out, res.stdout, "utf8");
+  return { out, raw: res.stdout, manifest: JSON.parse(res.stdout) };
+}
+
+function assertNoPrivateKeyMaterial(label, raw) {
+  for (const marker of testPrivateKeyMarkers) {
+    if (raw.includes(marker)) {
+      throw new Error(`${label} output leaked private key material`);
+    }
+  }
+}
+
 try {
   for (const manifest of validManifests) {
     printResult(`validate ${manifest}`, run(["validate", manifest]));
@@ -51,19 +80,32 @@ try {
   }
   process.stdout.write("ok invalid scanner fixture failed validation as expected\n");
 
-  const sdk = spawnSync(
-    process.execPath,
-    ["--import", "tsx", "examples/sdk-basic/manifest.ts"],
-    { cwd: root, encoding: "utf8" },
+  const sdk = runTsxExample(
+    "sdk-basic",
+    "examples/sdk-basic/manifest.ts",
+    "sdk-basic.agentbridge.json",
   );
-  if (sdk.status !== 0) {
-    if (sdk.stdout) process.stdout.write(sdk.stdout);
-    if (sdk.stderr) process.stderr.write(sdk.stderr);
-    throw new Error(`generate sdk-basic manifest failed with exit ${sdk.status}`);
+  printResult("validate sdk-basic generated manifest", run(["validate", sdk.out]));
+
+  const signed = runTsxExample(
+    "signed-manifest-basic",
+    "examples/signed-manifest-basic/manifest.ts",
+    "signed-basic.agentbridge.json",
+  );
+  printResult("validate signed-manifest-basic generated manifest", run(["validate", signed.out]));
+  assertNoPrivateKeyMaterial("signed-manifest-basic", signed.raw);
+  if (!signed.manifest.signature || typeof signed.manifest.signature !== "object") {
+    throw new Error("signed-manifest-basic output did not include a signature block");
   }
-  const sdkOut = join(tmp, "sdk-basic.agentbridge.json");
-  writeFileSync(sdkOut, sdk.stdout, "utf8");
-  printResult("validate sdk-basic generated manifest", run(["validate", sdkOut]));
+  if (signed.manifest.signature.alg !== "EdDSA") {
+    throw new Error("signed-manifest-basic signature.alg was not EdDSA");
+  }
+  if (!signed.manifest.signature.kid) {
+    throw new Error("signed-manifest-basic signature.kid was missing");
+  }
+  if (!signed.manifest.signature.value) {
+    throw new Error("signed-manifest-basic signature.value was missing");
+  }
 
   for (const source of openApiFixtures) {
     const out = join(tmp, `${source.split("/").pop()}.agentbridge.json`);

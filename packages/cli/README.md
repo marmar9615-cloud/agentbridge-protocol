@@ -83,6 +83,8 @@ most likely to copy:
 - `examples/openapi-store/store.openapi.json`
 - `examples/openapi-regression/catalog-regression.openapi.json`
 - `examples/sdk-basic/manifest.ts` generated to JSON and validated
+- `examples/signed-manifest-basic/manifest.ts` generated to signed
+  JSON and schema-validated
 - `agentbridge mcp-config`, including stdio, Codex, Claude Desktop,
   Cursor / generic JSON, and the v0.4.0 HTTP transport block
 
