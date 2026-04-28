@@ -45,12 +45,19 @@ jobs:
       - name: Setup Node 22
         uses: actions/setup-node@v4
         with:
-          # npm Trusted Publishing requires Node 24+ on the runner so the
-          # bundled npm CLI (>=11) supports OIDC. Node 22 here boots the job;
-          # the publish steps install a newer npm explicitly below.
+          # npm Trusted Publishing requires npm CLI >= 11.5.1 to perform the
+          # OIDC exchange and `--provenance` attestations. Node 22.x ships a
+          # 10.x npm; we bump npm globally below before any publish step so
+          # both dry-run and real publish exercise the same modern npm.
           node-version: 22.x
           registry-url: "https://registry.npmjs.org/"
           cache: npm
+
+      - name: Install latest npm (Trusted Publishing requires npm >= 11.5.1)
+        run: |
+          set -eu
+          npm install -g npm@latest
+          npm --version
 
       - name: Install dependencies
         run: npm ci
@@ -147,13 +154,9 @@ jobs:
         run: npm publish --access public --provenance --dry-run
 
       # Real publish steps — only run when explicitly requested.
-      # Trusted Publishing requires an npm CLI new enough to do the OIDC
-      # exchange. We install the latest npm globally before publishing so
-      # this works regardless of the runner image's bundled version.
-
-      - name: Bump npm to latest (Trusted Publishing requires npm >=11)
-        if: ${{ inputs.dry_run == false }}
-        run: npm install -g npm@latest
+      # Trusted Publishing exchanges a short-lived OIDC token for a one-shot
+      # publish credential. The npm version was already bumped earlier so
+      # both dry-run and real publish exercise npm >= 11.5.1.
 
       - name: Publish — core
         if: ${{ inputs.dry_run == false }}
