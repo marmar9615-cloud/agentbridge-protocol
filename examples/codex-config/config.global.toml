@@ -1,0 +1,18 @@
+# AgentBridge — global Codex MCP config
+#
+# Copy this block into ~/.codex/config.toml (create the file if it
+# doesn't exist). Codex will launch the AgentBridge stdio MCP server
+# from npm and expose its tools, resources, and prompts in every Codex
+# session.
+#
+# Verify with `/mcp` inside Codex.
+#
+# See ../../docs/codex-setup.md for the full walkthrough and
+# troubleshooting.
+
+[mcp_servers.agentbridge]
+command = "npx"
+args = ["-y", "@marmarlabs/agentbridge-mcp-server"]
+startup_timeout_sec = 20
+tool_timeout_sec = 60
+enabled = true

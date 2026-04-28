@@ -4,6 +4,71 @@ All notable changes to AgentBridge are documented here. The format is loosely
 based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this
 project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] — 2026-04-27 — OpenAI Codex onboarding
+
+### Added
+
+- [`docs/codex-setup.md`](docs/codex-setup.md) — full Codex onboarding
+  walkthrough covering the `codex mcp add` CLI, global
+  `~/.codex/config.toml`, project-scoped `.codex/config.toml`, demo
+  app pairing, troubleshooting, and the safety flow.
+- [`examples/codex-config/`](examples/codex-config/) — copy-pasteable
+  `config.global.toml` and `config.project.toml` plus a README that
+  explains when to use which.
+- [`AGENTS.md`](AGENTS.md) — short, model-neutral working notes for
+  any AI coding agent operating on this repo (OpenAI Codex, Claude
+  Code, Cursor, custom). Sibling to the deeper Claude-Code-focused
+  [`CLAUDE.md`](CLAUDE.md).
+- [`examples/codex-plugin/`](examples/codex-plugin/) — **experimental**
+  local Codex plugin skeleton with `.codex-plugin/plugin.json`,
+  `.mcp.json`, and a `skills/agentbridge/SKILL.md` operating guide.
+  Not a published plugin, not a stable distribution path — the
+  supported flow is the one in `docs/codex-setup.md`.
+
+### Changed
+
+- **`agentbridge mcp-config` CLI output** now prints copy-pasteable
+  snippets for OpenAI Codex (CLI one-liner + `config.toml`), Claude
+  Desktop, Cursor / generic MCP JSON, raw stdio command, and the
+  local-checkout option. New CLI test asserts each snippet is present
+  in the output.
+- [`docs/mcp-client-setup.md`](docs/mcp-client-setup.md) restructured
+  to be client-neutral with sections for OpenAI Codex, Claude
+  Desktop, Cursor, and custom MCP clients. New "Safety expectations
+  for all clients" section spells out the confirmation gate, origin
+  pinning, loopback-only default, audit redaction, and simulated
+  destructive demo actions.
+- Root [`README.md`](README.md) gained a "Works with MCP clients"
+  subsection in the wiring section, a Codex one-liner
+  (`codex mcp add agentbridge -- npx -y @marmarlabs/agentbridge-mcp-server`),
+  and a Cursor JSON snippet. Architecture diagram and conversation
+  example reframed to be client-neutral.
+- Per-package READMEs (`@marmarlabs/agentbridge-{core,sdk,scanner,
+  openapi,cli,mcp-server}`) now describe v0.2.2 as the OpenAI Codex
+  onboarding release. The `mcp-server` and `cli` READMEs got new
+  Codex setup sections; the others updated their Status block for
+  consistency.
+- Existing JSON examples (Claude Desktop, Cursor) standardized on
+  `npx -y @marmarlabs/agentbridge-mcp-server` (was bare `npx
+  @marmarlabs/agentbridge-mcp-server`) so first-run installs don't
+  prompt.
+- All 9 workspace `package.json` files bumped 0.2.1 → 0.2.2 (six
+  publishable packages plus root and the two private apps for
+  workspace-coherence). `package-lock.json` refreshed.
+
+### Compatibility
+
+- **No code, schema, or protocol behavior changes.** The MCP server
+  exposes the same five tools, four resources, four prompts, and the
+  same confirmation token / idempotency / origin-pinning / audit
+  redaction guarantees as v0.2.1.
+- All 86 existing tests still pass; the new mcp-config test brings
+  the count up.
+- Workspace dependency ranges remain `^0.2.0` — `0.2.2` satisfies
+  them, no consumer migration required.
+- `@marmarlabs` scope unchanged. v0.2.0 and v0.2.1 remain functional
+  on npm and on GitHub.
+
 ## [0.2.1] — 2026-04-27 — README cleanup patch
 
 ### Changed

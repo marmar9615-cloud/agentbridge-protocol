@@ -38,7 +38,9 @@ In a separate terminal, you can also run the MCP server directly:
 npm run dev:mcp
 ```
 
-It speaks stdio. Hook it up to Claude Desktop or any MCP client (see
+It speaks stdio. Hook it up to OpenAI Codex (see
+[codex-setup.md](./codex-setup.md)), Claude Desktop, Cursor, or any
+other MCP-compatible client (see
 [mcp-client-setup.md](./mcp-client-setup.md)).
 
 ## 4. Try the CLI

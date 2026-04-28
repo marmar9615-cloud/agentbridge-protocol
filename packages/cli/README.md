@@ -53,8 +53,19 @@ agentbridge generate openapi https://api.example.com/openapi.json --base-url htt
 
 ### `agentbridge mcp-config`
 
-Print example MCP client configuration snippets (Claude Desktop, Cursor)
-for wiring AgentBridge into your AI client.
+Print copy-pasteable MCP client config snippets for OpenAI Codex (CLI
+one-liner and `config.toml`), Claude Desktop, Cursor, and any other
+MCP-compatible client.
+
+```bash
+# OpenAI Codex one-liner (also printed by mcp-config)
+codex mcp add agentbridge -- npx -y @marmarlabs/agentbridge-mcp-server
+```
+
+Full Codex walkthrough:
+[docs/codex-setup.md](https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/docs/codex-setup.md).
+For everything else (Claude Desktop, Cursor, custom):
+[docs/mcp-client-setup.md](https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/docs/mcp-client-setup.md).
 
 ### `agentbridge version`
 
@@ -68,10 +79,11 @@ Print the CLI version.
 
 ## Status
 
-Public release. v0.2.1 is a docs-only patch over v0.2.0 that cleans up
-package README wording — no code or behavior changes. AgentBridge is
-suitable for local development, manifest authoring, scanner workflows,
-OpenAPI import, and MCP experiments. It is not yet production security
+Public release. v0.2.2 is a docs-and-CLI-output release that adds
+OpenAI Codex onboarding to the `mcp-config` command and to the docs —
+no other code or behavior changes. AgentBridge is suitable for local
+development, manifest authoring, scanner workflows, OpenAPI import,
+and MCP experiments. It is not yet production security
 infrastructure.
 
 The CLI command surface is stable for the v0.x line.

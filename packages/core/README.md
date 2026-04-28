@@ -44,11 +44,12 @@ console.log(`${result.manifest.name} v${result.manifest.version}`);
 
 ## Status
 
-Public release. v0.2.1 is a docs-only patch over v0.2.0 that cleans up
-package README wording — no code or behavior changes. AgentBridge is
-suitable for local development, manifest authoring, scanner workflows,
-OpenAPI import, and MCP experiments. It is not yet production security
-infrastructure.
+Public release. v0.2.2 is a docs-only release that adds OpenAI Codex
+onboarding alongside the existing Claude Desktop / Cursor / custom
+client setup paths — no code or behavior changes since v0.2.0.
+AgentBridge is suitable for local development, manifest authoring,
+scanner workflows, OpenAPI import, and MCP experiments. It is not yet
+production security infrastructure.
 
 The manifest schema is stable for the v0.x line; field additions are
 non-breaking, field removals or shape changes will bump to v1.0. See

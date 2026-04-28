@@ -1,0 +1,19 @@
+# AgentBridge — project-scoped Codex MCP config
+#
+# Copy this block into .codex/config.toml at the root of a trusted
+# project. Codex will only attach the AgentBridge MCP server when you
+# launch it from inside that repo — useful when one repo wants
+# AgentBridge on tap (e.g. you're authoring a manifest for that app)
+# without exposing it to every Codex session globally.
+#
+# Verify with `/mcp` inside Codex while cd'd into the project.
+#
+# See ../../docs/codex-setup.md for the full walkthrough and
+# troubleshooting.
+
+[mcp_servers.agentbridge]
+command = "npx"
+args = ["-y", "@marmarlabs/agentbridge-mcp-server"]
+startup_timeout_sec = 20
+tool_timeout_sec = 60
+enabled = true
