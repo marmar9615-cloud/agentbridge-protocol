@@ -1,15 +1,18 @@
 # AgentBridge production readiness
 
 This is a practical, non-marketing assessment of what AgentBridge is
-ready for *today* (as of `v0.3.0`) and what it is not. If you are
+ready for *today* (as of `v0.4.0`) and what it is not. If you are
 deciding whether to put AgentBridge in front of real customer,
 admin, or financial actions, read this first.
 
 > **Bottom line.** AgentBridge is **not** production security
 > infrastructure yet. The v1.0 criteria in
-> [v1-readiness.md](v1-readiness.md) are the bar; v0.3.0 is one
-> milestone toward them. Use AgentBridge in production only inside a
-> controlled environment with the safeguards listed below.
+> [v1-readiness.md](v1-readiness.md) are the bar; v0.4.0 is one
+> milestone toward them, and signed manifests (v0.5.0) are in
+> design — see
+> [designs/signed-manifests.md](designs/signed-manifests.md). Use
+> AgentBridge in production only inside a controlled environment
+> with the safeguards listed below.
 
 ## What AgentBridge is currently safe for
 
@@ -278,8 +281,11 @@ Pieces required to reach this shape:
   bearer token.
 - Pluggable storage adapter shipped in core, with reference Postgres
   and S3 adapters.
-- Signed manifests (Phase 5 / v0.5.0) so agents can verify the
-  publisher offline.
+- Signed manifests (v0.5.0) so agents can verify the publisher
+  offline. Design landed in
+  [designs/signed-manifests.md](designs/signed-manifests.md) and
+  [adr/0002-signed-manifests.md](adr/0002-signed-manifests.md);
+  implementation will follow in subsequent v0.5.0 PRs.
 
 ## Pre-flight checklist before using AgentBridge with real
 customer / admin / financial actions

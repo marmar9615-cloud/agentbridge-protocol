@@ -5,33 +5,34 @@ AgentBridge project. It is a living checklist, not a marketing claim.
 We use it to decide whether a given release line can call itself
 `v1.0.0`.
 
-> **Status.** Current published release is `v0.3.0` (Production
-> Foundations). **`v0.4.0` (HTTP MCP transport + auth) is
-> release-prepared** on `release/v0.4.0-http-polish` — design,
-> ADR, transport abstraction, HTTP transport implementation,
-> docs, examples, smoke, and lockstep version bump are all in
-> place. Publishing happens through the Trusted Publishing
-> workflow only after maintainer approval. See
-> [releases/v0.4.0.md](releases/v0.4.0.md),
+> **Status.** Current published release is `v0.4.0` (HTTP MCP
+> transport + auth) — published via npm Trusted Publishing with
+> SLSA build provenance. **`v0.5.0` (Signed manifests) is in
+> design**: see
+> [designs/signed-manifests.md](designs/signed-manifests.md) and
+> [adr/0002-signed-manifests.md](adr/0002-signed-manifests.md).
+> Predecessor design + shipped runtime for v0.4.0 is documented
+> in [releases/v0.4.0.md](releases/v0.4.0.md),
 > [designs/http-mcp-transport-auth.md](designs/http-mcp-transport-auth.md),
 > and [adr/0001-http-mcp-transport.md](adr/0001-http-mcp-transport.md).
-> Neither v0.3.0 nor v0.4.0 alone delivers v1.0; both are steps
+> No published v0.x release alone delivers v1.0; each is a step
 > toward it.
 
 ## 1. Current status
 
-| Surface | State (v0.3.0 published / v0.4.0 release-prepared) |
+| Surface | State (v0.4.0 published) |
 |---|---|
-| Manifest spec | v0.1, stable for the v0.x line. Not yet declared frozen for v1. |
+| Manifest spec | v0.1, stable for the v0.x line. Not yet declared frozen for v1. Optional `signature` field designed for v0.5.0; see [designs/signed-manifests.md](designs/signed-manifests.md). |
 | Public package APIs | Stable shape; not yet annotated with `@stable` / `@experimental` boundaries. |
-| MCP transport | stdio default on npm. **HTTP transport implemented opt-in in v0.4.0** (release-prepared, not yet on npm); see [designs/http-mcp-transport-auth.md](designs/http-mcp-transport-auth.md) and [releases/v0.4.0.md](releases/v0.4.0.md). |
+| MCP transport | stdio default. **HTTP transport shipped opt-in in v0.4.0** ([designs/http-mcp-transport-auth.md](designs/http-mcp-transport-auth.md), [releases/v0.4.0.md](releases/v0.4.0.md)). |
 | Authorization | None over stdio (caller identity implicit). **HTTP transport ships static bearer-token auth in v0.4.0** with constant-time compare, query-string-token rejection, exact-origin allowlist, loopback-by-default bind. OAuth 2.1 resource-server mode designed-for, not yet implemented. |
+| Manifest authenticity | **Unsigned today.** Signed-manifest design landed for v0.5.0; implementation to follow. See [designs/signed-manifests.md](designs/signed-manifests.md) and [adr/0002-signed-manifests.md](adr/0002-signed-manifests.md). |
 | Persistence | Local JSON files for audit, confirmations, idempotency. No pluggable storage adapter. |
 | Outbound URL gate | Loopback by default; opt-in `AGENTBRIDGE_ALLOWED_TARGET_ORIGINS` (strict) and `AGENTBRIDGE_ALLOW_REMOTE` (broad) escape hatches. |
 | Confirmation tokens | Single-use, input-bound, default 5-minute TTL (configurable 30s–1h). |
 | Origin pinning | Enforced before every outbound call. |
 | Audit redaction | Recursive, key-name-based. |
-| npm publishing | Manual, with temporary granular tokens. No Trusted Publishing yet. No build provenance. |
+| npm publishing | **Trusted Publishing (OIDC) with SLSA build provenance — shipped in v0.4.0.** No long-lived publish tokens. |
 
 ## 2. v1.0.0 non-goals
 
@@ -52,14 +53,14 @@ To call any release `v1.0.0`, every one of these must be true:
 
 | # | Criterion | State |
 |--:|---|---|
-| 1 | npm Trusted Publishing enabled for all six packages | not yet — see [trusted-publishing.md](trusted-publishing.md) |
-| 2 | npm provenance visible on every published version | not yet |
-| 3 | No long-lived publish tokens required for normal releases | not yet (we still publish manually) |
+| 1 | npm Trusted Publishing enabled for all six packages | **yes** (v0.4.0 published via OIDC) |
+| 2 | npm provenance visible on every published version | **yes** (SLSA build provenance attached in v0.4.0) |
+| 3 | No long-lived publish tokens required for normal releases | **yes** (Trusted Publishing dispatch from `release-publish.yml`) |
 | 4 | Package `repository` / `homepage` / `bugs` metadata verified per package | partial |
 | 5 | Manifest schema version frozen for v1.x | not yet |
 | 6 | Backwards-compatibility policy documented (this file's §13) | yes (this doc) |
-| 7 | Signed-manifest design complete (implementation may follow) | not yet |
-| 8 | HTTP MCP transport implemented OR explicitly deferred to v1.x with a date | **implemented opt-in in v0.4.0** (`apps/mcp-server/src/transports/http.ts`); release-prepared on `release/v0.4.0-http-polish`; not yet on npm |
+| 7 | Signed-manifest design complete (implementation may follow) | **design in progress** for v0.5.0 — see [designs/signed-manifests.md](designs/signed-manifests.md) and [adr/0002-signed-manifests.md](adr/0002-signed-manifests.md) |
+| 8 | HTTP MCP transport implemented OR explicitly deferred to v1.x with a date | **implemented opt-in in v0.4.0** (`apps/mcp-server/src/transports/http.ts`); shipped on npm |
 | 9 | OAuth / authorization design complete (implementation may follow) | **static bearer auth implemented in v0.4.0** ([releases/v0.4.0.md](releases/v0.4.0.md)); OAuth 2.1 resource-server mode designed-for-future, not yet implemented |
 | 10 | Production storage adapter shipped or interface declared | not yet |
 | 11 | Configurable, exact-origin remote allowlist | **yes** (v0.3.0) |
@@ -152,7 +153,10 @@ Before the MCP server line can claim production-readiness:
 - [ ] Public security advisories use a stable URL pattern.
 - [ ] Dependency review / supply-chain scan in CI.
 - [ ] Signed manifests (publisher-key verification) shipped or
-      definitively deferred with a v1.x date.
+      definitively deferred with a v1.x date. **Design in
+      progress for v0.5.0** —
+      [designs/signed-manifests.md](designs/signed-manifests.md) /
+      [adr/0002-signed-manifests.md](adr/0002-signed-manifests.md).
 
 ## 8. Release / supply-chain criteria
 

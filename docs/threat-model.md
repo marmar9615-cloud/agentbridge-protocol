@@ -52,12 +52,24 @@ For each threat:
 
 ---
 
-### T1. Malicious manifest
+### T1. Malicious / tampered / stale manifest
 
-- **Description.** A manifest published by an attacker (or a
-  legitimate publisher whose key was stolen) declares actions that
-  look benign but do something harmful, or describe permissions /
-  risk levels dishonestly.
+- **Description.** A manifest at
+  `/.well-known/agentbridge.json` is **substituted, replayed, or
+  signed by the wrong publisher** between the publisher's authoring
+  step and the agent's call. Concrete vectors:
+  - **T1.a Substitution.** A compromised CDN cache, stolen TLS
+    cert, or MITM after TLS termination serves an attacker-
+    authored manifest at the right URL.
+  - **T1.b Stale/replay.** A previously valid manifest is
+    re-served long after the publisher updated or rotated.
+    Origin and TLS still match, but the agent has no signal the
+    manifest is fresh.
+  - **T1.c Wrong publisher.** A manifest is served at the right
+    origin but signed by a key the publisher did not authorize
+    (e.g., a compromised build pipeline).
+  - **T1.d Honest-but-mistaken.** The publisher itself declares
+    `risk` / `requiresConfirmation` dishonestly or by mistake.
 - **Current mitigation.**
   - Schema validation rejects malformed manifests.
   - Origin pinning (T2 below) restricts where actions can be
@@ -65,21 +77,38 @@ For each threat:
   - Loopback default + explicit allowlist (T3) restricts which
     manifests we'll fetch.
   - Risky actions still require human confirmation regardless of
-    what the manifest claims.
+    what the manifest claims (covers T1.d at the action call —
+    not at the manifest layer).
 - **Remaining gap.** No publisher signature. We trust that the
   manifest at `https://app.example.com/.well-known/agentbridge.json`
   was put there by whoever controls `app.example.com`. A stolen TLS
-  certificate or a compromised CDN cache lets an attacker substitute
-  a manifest.
-- **v1.0 target.** Signed manifests with offline-verifiable
-  publisher keys (Phase 5 / `v0.5.0`). The agent fetches
-  `.well-known/agentbridge-keys.json` once, pins the publisher, and
-  verifies the manifest signature before trusting any action.
+  certificate, a compromised CDN cache, or a stale-but-valid
+  cached copy lets an attacker substitute or replay a manifest
+  with no protocol-layer signal.
+- **v0.5.0 / v1.0 target.** **Optional cryptographically signed
+  manifests.** Design landed in
+  [designs/signed-manifests.md](designs/signed-manifests.md) and
+  [adr/0002-signed-manifests.md](adr/0002-signed-manifests.md).
+  Publishers serve a key set at
+  `/.well-known/agentbridge-keys.json`; the manifest carries an
+  inline `signature` block with `alg`, `kid`, `iss`, `signedAt`,
+  `expiresAt`, and a base64url signature value over RFC 8785
+  (JCS) canonical bytes. The MCP server verifies before calling
+  any action; the scanner downgrades unsigned manifests; high-
+  assurance deployments can require signatures
+  (`AGENTBRIDGE_REQUIRE_SIGNATURE=true`). Verification is
+  **additive**: the confirmation gate, origin pinning, target-
+  origin allowlist, audit redaction, stdio stdout hygiene, and
+  HTTP transport auth/origin checks continue to enforce on top.
+  See [v0.5.0 §15 migration plan](designs/signed-manifests.md#15-migration-plan)
+  for the path to mandatory signing at v1.0.
 - **Test coverage.** Schema validation tests in
   [`packages/core/src/tests/manifest.test.ts`](../packages/core/src/tests/manifest.test.ts)
   and example manifests under
   [`spec/examples/`](../spec/examples/) verified by
   [`spec-examples.test.ts`](../packages/core/src/tests/spec-examples.test.ts).
+  Signing-specific test plan is in
+  [designs/signed-manifests.md §16](designs/signed-manifests.md#16-testing-plan).
 
 ---
 
@@ -97,8 +126,9 @@ For each threat:
 - **Remaining gap.** None known for in-protocol behavior. A
   publisher who controls both `baseUrl` and endpoint can still
   declare malicious actions; that's covered by T1.
-- **v1.0 target.** Same as today, plus signed manifests so the
-  publisher is verifiable.
+- **v1.0 target.** Same as today, plus signed manifests
+  ([designs/signed-manifests.md](designs/signed-manifests.md)) so
+  the publisher is verifiable on top of the existing origin pin.
 - **Test coverage.** [`call-action.test.ts`](../apps/mcp-server/src/tests/call-action.test.ts)
   → "callAction origin pinning" suite.
 

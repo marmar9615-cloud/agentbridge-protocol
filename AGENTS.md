@@ -22,26 +22,33 @@ The repo ships:
 ## Current state
 
 - npm scope: **`@marmarlabs`** (do not change).
-- Latest published release: **v0.3.0** on npm and on GitHub
+- Latest published release: **v0.4.0** on npm and on GitHub
   (Latest, stable; published via npm Trusted Publishing with SLSA
   build provenance).
-- **v0.4.0 is release-prepared on the `release/v0.4.0-http-polish`
-  branch** — all packages bumped to `0.4.0`, opt-in HTTP MCP
-  transport implemented (PR #27 landed), docs/examples updated,
-  HTTP smoke wired. **Not yet on npm**; publishing happens through
-  the Trusted Publishing workflow only after maintainer approval.
-  Predecessor PRs:
-  [#23](https://github.com/marmar9615-cloud/agentbridge-protocol/pull/23) (design),
+- **v0.5.0 is in design** — Signed manifests. Design doc:
+  [docs/designs/signed-manifests.md](docs/designs/signed-manifests.md);
+  ADR: [docs/adr/0002-signed-manifests.md](docs/adr/0002-signed-manifests.md);
+  tracking issue: [#31](https://github.com/marmar9615-cloud/agentbridge-protocol/issues/31)
+  /
+  [docs/issues/v0.5.0-signed-manifests.md](docs/issues/v0.5.0-signed-manifests.md).
+  No runtime change yet; implementation lands in subsequent PRs.
+- v0.4.0 predecessor PRs:
+  [#23](https://github.com/marmar9615-cloud/agentbridge-protocol/pull/23) (HTTP transport design),
   [#24](https://github.com/marmar9615-cloud/agentbridge-protocol/pull/24) (transport abstraction),
   [#25](https://github.com/marmar9615-cloud/agentbridge-protocol/pull/25) (adopter docs/examples),
   [#26](https://github.com/marmar9615-cloud/agentbridge-protocol/pull/26) (OpenAPI regression fixtures),
-  [#27](https://github.com/marmar9615-cloud/agentbridge-protocol/pull/27) (HTTP transport + bearer auth).
+  [#27](https://github.com/marmar9615-cloud/agentbridge-protocol/pull/27) (HTTP transport + bearer auth),
+  [#29](https://github.com/marmar9615-cloud/agentbridge-protocol/pull/29) (release prep),
+  [#30](https://github.com/marmar9615-cloud/agentbridge-protocol/pull/30) (post-release notes),
+  [#28](https://github.com/marmar9615-cloud/agentbridge-protocol/pull/28) (SDK public API contract coverage).
 - Stdio remains the default and only-when-unset transport. HTTP is
   **opt-in** via `AGENTBRIDGE_TRANSPORT=http`. Design in
   [docs/designs/http-mcp-transport-auth.md](docs/designs/http-mcp-transport-auth.md);
   ADR in [docs/adr/0001-http-mcp-transport.md](docs/adr/0001-http-mcp-transport.md).
 - Manifest schema: v0.1, stable for the v0.x line. Will be frozen
-  for v1.x per [docs/v1-readiness.md](docs/v1-readiness.md).
+  for v1.x per [docs/v1-readiness.md](docs/v1-readiness.md). v0.5.0
+  adds an optional `signature` block; unsigned manifests still
+  validate.
 
 ## Layout
 
@@ -181,7 +188,11 @@ If a change weakens any of these, stop and ask before continuing.
   — v0.4.0 HTTP MCP transport + auth design.
 - [docs/adr/0001-http-mcp-transport.md](docs/adr/0001-http-mcp-transport.md)
   — ADR for the HTTP transport decision.
-- [docs/roadmap.md](docs/roadmap.md) — what's planned beyond v0.3.x
-  (HTTP MCP transport, signed manifests, OAuth scope enforcement,
-  distributed audit storage, …).
+- [docs/designs/signed-manifests.md](docs/designs/signed-manifests.md)
+  — v0.5.0 signed-manifest design (in progress).
+- [docs/adr/0002-signed-manifests.md](docs/adr/0002-signed-manifests.md)
+  — ADR for the signed-manifest decision.
+- [docs/roadmap.md](docs/roadmap.md) — what's planned beyond v0.4.x
+  (signed manifests, OAuth scope enforcement, distributed audit
+  storage, …).
 - [SECURITY.md](SECURITY.md) — how to report security issues.
