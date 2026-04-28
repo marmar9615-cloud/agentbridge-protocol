@@ -11,7 +11,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178c6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-15-black?logo=next.js&logoColor=white)](https://nextjs.org/)
 [![MCP](https://img.shields.io/badge/MCP-1.0-orange)](https://modelcontextprotocol.io)
-[![Status: v0.2.1](https://img.shields.io/badge/Status-v0.2.1-blue)]()
+[![Status: v0.2.2](https://img.shields.io/badge/Status-v0.2.2-blue)]()
 [![npm](https://img.shields.io/npm/v/@marmarlabs/agentbridge-sdk?label=%40marmarlabs%2Fagentbridge-sdk)](https://www.npmjs.com/package/@marmarlabs/agentbridge-sdk)
 
 </div>
@@ -20,9 +20,11 @@
 
 ## Status
 
-**AgentBridge v0.2.1 is live on npm under the `@marmarlabs` scope.**
-v0.2.0 was the first public release; v0.2.1 is a docs-only cleanup
-patch on top.
+**AgentBridge v0.2.2 is live on npm under the `@marmarlabs` scope.**
+v0.2.0 was the first public release, v0.2.1 was a docs-only cleanup
+patch, and v0.2.2 adds first-class OpenAI Codex onboarding (CLI
+one-liner, `~/.codex/config.toml` snippets, project-scoped
+`.mcp.json`, and a Codex plugin example).
 
 ```bash
 npm install @marmarlabs/agentbridge-sdk @marmarlabs/agentbridge-core
@@ -38,10 +40,11 @@ distributed audit storage are roadmap items (see
 [docs/roadmap.md](docs/roadmap.md)). Destructive demo actions remain
 simulated.
 
-For release notes, see [docs/releases/v0.2.1.md](docs/releases/v0.2.1.md)
-for the current release and
-[docs/releases/v0.2.0.md](docs/releases/v0.2.0.md) for the first public
-release.
+For release notes, see [docs/releases/v0.2.2.md](docs/releases/v0.2.2.md)
+for the current release,
+[docs/releases/v0.2.1.md](docs/releases/v0.2.1.md) for the docs cleanup
+patch, and [docs/releases/v0.2.0.md](docs/releases/v0.2.0.md) for the
+first public release.
 
 ---
 
