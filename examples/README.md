@@ -2,7 +2,8 @@
 
 Self-contained examples showing how to integrate AgentBridge in different contexts.
 The CLI regression suite validates the manifest and OpenAPI examples
-that adopters are most likely to copy.
+that adopters are most likely to copy. MCP client config examples are
+covered by `npm run validate:mcp-config-examples`.
 
 | Directory | What it shows |
 |---|---|

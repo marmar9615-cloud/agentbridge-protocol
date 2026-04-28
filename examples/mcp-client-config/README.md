@@ -78,8 +78,12 @@ Settings → MCP. Same shape as Claude Desktop.
 
 ## Custom MCP client (HTTP example)
 
-The bundled MCP server speaks **stdio**. If your client needs HTTP, run it
-behind an MCP HTTP transport adapter. See [`docs/mcp-client-setup.md`](../../docs/mcp-client-setup.md).
+The bundled MCP server defaults to **stdio**. If your client needs HTTP,
+v0.4.0 includes an opt-in Streamable HTTP transport with static bearer
+auth and Origin allowlisting. See
+[`../http-client-config/`](../http-client-config/) for a runnable local
+recipe and [`docs/mcp-client-setup.md`](../../docs/mcp-client-setup.md)
+for client setup notes.
 
 ## After connecting
 
@@ -101,4 +105,5 @@ npx @marmarlabs/agentbridge-cli mcp-config
 ```
 
 prints copy-pasteable config snippets for direct invocation and for a
-local-checkout setup.
+local-checkout setup, plus the opt-in HTTP transport shape for hosted
+clients.
