@@ -1,0 +1,426 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Catalog Regression API",
+    "version": "2.1.0",
+    "description": "Fixture covering OpenAPI to AgentBridge converter edge cases.",
+    "contact": {
+      "email": "platform@example.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.example.com"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "operatorToken": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    },
+    "schemas": {
+      "Order": {
+        "type": "object",
+        "required": ["id", "status", "lineItems"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "shipped", "refunded", "cancelled"]
+          },
+          "lineItems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LineItem"
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "gift": {
+                "type": "boolean"
+              },
+              "channel": {
+                "type": "string",
+                "enum": ["web", "phone", "marketplace"]
+              }
+            }
+          }
+        }
+      },
+      "LineItem": {
+        "type": "object",
+        "required": ["sku", "quantity"],
+        "properties": {
+          "sku": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "disposition": {
+            "type": "string",
+            "enum": ["keep", "refund", "replace"]
+          }
+        }
+      },
+      "RefundDraftInput": {
+        "type": "object",
+        "required": ["amount", "reason", "lineItems"],
+        "properties": {
+          "amount": {
+            "type": "number",
+            "minimum": 0.01
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 3
+          },
+          "lineItems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LineItem"
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "requestedBy": {
+                "type": "string"
+              },
+              "notifyCustomer": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "operatorToken": []
+    }
+  ],
+  "paths": {
+    "/orders": {
+      "get": {
+        "operationId": "ListOrdersV2",
+        "tags": ["orders"],
+        "summary": "List orders",
+        "description": "Returns orders filtered by status or customer.",
+        "security": [
+          {
+            "operatorToken": ["orders:read"]
+          }
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "description": "Filter by order status.",
+            "schema": {
+              "type": "string",
+              "enum": ["pending", "shipped", "refunded", "cancelled"]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "orders": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Order"
+                      }
+                    }
+                  }
+                },
+                "examples": {
+                  "empty": {
+                    "value": {
+                      "orders": []
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createOrder",
+        "tags": ["orders"],
+        "summary": "Create order",
+        "description": "Creates an order draft in the catalog system.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Order"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/orders/{orderId}": {
+      "get": {
+        "summary": "Get order detail",
+        "description": "Returns one order with optional internal notes.",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeNotes",
+            "in": "query",
+            "description": "Include internal staff notes.",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "default": {
+            "description": "Order detail",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Order"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "replaceOrderStatus",
+        "summary": "Replace order status",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["status"],
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": ["pending", "shipped", "refunded", "cancelled"]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated"
+          }
+        }
+      },
+      "patch": {
+        "operationId": "patchOrderMetadata",
+        "summary": "Patch order metadata",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "metadata": {
+                    "type": "object",
+                    "properties": {
+                      "priority": {
+                        "type": "string",
+                        "enum": ["low", "normal", "high"]
+                      },
+                      "tags": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteOrderDanger",
+        "summary": "Delete order",
+        "description": "Deletes an order record from this fixture.",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/orders/{orderId}/refund-drafts": {
+      "post": {
+        "operationId": "create-refund-draft",
+        "tags": ["refunds"],
+        "summary": "Create refund draft",
+        "description": "Creates a refund draft. It does not execute a refund.",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefundDraftInput"
+              },
+              "examples": {
+                "damagedItem": {
+                  "value": {
+                    "amount": 24,
+                    "reason": "Damaged on arrival",
+                    "lineItems": [
+                      {
+                        "sku": "SKU-123",
+                        "quantity": 1,
+                        "disposition": "refund"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "draftId": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/projects/{projectId}/notes/{noteId}": {
+      "delete": {
+        "summary": "Delete project note",
+        "parameters": [
+          {
+            "name": "projectId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "noteId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Deleted"
+          }
+        }
+      }
+    },
+    "/reports/{reportId}/exports": {
+      "head": {
+        "summary": "Check export readiness",
+        "parameters": [
+          {
+            "name": "reportId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ready"
+          }
+        }
+      }
+    }
+  }
+}
