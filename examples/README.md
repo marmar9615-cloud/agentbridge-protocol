@@ -1,6 +1,8 @@
 # Examples
 
 Self-contained examples showing how to integrate AgentBridge in different contexts.
+The CLI regression suite validates the manifest and OpenAPI examples
+that adopters are most likely to copy.
 
 | Directory | What it shows |
 |---|---|

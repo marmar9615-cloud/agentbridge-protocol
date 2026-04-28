@@ -71,6 +71,28 @@ For everything else (Claude Desktop, Cursor, custom):
 
 Print the CLI version.
 
+## Regression-tested examples
+
+CLI regression coverage exercises the repo examples that adopters are
+most likely to copy:
+
+- `examples/adopter-quickstart/manifest.basic.json`
+- `examples/adopter-quickstart/manifest.production-shaped.json`
+- `examples/scanner-regression/*.json` (valid fixtures pass; the
+  intentionally invalid fixture fails safely)
+- `examples/openapi-store/store.openapi.json`
+- `examples/openapi-regression/catalog-regression.openapi.json`
+- `examples/sdk-basic/manifest.ts` generated to JSON and validated
+- `agentbridge mcp-config`, including stdio, Codex, Claude Desktop,
+  Cursor / generic JSON, and the v0.4.0 HTTP transport block
+
+After building the workspace, run the same example validation pass
+manually with:
+
+```bash
+npm run validate:examples
+```
+
 ## Exit codes
 
 - `0` — success

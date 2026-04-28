@@ -28,6 +28,7 @@
     "typecheck:clean": "node scripts/clean-dist.mjs && npm run typecheck",
     "clean:dist": "node scripts/clean-dist.mjs",
     "pack:dry-run": "node scripts/pack-check.mjs",
+    "validate:examples": "node scripts/validate-examples.mjs",
     "smoke:external": "node scripts/external-adopter-smoke.mjs",
     "smoke:http": "node scripts/http-mcp-smoke.mjs"
   },
