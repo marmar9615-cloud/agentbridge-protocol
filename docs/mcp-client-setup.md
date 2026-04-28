@@ -129,10 +129,38 @@ If your client expects a JSON server descriptor, the same shape used by
 Claude Desktop and Cursor (`command: "npx"`, `args: ["-y",
 "@marmarlabs/agentbridge-mcp-server"]`) works in most clients.
 
-If your client only supports HTTP MCP, the bundled server doesn't ship
-an HTTP transport yet. Wrap it with an MCP HTTP transport adapter such
-as the [official MCP SDK transports](https://github.com/modelcontextprotocol/typescript-sdk#transports);
-a first-class HTTP transport is on [the roadmap](roadmap.md).
+### HTTP MCP transport (experimental, v0.4.0 in flight)
+
+If your client only supports HTTP MCP — typically hosted/centralized
+MCP clients that cannot launch a local subprocess — the bundled
+server now exposes an opt-in **Streamable HTTP** transport at
+`POST /mcp`. The default remains stdio; HTTP is enabled per-process
+via `AGENTBRIDGE_TRANSPORT=http`.
+
+Minimal local-dev launch:
+
+```bash
+export AGENTBRIDGE_TRANSPORT=http
+export AGENTBRIDGE_HTTP_AUTH_TOKEN=$(openssl rand -hex 32)
+# Optional: only needed if a browser-based MCP client will connect.
+export AGENTBRIDGE_HTTP_ALLOWED_ORIGINS=http://localhost:5173
+npx -y @marmarlabs/agentbridge-mcp-server
+# → listens on http://127.0.0.1:3333/mcp
+```
+
+Clients authenticate with `Authorization: Bearer <token>`. Tokens
+in URL query strings are rejected with HTTP `400`. The full env-var
+table and threat coverage are in
+[docs/security-configuration.md](security-configuration.md) and
+[docs/designs/http-mcp-transport-auth.md](designs/http-mcp-transport-auth.md).
+
+> The HTTP transport is **experimental** in v0.4.0. stdio remains
+> the default and the recommended path for local desktop clients
+> (Codex, Claude Desktop, Cursor). Production hosting of the HTTP
+> transport is on the v1.0 path; today it is appropriate for
+> local development, controlled-internal staging, and integration
+> with hosted MCP clients in non-production environments. See
+> [docs/production-readiness.md](production-readiness.md).
 
 ## Safety expectations for all clients
 

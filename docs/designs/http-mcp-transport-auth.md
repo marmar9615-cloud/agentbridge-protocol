@@ -522,15 +522,32 @@ Releases land in this order:
    change; verified by the existing `stdio-hygiene.test.ts`
    subprocess test plus a new in-memory factory test.
 3. **v0.4.0 implementation PR 2 — HTTP transport + bearer auth.**
-   Adds the HTTP entry path, env vars, host/auth/origin checks,
-   and the Streamable HTTP wiring. All HTTP tests above land
-   here. stdio path untouched.
+   ✅ landed. Added
+   [`apps/mcp-server/src/transports/http.ts`](../../apps/mcp-server/src/transports/http.ts)
+   wrapping `StreamableHTTPServerTransport` from
+   `@modelcontextprotocol/sdk` behind bearer-token auth, Origin
+   allowlist, loopback-by-default bind, query-string-token
+   rejection, and request-body size cap. Extended
+   [`apps/mcp-server/src/config.ts`](../../apps/mcp-server/src/config.ts)
+   with `resolveTransport()` (defaults stdio) and
+   `resolveHttpConfig()` (AGENTBRIDGE_HTTP_* knobs). Updated
+   [`apps/mcp-server/src/index.ts`](../../apps/mcp-server/src/index.ts)
+   to dispatch on `AGENTBRIDGE_TRANSPORT`. stdio path untouched.
+   174/174 tests green; new test files
+   [`http-config.test.ts`](../../apps/mcp-server/src/tests/http-config.test.ts)
+   (23 cases) and
+   [`http-transport.test.ts`](../../apps/mcp-server/src/tests/http-transport.test.ts)
+   (26 cases) cover every requirement in
+   [§12](#12-testing-plan).
 4. **v0.4.0 implementation PR 3 — docs / examples / smoke
-   tests.** Updates `docs/security-configuration.md` (add the
-   `AGENTBRIDGE_HTTP_*` table), `docs/mcp-client-setup.md` (HTTP
-   client recipes), `docs/codex-setup.md` if relevant, an
-   `examples/http-client-config/` directory, and an external
-   smoke test that exercises HTTP end-to-end.
+   tests.** Polishes
+   [`docs/security-configuration.md`](../security-configuration.md)
+   (the AGENTBRIDGE_HTTP_* table), expands
+   [`docs/mcp-client-setup.md`](../mcp-client-setup.md) (HTTP
+   client recipes), adds an `examples/http-client-config/`
+   directory, an external smoke test that exercises HTTP
+   end-to-end, and bumps all six packages in lockstep to
+   `0.4.0`.
 5. **v0.4.0 release.** All six packages bump in lockstep to
    `0.4.0`, published via the existing Trusted Publishing
    workflow with provenance.

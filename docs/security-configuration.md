@@ -9,18 +9,40 @@ threats these knobs mitigate).
 
 ## At a glance
 
+### Universal (apply to both transports)
+
 | Env var | What it does | Default | Allowed range |
 |---|---|---|---|
-| `AGENTBRIDGE_ALLOWED_TARGET_ORIGINS` | Strict allowlist of remote target origins (comma-separated). Recommended for production. | unset | comma-separated http(s) origins |
-| `AGENTBRIDGE_ALLOW_REMOTE` | Broad escape hatch — permits all http(s) remote origins. Emits a one-time stderr warning. | unset (loopback only) | `true` or unset |
+| `AGENTBRIDGE_TRANSPORT` | Selects the MCP transport. `stdio` (default) is the local-subprocess transport; `http` opts into the Streamable HTTP transport. Unknown values fall back to `stdio` with a stderr warning. | `stdio` | `stdio` \| `http` |
+| `AGENTBRIDGE_ALLOWED_TARGET_ORIGINS` | **Outbound.** Strict allowlist of remote target origins (comma-separated) the MCP server is willing to fetch manifests from and call actions against. Recommended for production. | unset | comma-separated http(s) origins |
+| `AGENTBRIDGE_ALLOW_REMOTE` | **Outbound.** Broad escape hatch — permits all http(s) remote target origins. Emits a one-time stderr warning. | unset (loopback only) | `true` or unset |
 | `AGENTBRIDGE_ACTION_TIMEOUT_MS` | Outbound HTTP timeout for action calls. | `10000` (10s) | `1000`–`120000` |
-| `AGENTBRIDGE_MAX_RESPONSE_BYTES` | Hard cap on action response body size. | `1000000` (1MB) | `1024`–`10485760` (1KB–10MB) |
+| `AGENTBRIDGE_MAX_RESPONSE_BYTES` | Hard cap on action response body size; HTTP transport also uses this as the inbound request-body cap. | `1000000` (1MB) | `1024`–`10485760` (1KB–10MB) |
 | `AGENTBRIDGE_CONFIRMATION_TTL_SECONDS` | TTL for pending confirmation tokens. | `300` (5 minutes) | `30`–`3600` (30s–1h) |
 | `AGENTBRIDGE_DATA_DIR` | Directory for `audit.json`, `confirmations.json`, `idempotency.json`. | `<repo>/data` | absolute path |
+
+### HTTP transport (only when `AGENTBRIDGE_TRANSPORT=http`)
+
+| Env var | What it does | Default | Allowed range |
+|---|---|---|---|
+| `AGENTBRIDGE_HTTP_HOST` | Bind interface. Loopback (`127.0.0.1`/`localhost`/`::1`) is safe by default. Anything else is "public bind" and the server requires both auth and an Origin allowlist. | `127.0.0.1` | hostname or IP |
+| `AGENTBRIDGE_HTTP_PORT` | TCP port. `0` selects an ephemeral port (used by tests). | `3333` | `0`–`65535` |
+| `AGENTBRIDGE_HTTP_AUTH_TOKEN` | **Required for HTTP mode.** Static bearer token; clients send `Authorization: Bearer <token>`. Compared in constant time. Generate with `openssl rand -hex 32`. Never logged, never echoed in error responses. | unset | non-empty string, ≥ 16 chars |
+| `AGENTBRIDGE_HTTP_ALLOWED_ORIGINS` | **Inbound** allowlist of `Origin` headers (comma-separated, exact-`URL.origin` match). Required for non-loopback bind. Independent from the outbound `AGENTBRIDGE_ALLOWED_TARGET_ORIGINS`. | unset (rejects requests that supply an Origin header) | comma-separated http(s) origins |
 
 Out-of-range integers are clamped to the nearest bound, with a
 stderr warning. Non-integer values fall back to the default with a
 stderr warning.
+
+> **Inbound vs outbound.**
+> `AGENTBRIDGE_HTTP_ALLOWED_ORIGINS` is the **inbound** allowlist — it
+> gates which `Origin` headers the HTTP MCP server will accept from
+> calling clients (typically browsers).
+> `AGENTBRIDGE_ALLOWED_TARGET_ORIGINS` is the **outbound** allowlist —
+> it gates which target-app origins the MCP server is willing to
+> fetch manifests from and invoke action endpoints against.
+> The two are independent and not interchangeable. Setting one does
+> nothing for the other.
 
 ## `AGENTBRIDGE_ALLOWED_TARGET_ORIGINS`
 
@@ -252,37 +274,55 @@ AGENTBRIDGE_ACTION_TIMEOUT_MS=10 \
 # [agentbridge] AGENTBRIDGE_MAX_RESPONSE_BYTES=999999999 is outside [1024, 10485760]; clamped to 10485760.
 ```
 
-## Forthcoming env vars (v0.4.0 — HTTP transport)
+## HTTP transport recipes (v0.4.0)
 
-The v0.4.0 release line will add an opt-in HTTP MCP transport.
-The full env-var table for HTTP mode lives in the design doc
-([designs/http-mcp-transport-auth.md §5](designs/http-mcp-transport-auth.md#5-proposed-env-vars-and-flags))
-and the ADR
-([adr/0001-http-mcp-transport.md](adr/0001-http-mcp-transport.md)).
+The HTTP transport is opt-in via `AGENTBRIDGE_TRANSPORT=http`.
+stdio remains the default. The endpoint is mounted at `/mcp`.
+Clients authenticate with `Authorization: Bearer <token>`.
+Tokens in URL query strings are rejected with HTTP `400`.
+JSON responses are returned (no SSE in v0.4.0). For the full
+contract, see
+[designs/http-mcp-transport-auth.md](designs/http-mcp-transport-auth.md)
+and [adr/0001-http-mcp-transport.md](adr/0001-http-mcp-transport.md).
 
-In short, when v0.4.0 ships, additional knobs will appear under
-the `AGENTBRIDGE_HTTP_*` namespace:
+### Loopback / local development (recommended starting point)
 
-- `AGENTBRIDGE_TRANSPORT` — `stdio` (default) or `http`.
-- `AGENTBRIDGE_HTTP_HOST` — bind interface; default `127.0.0.1`.
-- `AGENTBRIDGE_HTTP_PORT` — TCP port; default `3333`.
-- `AGENTBRIDGE_HTTP_PATH` — endpoint path; default `/mcp`.
-- `AGENTBRIDGE_HTTP_AUTH_TOKEN` — static bearer token; required
-  for HTTP unless `AGENTBRIDGE_HTTP_REQUIRE_AUTH=false` *and* the
-  bind is loopback.
-- `AGENTBRIDGE_HTTP_REQUIRE_AUTH` — default `true`. Setting it to
-  `false` is allowed only on loopback and emits a stderr warning.
-- `AGENTBRIDGE_HTTP_ALLOWED_ORIGINS` — comma-separated inbound
-  `Origin` allowlist; required for non-loopback bind.
-- `AGENTBRIDGE_HTTP_PUBLIC_URL` — canonical server URL for
-  audit/metadata.
-- `AGENTBRIDGE_HTTP_ENABLE_SSE` — default `false`; enables
-  `GET /mcp` for Streamable HTTP / SSE session resumption.
+```bash
+export AGENTBRIDGE_TRANSPORT=http
+export AGENTBRIDGE_HTTP_AUTH_TOKEN=$(openssl rand -hex 32)
+# Optional: only needed if a browser-based MCP client will connect.
+export AGENTBRIDGE_HTTP_ALLOWED_ORIGINS=http://localhost:5173
+npx -y @marmarlabs/agentbridge-mcp-server
+```
 
-These names are tentative until the implementation PR lands.
-**The inbound `AGENTBRIDGE_HTTP_ALLOWED_ORIGINS` is independent
-from the outbound `AGENTBRIDGE_ALLOWED_TARGET_ORIGINS`** — they
-gate different traffic and are not interchangeable.
+The server listens on `127.0.0.1:3333` by default. The token is
+sourced from your shell environment and **never** appears in
+logs or HTTP error bodies.
+
+### Non-loopback bind (controlled environments only)
+
+When `AGENTBRIDGE_HTTP_HOST` is anything other than loopback,
+the server fails closed at startup unless **both**
+`AGENTBRIDGE_HTTP_AUTH_TOKEN` and a non-empty
+`AGENTBRIDGE_HTTP_ALLOWED_ORIGINS` are set:
+
+```bash
+export AGENTBRIDGE_TRANSPORT=http
+export AGENTBRIDGE_HTTP_HOST=0.0.0.0
+export AGENTBRIDGE_HTTP_AUTH_TOKEN=$(openssl rand -hex 32)
+export AGENTBRIDGE_HTTP_ALLOWED_ORIGINS=https://agent-platform.example.com
+npx -y @marmarlabs/agentbridge-mcp-server
+```
+
+The server emits a stderr notice (`[agentbridge-mcp-http]
+non-loopback bind to 0.0.0.0 — auth and Origin allowlist are
+required and have been verified.`) so the operator sees the
+broader trust boundary.
+
+> **Production-readiness caveat.** v0.4.0 ships HTTP transport
+> as an *opt-in* runtime, not a production-readiness milestone.
+> See [production-readiness.md](production-readiness.md) for
+> what AgentBridge is and isn't safe for today.
 
 ## See also
 

@@ -11,25 +11,28 @@ lands) live in the adapter, not in the dispatcher.**
 | File | Status | Notes |
 |---|---|---|
 | [`stdio.ts`](stdio.ts) | shipping | Default. Wraps `StdioServerTransport`. Stdout = JSON-RPC; stderr = diagnostics. Verified by [`stdio-hygiene.test.ts`](../tests/stdio-hygiene.test.ts). |
-| `http.ts` | not yet | Lands in v0.4.0 implementation PR 2. Will wrap `StreamableHTTPServerTransport` behind bearer auth + Origin allowlist + loopback-by-default bind. |
+| [`http.ts`](http.ts) | experimental (v0.4.0, opt-in) | Wraps `StreamableHTTPServerTransport` behind bearer-token auth, Origin allowlist, loopback-by-default bind, query-string-token rejection, and a request-body size cap. Endpoint `/mcp`. JSON responses (no SSE). Stateless mode. Verified by [`http-config.test.ts`](../tests/http-config.test.ts) (23 cases) and [`http-transport.test.ts`](../tests/http-transport.test.ts) (26 cases). |
 
 ## Migration plan
 
 Per [`docs/designs/http-mcp-transport-auth.md §13`](../../../../docs/designs/http-mcp-transport-auth.md#13-migration-plan):
 
 1. **PR 1 — transport abstraction.** ✅ landed. `createMcpServer()`
-   factory in `../server.ts`; this directory holds the stdio
-   adapter; `index.ts` is now a thin entry that calls
-   `runStdioServer()`. Zero behavior change.
-2. **PR 2 — HTTP transport + bearer auth.** Adds `http.ts` here,
-   wires `StreamableHTTPServerTransport` from
+   factory in `../server.ts`; this directory holds the transport
+   adapters; `index.ts` is a thin entry that picks a transport.
+   Zero behavior change.
+2. **PR 2 — HTTP transport + bearer auth.** ✅ landed. `http.ts`
+   wraps `StreamableHTTPServerTransport` from
    `@modelcontextprotocol/sdk` behind an auth + Origin + bind
-   check. New env vars (`AGENTBRIDGE_HTTP_*`) parsed in
-   `../config.ts`.
-3. **PR 3 — docs / examples / smoke tests.** Updates
+   check. New env vars (`AGENTBRIDGE_TRANSPORT`,
+   `AGENTBRIDGE_HTTP_*`) parsed in `../config.ts`. stdio path
+   untouched and verified by the existing
+   [`stdio-hygiene.test.ts`](../tests/stdio-hygiene.test.ts).
+3. **PR 3 — docs / examples / smoke tests.** Polishes
    [`docs/security-configuration.md`](../../../../docs/security-configuration.md),
    [`docs/mcp-client-setup.md`](../../../../docs/mcp-client-setup.md),
-   and adds an `examples/http-client-config/` directory.
+   adds an `examples/http-client-config/` directory, an external
+   smoke test, and bumps all six packages to `0.4.0`.
 
 ## Hard rules for the implementation
 

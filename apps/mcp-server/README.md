@@ -73,6 +73,31 @@ See
 [docs/mcp-client-setup.md](https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/docs/mcp-client-setup.md)
 for everything else.
 
+### HTTP transport (experimental, opt-in)
+
+Hosted/centralized MCP clients that cannot launch a local
+subprocess can use the opt-in **Streamable HTTP** transport.
+stdio remains the default.
+
+```bash
+export AGENTBRIDGE_TRANSPORT=http
+export AGENTBRIDGE_HTTP_AUTH_TOKEN=$(openssl rand -hex 32)
+# Optional: only needed if a browser-based MCP client will connect.
+export AGENTBRIDGE_HTTP_ALLOWED_ORIGINS=http://localhost:5173
+npx -y @marmarlabs/agentbridge-mcp-server
+# → listens on http://127.0.0.1:3333/mcp
+```
+
+Clients send `Authorization: Bearer <token>`. Tokens in URL
+query strings are rejected with `400`. Default bind is loopback;
+non-loopback bind requires both auth and an Origin allowlist or
+the server fails closed at startup. Full env-var table:
+[docs/security-configuration.md](https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/docs/security-configuration.md).
+
+> The HTTP transport is **experimental** in v0.4.0. See
+> [docs/production-readiness.md](https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/docs/production-readiness.md)
+> for what AgentBridge is and isn't safe for today.
+
 ## Tools exposed
 
 | Tool | Purpose |
