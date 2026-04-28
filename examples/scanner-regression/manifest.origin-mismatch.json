@@ -1,0 +1,60 @@
+{
+  "name": "Scanner Regression Origin Mismatch",
+  "description": "Fixture whose baseUrl intentionally differs from the scanned origin.",
+  "version": "1.0.0",
+  "baseUrl": "https://api.example.com",
+  "contact": "platform@example.com",
+  "auth": {
+    "type": "bearer",
+    "description": "Use short-lived bearer tokens scoped to the current operator."
+  },
+  "resources": [
+    {
+      "name": "orders",
+      "description": "Orders visible to the current operator.",
+      "url": "/orders"
+    }
+  ],
+  "actions": [
+    {
+      "name": "list_orders",
+      "title": "List orders",
+      "description": "Returns recent orders filtered by status or customer.",
+      "method": "GET",
+      "endpoint": "/api/agentbridge/actions/list_orders",
+      "risk": "low",
+      "requiresConfirmation": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["pending", "shipped", "refunded"]
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "orders": {
+            "type": "array"
+          }
+        }
+      },
+      "permissions": [
+        {
+          "scope": "orders:read"
+        }
+      ],
+      "examples": [
+        {
+          "description": "Pending orders",
+          "input": {
+            "status": "pending"
+          }
+        }
+      ],
+      "humanReadableSummaryTemplate": "List orders (status: {{status}})"
+    }
+  ]
+}

@@ -47,6 +47,38 @@ Checks are grouped into:
 - `docs` — descriptions, summaries, contact info
 - `developerExperience` — discoverability, latency, error responses
 
+## Scanner regression fixtures
+
+The repo includes scanner fixtures in
+[`examples/scanner-regression`](https://github.com/marmar9615-cloud/agentbridge-protocol/tree/main/examples/scanner-regression)
+that pin public scanner behavior:
+
+- `manifest.good.json` demonstrates a high-readiness manifest with
+  contact, auth, resources, schemas, examples, summary templates,
+  permissions, and confirmation on risky actions.
+- `manifest.minimal-valid.json` is valid but intentionally low
+  readiness, so the scanner recommends contact, auth, resources,
+  output schema, examples, and summary templates.
+- `manifest.missing-confirmation.json` keeps schema validation green
+  while triggering the risky-action confirmation check.
+- `manifest.origin-mismatch.json` shows the `baseUrl` / scanned-origin
+  warning used to protect origin-pinned action calls.
+- `manifest.invalid.json` verifies invalid manifests fail safely with
+  validation errors.
+
+Run the fixture coverage from the repo root:
+
+```bash
+npx vitest run packages/scanner/src/tests
+```
+
+After building the CLI, validate the fixture manifests with:
+
+```bash
+node packages/cli/dist/bin.js validate examples/scanner-regression/manifest.good.json
+node packages/cli/dist/bin.js validate examples/scanner-regression/manifest.minimal-valid.json
+```
+
 ## Status
 
 Public release. v0.2.2 is a docs-only release that adds OpenAI Codex

@@ -1,0 +1,169 @@
+{
+  "name": "Scanner Regression Good",
+  "description": "High-readiness fixture for scanner public API regression tests.",
+  "version": "1.2.0",
+  "baseUrl": "https://support.example.com",
+  "contact": "platform@example.com",
+  "auth": {
+    "type": "bearer",
+    "description": "Use short-lived bearer tokens scoped to the current operator."
+  },
+  "resources": [
+    {
+      "name": "support_tickets",
+      "description": "Support tickets, staff-only notes, and safe simulated deletion flows.",
+      "url": "/support/tickets"
+    }
+  ],
+  "actions": [
+    {
+      "name": "list_tickets",
+      "title": "List tickets",
+      "description": "Returns support tickets filtered by status, priority, or assigned team.",
+      "method": "GET",
+      "endpoint": "/api/agentbridge/actions/list_tickets",
+      "risk": "low",
+      "requiresConfirmation": false,
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": ["open", "pending", "resolved"]
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "tickets": {
+            "type": "array"
+          }
+        }
+      },
+      "permissions": [
+        {
+          "scope": "tickets:read",
+          "description": "Read tickets visible to the current operator."
+        }
+      ],
+      "examples": [
+        {
+          "description": "Recent open tickets",
+          "input": {
+            "status": "open",
+            "limit": 25
+          }
+        }
+      ],
+      "humanReadableSummaryTemplate": "List tickets (status: {{status}}, limit: {{limit}})"
+    },
+    {
+      "name": "add_internal_note",
+      "title": "Add internal note",
+      "description": "Adds a staff-only note to a support ticket for human review.",
+      "method": "POST",
+      "endpoint": "/api/agentbridge/actions/add_internal_note",
+      "risk": "medium",
+      "requiresConfirmation": true,
+      "inputSchema": {
+        "type": "object",
+        "required": ["ticketId", "body"],
+        "properties": {
+          "ticketId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "noteId": {
+            "type": "string"
+          }
+        }
+      },
+      "permissions": [
+        {
+          "scope": "tickets:comment",
+          "description": "Create staff-only notes on tickets."
+        }
+      ],
+      "examples": [
+        {
+          "description": "Staff-only update",
+          "input": {
+            "ticketId": "T-1001",
+            "body": "Customer retried checkout and still sees the same error."
+          }
+        }
+      ],
+      "humanReadableSummaryTemplate": "Add internal note to ticket {{ticketId}}: {{body}}"
+    },
+    {
+      "name": "simulate_delete_ticket_note",
+      "title": "Simulate delete ticket note",
+      "description": "Simulates deleting a ticket note for scanner coverage. This fixture performs no real deletion.",
+      "method": "DELETE",
+      "endpoint": "/api/agentbridge/actions/simulate_delete_ticket_note",
+      "risk": "high",
+      "requiresConfirmation": true,
+      "inputSchema": {
+        "type": "object",
+        "required": ["ticketId", "noteId"],
+        "properties": {
+          "ticketId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "noteId": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "simulated": {
+            "type": "boolean"
+          },
+          "deletedNoteId": {
+            "type": "string"
+          }
+        }
+      },
+      "permissions": [
+        {
+          "scope": "tickets:delete_note",
+          "description": "High-risk simulated delete scope. Keep confirmation enabled."
+        }
+      ],
+      "examples": [
+        {
+          "description": "Simulated note deletion",
+          "input": {
+            "ticketId": "T-1001",
+            "noteId": "note_123"
+          },
+          "output": {
+            "simulated": true,
+            "deletedNoteId": "note_123"
+          }
+        }
+      ],
+      "humanReadableSummaryTemplate": "SIMULATE deleting note {{noteId}} from ticket {{ticketId}}"
+    }
+  ]
+}
