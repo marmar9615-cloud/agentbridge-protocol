@@ -487,11 +487,18 @@ describe("createSignedManifest", () => {
 
 describe("signManifest — canonicalization sanity", () => {
   it("re-signing the same manifest with the same Ed25519 key yields identical bytes", () => {
-    // Ed25519 is deterministic — same key + same payload + same `value`.
+    // Ed25519 is deterministic — same key + same payload + same fixed
+    // signedAt → same `value`. We must build the manifest once,
+    // because createAgentBridgeManifest stamps `generatedAt: new
+    // Date().toISOString()` on each call; calling buildManifest()
+    // twice would produce different canonical bytes whenever the two
+    // calls land in different millisecond ticks (visible on CI, often
+    // hidden locally).
     const { privateKey } = genEd25519();
     const signedAt = new Date("2026-04-28T12:00:00Z");
-    const a = signManifest(buildManifest(), { kid: "k1", privateKey, signedAt });
-    const b = signManifest(buildManifest(), { kid: "k1", privateKey, signedAt });
+    const manifest = buildManifest();
+    const a = signManifest(manifest, { kid: "k1", privateKey, signedAt });
+    const b = signManifest(manifest, { kid: "k1", privateKey, signedAt });
     expect(a.signature?.value).toBe(b.signature?.value);
   });
 
