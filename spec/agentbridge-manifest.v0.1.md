@@ -172,7 +172,21 @@ The publisher hosts a key set at `/.well-known/agentbridge-keys.json`
 [`packages/core/src/signing/schemas.ts`](../packages/core/src/signing/schemas.ts)
 and the full design is in
 [`docs/designs/signed-manifests.md`](../docs/designs/signed-manifests.md)).
-A formal JSON Schema for the key set will land alongside the verifier.
+A formal JSON Schema for the key set will land alongside the runtime
+fetch helpers.
+
+**Local verifier (v0.5.0).** `verifyManifestSignature(manifest, keySet,
+options?)` from
+[`@marmarlabs/agentbridge-core`](../packages/core/README.md) does
+schema-checked, local-only signature verification — Ed25519 and ES256
+— and returns a stable failure-reason enum suitable for downstream
+scanner / MCP / CLI integration. Reference test vectors covering both
+algorithms (and a tampered-manifest case) ship at
+[`spec/signing/test-vectors.json`](signing/test-vectors.json) so
+non-JS implementers can pin their canonicalizer + verifier against
+fixed bytes. Runtime fetching of `/.well-known/agentbridge-keys.json`,
+scanner signature checks, and MCP server `--require-signature`
+enforcement are subsequent v0.5.0 PRs.
 
 ## Security considerations
 

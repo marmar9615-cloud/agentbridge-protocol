@@ -40,12 +40,30 @@ npm install @marmarlabs/agentbridge-core
   - `canonicalizeJson` / `canonicalizeManifestForSigning` — RFC 8785
     (JCS) canonicalizer used by the verifier and by `signManifest`.
     No new runtime dependency.
-  - **Sign / verify runtime APIs are not in this package yet.**
-    `signManifest` / `verifyManifestSignature` ship in subsequent
-    v0.5.0 PRs (planned to live in
-    `@marmarlabs/agentbridge-sdk`). The schemas and canonicalizer
-    here are the contract those follow-ups target. See the
-    [signed-manifest design](https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/docs/designs/signed-manifests.md).
+  - `verifyManifestSignature(manifest, keySet, options?)` — local
+    signature verification. Returns a discriminated
+    `{ ok: true, kid, iss, alg, signedAt, expiresAt }` |
+    `{ ok: false, reason, message }` result with stable failure
+    enum values (`missing-signature`, `malformed-signature`,
+    `malformed-key-set`, `unsupported-algorithm`, `unknown-kid`,
+    `revoked-kid`, `issuer-mismatch`, `before-signed-at`,
+    `expired`, `canonicalization-failed`, `signature-invalid`,
+    `key-type-mismatch`). Pure, no network, no SDK dependency.
+    Ed25519 + ES256. Reference test vectors live at
+    [`spec/signing/test-vectors.json`](https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/spec/signing/test-vectors.json)
+    so non-JS implementers can check their canonicalizer + verifier
+    against fixed bytes.
+  - **Runtime enforcement is not in this package yet.**
+    `signManifest` is in `@marmarlabs/agentbridge-sdk`. Scanner
+    signature checks, MCP server enforcement, CLI
+    `--require-signature`, and the remote
+    `/.well-known/agentbridge-keys.json` fetch ship in subsequent
+    v0.5.0 PRs. Until then, **unsigned manifests continue to
+    validate exactly as in v0.4.x**, and verification is
+    **additive** — even when a manifest verifies, the existing
+    confirmation gate, origin pinning, target-origin allowlist,
+    audit redaction, stdio stdout hygiene, and HTTP transport
+    auth/origin checks all continue to enforce on top.
 
 ## Quick example
 
