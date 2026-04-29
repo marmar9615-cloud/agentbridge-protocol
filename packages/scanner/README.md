@@ -75,6 +75,12 @@ const invalid = result.checks.find((c) => c.id === "manifest.signature.invalid")
 
 `scoreManifest(manifest, options?)` accepts the same `signature` block.
 
+For a copy-pasteable reporting walkthrough, see
+[`examples/scanner-signature-reporting`](https://github.com/marmar9615-cloud/agentbridge-protocol/tree/main/examples/scanner-signature-reporting).
+It demonstrates unsigned default output, `requireSignature`, verified
+signatures, tampering, and expiry using the public key set from the
+signed-manifest example.
+
 ### Check IDs
 
 Stable identifiers — once shipped, renaming any of them is a major

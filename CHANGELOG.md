@@ -23,6 +23,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   publisher-side signing helpers.
 - Verifier-backed signed-manifest example checks covering the example
   public key set and tamper detection.
+- Scanner signed-manifest reporting examples covering missing,
+  verified, invalid, and expired signature check IDs.
 
 ## [0.4.0] — release-prepared — HTTP MCP Transport + Auth
 

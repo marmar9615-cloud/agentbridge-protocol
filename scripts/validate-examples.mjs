@@ -63,6 +63,19 @@ function runTsxExample(label, source, outName) {
   return { out, raw: res.stdout, manifest: JSON.parse(res.stdout) };
 }
 
+function runTsxJson(label, source) {
+  const res = spawnSync(process.execPath, ["--import", "tsx", source], {
+    cwd: root,
+    encoding: "utf8",
+  });
+  if (res.status !== 0) {
+    if (res.stdout) process.stdout.write(res.stdout);
+    if (res.stderr) process.stderr.write(res.stderr);
+    throw new Error(`run ${label} failed with exit ${res.status}`);
+  }
+  return { raw: res.stdout, json: JSON.parse(res.stdout) };
+}
+
 function assertNoPrivateKeyMaterial(label, raw) {
   for (const marker of testPrivateKeyMarkers) {
     if (raw.includes(marker)) {
@@ -148,6 +161,36 @@ try {
   const unsignedOut = join(tmp, "signed-basic-unsigned.agentbridge.json");
   writeFileSync(unsignedOut, JSON.stringify(unsigned, null, 2), "utf8");
   printResult("validate unsigned copy of signed-manifest-basic", run(["validate", unsignedOut]));
+
+  const reporting = runTsxJson(
+    "scanner-signature-reporting",
+    "examples/scanner-signature-reporting/reporting.ts",
+  );
+  assertNoPrivateKeyMaterial("scanner-signature-reporting", reporting.raw);
+  const scenarios = new Map(
+    reporting.json.scenarios.map((scenario) => [scenario.name, scenario]),
+  );
+  const expectedSignatureIds = new Map([
+    ["unsigned-default", []],
+    ["unsigned-require-signature", ["manifest.signature.missing"]],
+    ["signed-valid-key-set", ["manifest.signature.verified"]],
+    ["signed-tampered-key-set", ["manifest.signature.invalid"]],
+    ["signed-expired-key-set", ["manifest.signature.expired"]],
+  ]);
+  for (const [name, ids] of expectedSignatureIds) {
+    const scenario = scenarios.get(name);
+    if (!scenario) {
+      throw new Error(`scanner-signature-reporting omitted scenario ${name}`);
+    }
+    if (JSON.stringify(scenario.signatureCheckIds) !== JSON.stringify(ids)) {
+      throw new Error(
+        `scanner-signature-reporting ${name} emitted ${JSON.stringify(
+          scenario.signatureCheckIds,
+        )}, expected ${JSON.stringify(ids)}`,
+      );
+    }
+  }
+  process.stdout.write("ok scanner signature reporting example matched expected check IDs\n");
 
   for (const source of openApiFixtures) {
     const out = join(tmp, `${source.split("/").pop()}.agentbridge.json`);
