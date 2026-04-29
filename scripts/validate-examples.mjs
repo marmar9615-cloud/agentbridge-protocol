@@ -3,6 +3,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { spawnSync } from "node:child_process";
+import { pathToFileURL } from "node:url";
 
 const root = resolve(new URL("..", import.meta.url).pathname);
 const cli = join(root, "packages/cli/dist/bin.js");
@@ -27,6 +28,7 @@ const testPrivateKeyMarkers = [
   "BEGIN PRIVATE KEY",
   "END PRIVATE KEY",
   "MC4CAQAwBQYDK2VwBCIEIKSXsEXyAP3O1L5RImgZcGDzbiKurlmgrrmR6AojVA7U",
+  "\"d\":",
 ];
 
 function run(args, opts = {}) {
@@ -70,6 +72,10 @@ function assertNoPrivateKeyMaterial(label, raw) {
 }
 
 try {
+  const { validateKeySet, verifyManifestSignature } = await import(
+    pathToFileURL(join(root, "packages/core/dist/index.js")).href
+  );
+
   for (const manifest of validManifests) {
     printResult(`validate ${manifest}`, run(["validate", manifest]));
   }
@@ -94,6 +100,18 @@ try {
   );
   printResult("validate signed-manifest-basic generated manifest", run(["validate", signed.out]));
   assertNoPrivateKeyMaterial("signed-manifest-basic", signed.raw);
+  const keySetRaw = readFileSync(
+    join(root, "examples/signed-manifest-basic/agentbridge-keys.json"),
+    "utf8",
+  );
+  assertNoPrivateKeyMaterial("signed-manifest-basic key set", keySetRaw);
+  const keySet = JSON.parse(keySetRaw);
+  const keySetValidation = validateKeySet(keySet);
+  if (!keySetValidation.ok) {
+    throw new Error(
+      `signed-manifest-basic key set failed validation:\n${keySetValidation.errors.join("\n")}`,
+    );
+  }
   if (!signed.manifest.signature || typeof signed.manifest.signature !== "object") {
     throw new Error("signed-manifest-basic output did not include a signature block");
   }
@@ -106,6 +124,30 @@ try {
   if (!signed.manifest.signature.value) {
     throw new Error("signed-manifest-basic signature.value was missing");
   }
+  const verified = verifyManifestSignature(signed.manifest, keySet, {
+    now: "2026-04-28T18:00:00.000Z",
+    expectedIssuer: "https://projects.example.com",
+  });
+  if (!verified.ok) {
+    throw new Error(
+      `signed-manifest-basic failed signature verification: ${verified.reason} ${verified.message}`,
+    );
+  }
+  const tampered = {
+    ...signed.manifest,
+    description: `${signed.manifest.description} Tampered after signing.`,
+  };
+  const tamperedResult = verifyManifestSignature(tampered, keySet, {
+    now: "2026-04-28T18:00:00.000Z",
+    expectedIssuer: "https://projects.example.com",
+  });
+  if (tamperedResult.ok || tamperedResult.reason !== "signature-invalid") {
+    throw new Error("tampered signed-manifest-basic output did not fail with signature-invalid");
+  }
+  const { signature: _signature, ...unsigned } = signed.manifest;
+  const unsignedOut = join(tmp, "signed-basic-unsigned.agentbridge.json");
+  writeFileSync(unsignedOut, JSON.stringify(unsigned, null, 2), "utf8");
+  printResult("validate unsigned copy of signed-manifest-basic", run(["validate", unsignedOut]));
 
   for (const source of openApiFixtures) {
     const out = join(tmp, `${source.split("/").pop()}.agentbridge.json`);

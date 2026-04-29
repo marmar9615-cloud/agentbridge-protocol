@@ -21,6 +21,8 @@ project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   Cursor/generic, and HTTP examples.
 - Signed-manifest example and validation coverage using the SDK
   publisher-side signing helpers.
+- Verifier-backed signed-manifest example checks covering the example
+  public key set and tamper detection.
 
 ## [0.4.0] — release-prepared — HTTP MCP Transport + Auth
 

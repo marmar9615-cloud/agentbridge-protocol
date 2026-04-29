@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import os from "node:os";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { runCli } from "../index";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -12,10 +12,12 @@ const repoRoot = path.resolve(here, "../../../..");
 const coreDist = path.join(repoRoot, "packages/core/dist/index.js");
 const sdkDist = path.join(repoRoot, "packages/sdk/dist/index.js");
 const examplePath = path.join(repoRoot, "examples/signed-manifest-basic/manifest.ts");
+const keySetPath = path.join(repoRoot, "examples/signed-manifest-basic/agentbridge-keys.json");
 const privateKeyMarkers = [
   "BEGIN PRIVATE KEY",
   "END PRIVATE KEY",
   "MC4CAQAwBQYDK2VwBCIEIKSXsEXyAP3O1L5RImgZcGDzbiKurlmgrrmR6AojVA7U",
+  "\"d\":",
 ];
 
 function captureStdio(): {
@@ -72,7 +74,7 @@ describe("signed manifest example regressions", () => {
     const currentDist =
       existsSync(coreDist) &&
       existsSync(sdkDist) &&
-      readFileSync(coreDist, "utf8").includes("ManifestSignatureSchema") &&
+      readFileSync(coreDist, "utf8").includes("verifyManifestSignature") &&
       readFileSync(sdkDist, "utf8").includes("signManifest");
     if (currentDist) return;
 
@@ -96,12 +98,43 @@ describe("signed manifest example regressions", () => {
       assertNoPrivateKeyMaterial(raw);
 
       const manifest = JSON.parse(raw);
+      const keySetRaw = await fs.readFile(keySetPath, "utf8");
+      assertNoPrivateKeyMaterial(keySetRaw);
+      const keySet = JSON.parse(keySetRaw);
+      const core = await import(pathToFileURL(coreDist).href);
+      const keySetValidation = core.validateKeySet(keySet);
+      expect(keySetValidation.ok).toBe(true);
+
       expect(manifest.signature).toBeDefined();
       expect(manifest.signature.alg).toBe("EdDSA");
       expect(manifest.signature.kid).toBe("test-ed25519-2026-04");
       expect(manifest.signature.iss).toBe("https://projects.example.com");
       expect(manifest.signature.value).toEqual(expect.any(String));
       expect(manifest.signature.value.length).toBeGreaterThan(20);
+
+      const verified = core.verifyManifestSignature(manifest, keySet, {
+        now: "2026-04-28T18:00:00.000Z",
+        expectedIssuer: "https://projects.example.com",
+      });
+      expect(verified).toMatchObject({
+        ok: true,
+        alg: "EdDSA",
+        kid: "test-ed25519-2026-04",
+        iss: "https://projects.example.com",
+      });
+
+      const tampered = {
+        ...manifest,
+        description: `${manifest.description} Tampered after signing.`,
+      };
+      const tamperedResult = core.verifyManifestSignature(tampered, keySet, {
+        now: "2026-04-28T18:00:00.000Z",
+        expectedIssuer: "https://projects.example.com",
+      });
+      expect(tamperedResult).toMatchObject({
+        ok: false,
+        reason: "signature-invalid",
+      });
 
       const outPath = path.join(tmpDir, "signed-basic.agentbridge.json");
       await fs.writeFile(outPath, raw, "utf8");
@@ -114,8 +147,26 @@ describe("signed manifest example regressions", () => {
       expect(code).toBe(0);
       expect(output).toContain("valid manifest");
       assertNoPrivateKeyMaterial(output);
+
+      const { signature: _signature, ...unsigned } = manifest;
+      const unsignedOutPath = path.join(tmpDir, "signed-basic-unsigned.agentbridge.json");
+      await fs.writeFile(unsignedOutPath, JSON.stringify(unsigned, null, 2), "utf8");
+      const unsignedCap = captureStdio();
+      const unsignedCode = await runCli({ argv: ["validate", unsignedOutPath] });
+      unsignedCap.restore();
+      expect(unsignedCode).toBe(0);
     } finally {
       await fs.rm(tmpDir, { recursive: true, force: true });
     }
+  });
+
+  it("keeps signed example docs on current package scope", async () => {
+    const oldScope = ["@marmar", "9615-cloud"].join("");
+    const docs = await fs.readFile(
+      path.join(repoRoot, "examples/signed-manifest-basic/README.md"),
+      "utf8",
+    );
+    expect(docs).toContain("@marmarlabs/agentbridge-sdk");
+    expect(docs).not.toContain(oldScope);
   });
 });
