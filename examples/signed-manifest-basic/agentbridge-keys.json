@@ -1,0 +1,19 @@
+{
+  "issuer": "https://projects.example.com",
+  "version": "1",
+  "keys": [
+    {
+      "kid": "test-ed25519-2026-04",
+      "alg": "EdDSA",
+      "use": "manifest-sign",
+      "publicKey": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "4F0ROqXtFRtcx7XODDt-sWq87Essl6qUMLwlupVSvWw"
+      },
+      "notBefore": "2026-04-01T00:00:00.000Z",
+      "notAfter": "2026-12-31T23:59:59.000Z"
+    }
+  ],
+  "revokedKids": []
+}

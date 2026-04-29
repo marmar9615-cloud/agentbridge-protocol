@@ -84,9 +84,14 @@ most likely to copy:
 - `examples/openapi-regression/catalog-regression.openapi.json`
 - `examples/sdk-basic/manifest.ts` generated to JSON and validated
 - `examples/signed-manifest-basic/manifest.ts` generated to signed
-  JSON and schema-validated
+  JSON, schema-validated, and verified with its example public key set
 - `agentbridge mcp-config`, including stdio, Codex, Claude Desktop,
   Cursor / generic JSON, and the v0.4.0 HTTP transport block
+
+The signed-manifest example verification is currently part of the
+example regression suite, not a CLI enforcement mode. A future CLI
+`--require-signature` flag will make signature verification available
+as a command option.
 
 After building the workspace, run the same example validation pass
 manually with:
