@@ -1,4 +1,8 @@
 import type { AgentBridgeManifest, AgentAction } from "@marmarlabs/agentbridge-core";
+import {
+  verifyManifestSignature,
+  type VerifyManifestSignatureFailure,
+} from "@marmarlabs/agentbridge-core";
 
 export type CheckSeverity = "info" | "warning" | "error";
 export type RecommendationCategory =
@@ -6,6 +10,66 @@ export type RecommendationCategory =
   | "schema"
   | "docs"
   | "developerExperience";
+
+/**
+ * Optional signed-manifest checking config (v0.5.0). When omitted,
+ * scanner output is bit-for-bit identical to v0.4.x — unsigned
+ * manifests still score the same and signed manifests do **not**
+ * trigger any signature check.
+ *
+ * When `keySet` is provided, the scanner runs `verifyManifestSignature`
+ * from @marmarlabs/agentbridge-core and emits a stable check ID per
+ * the verifier outcome (success → `manifest.signature.verified`;
+ * failure → `manifest.signature.<reason>`). When `keySet` is omitted
+ * but `requireSignature` is true, the scanner still emits
+ * `manifest.signature.missing` if no signature is present.
+ *
+ * No remote key fetch. The scanner accepts a key set the operator
+ * already loaded; runtime fetch of `/.well-known/agentbridge-keys.json`
+ * is reserved for a later v0.5.0 PR.
+ *
+ * Signature checks never authorize anything — they sit alongside the
+ * existing readiness checks. Verification is additive.
+ */
+export interface SignatureScoringOptions {
+  /**
+   * The publisher's key set, typically loaded from
+   * `/.well-known/agentbridge-keys.json`. Anything that conforms to
+   * `AgentBridgeKeySetSchema` from @marmarlabs/agentbridge-core. When
+   * omitted, the scanner cannot verify signatures and only the
+   * `manifest.signature.missing` check is exercised (and only when
+   * `requireSignature` is true).
+   */
+  keySet?: unknown;
+  /**
+   * Optional strict-equality check on `signature.iss`. Forwarded to
+   * `verifyManifestSignature`. Useful when the scanner is invoked
+   * with knowledge of the origin the manifest was fetched from.
+   */
+  expectedIssuer?: string;
+  /**
+   * When true, an unsigned manifest emits `manifest.signature.missing`
+   * as `error` (deduction 15). When false (default), an unsigned
+   * manifest emits the same check id as `info` with no deduction —
+   * informational only, scanner output otherwise unchanged.
+   */
+  requireSignature?: boolean;
+  /**
+   * Override "now" for freshness checks. Forwarded to
+   * `verifyManifestSignature`.
+   */
+  now?: Date | string;
+  /**
+   * Allowed clock skew for `signedAt`/`expiresAt` comparisons.
+   * Forwarded to `verifyManifestSignature`.
+   */
+  clockSkewSeconds?: number;
+}
+
+/** Optional second argument to `scoreManifest`. */
+export interface ScoringOptions {
+  signature?: SignatureScoringOptions;
+}
 
 export interface ScannerCheck {
   /** Stable identifier — useful for suppression/CI rules. */
@@ -46,7 +110,10 @@ const DESTRUCTIVE_METHODS = new Set(["DELETE"]);
 
 // Each check produces a ScannerCheck. Build a list of checks first, then
 // derive score / grouped recommendations / legacy fields from it.
-export function scoreManifest(manifest: AgentBridgeManifest): ScoringResult {
+export function scoreManifest(
+  manifest: AgentBridgeManifest,
+  options: ScoringOptions = {},
+): ScoringResult {
   const checks: ScannerCheck[] = [];
   const passed: ScannerCheck[] = [];
 
@@ -182,6 +249,13 @@ export function scoreManifest(manifest: AgentBridgeManifest): ScoringResult {
     ) {
       missingConfirmation += 1;
     }
+  }
+
+  // ── Signed-manifest checks (v0.5.0, opt-in) ────────────────────────
+  if (options.signature !== undefined) {
+    const sig = scoreSignature(manifest, options.signature);
+    for (const c of sig.failed) checks.push(c);
+    for (const c of sig.passed) passed.push(c);
   }
 
   // ── Derive aggregate fields ────────────────────────────────────────
@@ -412,5 +486,246 @@ function pushOrPass(
       category: failedCheck.category,
       deduction: 0,
     });
+  }
+}
+
+// ── Signed-manifest scoring ──────────────────────────────────────────
+//
+// Maps `verifyManifestSignature` outcomes to stable scanner check IDs
+// per docs/designs/signed-manifests.md §13.5. Severity / deduction
+// reflect the v0.5.0 default mode unless `requireSignature` flips
+// the missing-signature severity to error.
+//
+// What this function deliberately does NOT do:
+//   - No remote fetch of /.well-known/agentbridge-keys.json. The
+//     operator passes the key set in.
+//   - No bypass of any other safety check. Verification is additive.
+//   - No deduction for `malformed-key-set` — that's an
+//     operator-supplied input problem, not a manifest readiness
+//     defect. Surfaced as warning so the operator notices, but the
+//     manifest's score is unaffected.
+
+function scoreSignature(
+  manifest: AgentBridgeManifest,
+  options: SignatureScoringOptions,
+): { failed: ScannerCheck[]; passed: ScannerCheck[] } {
+  const failed: ScannerCheck[] = [];
+  const passed: ScannerCheck[] = [];
+
+  const requireSig = options.requireSignature === true;
+  const hasSig = manifest.signature !== undefined;
+
+  // Branch 1: no signature on the manifest.
+  if (!hasSig) {
+    if (requireSig) {
+      failed.push({
+        id: "manifest.signature.missing",
+        severity: "error",
+        message: "Manifest does not carry a `signature` block, and the scanner is in require-signature mode.",
+        path: "signature",
+        recommendation:
+          "Sign the manifest with `signManifest()` from @marmarlabs/agentbridge-sdk and publish the public key set at /.well-known/agentbridge-keys.json.",
+        category: "safety",
+        deduction: 15,
+      });
+    } else {
+      // Default mode: informational only. The score does not move,
+      // and v0.4.x scanner output is preserved when callers don't
+      // enable require-signature mode.
+      failed.push({
+        id: "manifest.signature.missing",
+        severity: "info",
+        message: "Manifest does not carry a `signature` block (informational; verification is opt-in in v0.5.0).",
+        path: "signature",
+        recommendation:
+          "Optional: sign the manifest with `signManifest()` from @marmarlabs/agentbridge-sdk so agents can verify its publisher offline.",
+        category: "safety",
+        deduction: 0,
+      });
+    }
+    return { failed, passed };
+  }
+
+  // Branch 2: signature present but no key set was supplied — verifier
+  // can't run. Emit an info note so the operator knows verification
+  // was skipped; do not deduct (it's an operator config gap, not a
+  // manifest defect).
+  if (options.keySet === undefined) {
+    failed.push({
+      id: "manifest.signature.unverified-no-key-set",
+      severity: "info",
+      message: "Manifest carries a signature, but no key set was supplied to the scanner — verification was skipped.",
+      path: "signature",
+      recommendation:
+        "Pass the publisher's key set (typically from /.well-known/agentbridge-keys.json) via the scanner's signature.keySet option to verify.",
+      category: "safety",
+      deduction: 0,
+    });
+    return { failed, passed };
+  }
+
+  // Branch 3: both signature and key set present — run the verifier.
+  const result = verifyManifestSignature(manifest, options.keySet, {
+    expectedIssuer: options.expectedIssuer,
+    now: options.now,
+    clockSkewSeconds: options.clockSkewSeconds,
+  });
+
+  if (result.ok) {
+    passed.push({
+      id: "manifest.signature.verified",
+      severity: "info",
+      message: `Signature verified (alg=${result.alg}, kid=${result.kid}, iss=${result.iss}).`,
+      path: "signature",
+      category: "safety",
+      deduction: 0,
+    });
+    return { failed, passed };
+  }
+
+  const mapped = mapVerifyFailure(result.reason);
+  failed.push({
+    id: mapped.id,
+    severity: mapped.severity,
+    message: result.message,
+    path: "signature",
+    recommendation: mapped.recommendation,
+    category: "safety",
+    deduction: mapped.deduction,
+  });
+  return { failed, passed };
+}
+
+interface MappedSignatureFailure {
+  id: string;
+  severity: CheckSeverity;
+  deduction: number;
+  recommendation: string;
+}
+
+/**
+ * Maps a `VerifyManifestSignatureFailure` to its scanner check ID,
+ * severity, deduction, and recommendation. Stable identifiers — once
+ * shipped, renaming any of them is a major bump per
+ * docs/v1-readiness.md §13.
+ */
+function mapVerifyFailure(
+  reason: VerifyManifestSignatureFailure,
+): MappedSignatureFailure {
+  switch (reason) {
+    case "missing-signature":
+      // Only reachable here when `keySet` was provided (we'd have
+      // returned earlier otherwise). Treat as the same default-mode
+      // info as the no-key-set branch.
+      return {
+        id: "manifest.signature.missing",
+        severity: "info",
+        deduction: 0,
+        recommendation:
+          "Optional: sign the manifest with `signManifest()` from @marmarlabs/agentbridge-sdk so agents can verify its publisher offline.",
+      };
+    case "malformed-signature":
+      return {
+        id: "manifest.signature.malformed",
+        severity: "error",
+        deduction: 25,
+        recommendation:
+          "Re-sign the manifest with a current SDK; the signature block fails schema validation (bad iss / dates / value, or expiresAt not after signedAt).",
+      };
+    case "malformed-key-set":
+      // Operator-side issue; surfaced for visibility but not deducted
+      // from the manifest's readiness score.
+      return {
+        id: "manifest.signature.key-set-malformed",
+        severity: "warning",
+        deduction: 0,
+        recommendation:
+          "Fix the supplied key set so it conforms to AgentBridgeKeySetSchema. Verification was skipped — the manifest itself may still be valid.",
+      };
+    case "unsupported-algorithm":
+      return {
+        id: "manifest.signature.unsupported-algorithm",
+        severity: "error",
+        deduction: 20,
+        recommendation:
+          "Use one of the v0.5.0 supported algorithms: EdDSA (Ed25519, default) or ES256 (ECDSA P-256).",
+      };
+    case "unknown-kid":
+      return {
+        id: "manifest.signature.unknown-kid",
+        severity: "error",
+        deduction: 25,
+        recommendation:
+          "Sign with a kid present in the publisher's key set, or rotate the key set to include the kid the manifest references.",
+      };
+    case "revoked-kid":
+      return {
+        id: "manifest.signature.revoked-kid",
+        severity: "error",
+        deduction: 30,
+        recommendation:
+          "Re-sign the manifest with a current, non-revoked kid. The key id used here appears in keySet.revokedKids.",
+      };
+    case "issuer-mismatch":
+      return {
+        id: "manifest.signature.issuer-mismatch",
+        severity: "error",
+        deduction: 25,
+        recommendation:
+          "Ensure signature.iss equals the canonical origin of manifest.baseUrl AND keySet.issuer (and any expectedIssuer the runtime supplies).",
+      };
+    case "before-signed-at":
+      return {
+        id: "manifest.signature.before-signed-at",
+        severity: "error",
+        deduction: 20,
+        recommendation:
+          "Check the signer's clock — signedAt is in the future relative to the verifier's now (outside the configured skew window).",
+      };
+    case "expired":
+      return {
+        id: "manifest.signature.expired",
+        severity: "error",
+        deduction: 20,
+        recommendation:
+          "Ask the publisher to re-sign the manifest. The signature's expiresAt has passed (outside the configured skew window).",
+      };
+    case "canonicalization-failed":
+      return {
+        id: "manifest.signature.canonicalization-failed",
+        severity: "error",
+        deduction: 25,
+        recommendation:
+          "The manifest contains values that cannot be canonicalized (circular references, BigInt, etc.). Remove them and re-sign.",
+      };
+    case "signature-invalid":
+      return {
+        id: "manifest.signature.invalid",
+        severity: "error",
+        deduction: 25,
+        recommendation:
+          "Verify the manifest has not been tampered with after signing, that the kid resolves to the right public key, and that the signature was produced over the canonical bytes.",
+      };
+    case "key-type-mismatch":
+      return {
+        id: "manifest.signature.key-type-mismatch",
+        severity: "error",
+        deduction: 20,
+        recommendation:
+          "Match the key entry's alg + JWK kty/crv to the signature's alg (EdDSA → kty=OKP/crv=Ed25519; ES256 → kty=EC/crv=P-256).",
+      };
+    default: {
+      // Defensive — TypeScript exhaustiveness. If a new failure
+      // reason is added to the verifier without updating this
+      // mapping, surface it explicitly rather than silently dropping.
+      const _exhaustive: never = reason;
+      return {
+        id: `manifest.signature.unknown-failure-${String(_exhaustive)}`,
+        severity: "error",
+        deduction: 0,
+        recommendation:
+          "An unrecognized verifier failure reason was returned; please file an issue.",
+      };
+    }
   }
 }
