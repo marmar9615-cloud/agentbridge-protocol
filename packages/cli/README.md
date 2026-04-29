@@ -32,6 +32,84 @@ agentbridge validate ./public/.well-known/agentbridge.json
 agentbridge validate http://localhost:3000
 ```
 
+**Optional signed-manifest checks (v0.5.0).** Pass a publisher key
+set with `--keys` to also verify the manifest's signature, or
+require a signature without verifying with `--require-signature`.
+Default behavior — neither flag — is unchanged from v0.4.x.
+
+```bash
+# Verify a signed manifest against a key set you already loaded.
+agentbridge validate ./manifest.json --keys ./agentbridge-keys.json
+
+# Reject unsigned manifests (exit 1 if no signature).
+agentbridge validate ./manifest.json --require-signature
+
+# Combine: schema-valid AND signature verifies.
+agentbridge validate ./manifest.json --require-signature --keys ./agentbridge-keys.json
+
+# Optional knobs forwarded to the verifier:
+#   --expected-issuer <origin>
+#   --now <iso-datetime>
+#   --clock-skew-seconds <seconds>
+```
+
+The CLI does not fetch `/.well-known/agentbridge-keys.json` for
+you. Pass the key set as a local file. Runtime fetch lands in the
+MCP server PR.
+
+### `agentbridge verify <file-or-url> --keys <path>`
+
+Dedicated signature-verification command. Always runs the verifier
+(unlike `validate`, which makes verification opt-in). Returns a
+structured outcome with stable failure-reason codes from
+`@marmarlabs/agentbridge-core`.
+
+```bash
+agentbridge verify ./manifest.json --keys ./agentbridge-keys.json
+agentbridge verify https://orders.acme.example/.well-known/agentbridge.json \
+  --keys ./acme-keys.json --expected-issuer https://orders.acme.example
+
+# Machine-readable output for CI.
+agentbridge verify ./manifest.json --keys ./keys.json --json
+# {
+#   "ok": true,
+#   "kid": "acme-orders-2026-04",
+#   "iss": "https://orders.acme.example",
+#   "alg": "EdDSA",
+#   "signedAt": "2026-04-28T12:00:00.000Z",
+#   "expiresAt": "2026-04-29T12:00:00.000Z"
+# }
+```
+
+Failure outcomes carry a stable `reason` from the core verifier
+(`signature-invalid`, `expired`, `unknown-kid`, `revoked-kid`,
+`issuer-mismatch`, …). See
+[`packages/core/README.md`](https://github.com/marmar9615-cloud/agentbridge-protocol/blob/main/packages/core/README.md)
+for the full enum.
+
+### `agentbridge keys generate` (local dev only)
+
+Generate an Ed25519 (or ES256) signing keypair, write the public
+half to a complete `agentbridge-keys.json` document and the private
+half to a separate file with mode `0o600`. Useful for bootstrapping
+the first key set in a development project.
+
+```bash
+agentbridge keys generate \
+  --kid acme-2026-04 \
+  --issuer https://acme.example \
+  --out-public ./agentbridge-keys.json \
+  --out-private ./acme.signing-key.json
+```
+
+> ⚠️ **Local-dev only.** The private key file is sensitive
+> material. Do **not** commit it. Production signing keys belong
+> in a KMS / HSM, never on a developer's filesystem. The CLI
+> writes the private key with mode `0o600` (owner-only) on POSIX,
+> never echoes the private `d` parameter to stdout/stderr, and
+> requires explicit `--out-private` so it cannot silently discard
+> freshly-generated material.
+
 ### `agentbridge init`
 
 Scaffold an `agentbridge.config.ts` and starter manifest in the current
@@ -88,10 +166,12 @@ most likely to copy:
 - `agentbridge mcp-config`, including stdio, Codex, Claude Desktop,
   Cursor / generic JSON, and the v0.4.0 HTTP transport block
 
-The signed-manifest example verification is currently part of the
-example regression suite, not a CLI enforcement mode. A future CLI
-`--require-signature` flag will make signature verification available
-as a command option.
+The signed-manifest example is verified end-to-end by the example
+regression suite. As of v0.5.0 the CLI also exposes
+`agentbridge validate --require-signature [--keys …]` and
+`agentbridge verify` directly, so adopters can wire signature
+verification into their own scripts without re-implementing the
+verifier.
 
 After building the workspace, run the same example validation pass
 manually with:
