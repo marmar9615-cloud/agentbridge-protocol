@@ -159,6 +159,15 @@ export async function runKeysGenerate(opts: KeysGenerateOptions): Promise<number
       `${JSON.stringify(privateEnvelope, null, 2)}\n`,
       { encoding: "utf8", mode: 0o600 },
     );
+    // `fs.writeFile`'s `mode` only applies when the file is *created*;
+    // on a rewrite (e.g. operator regenerates a key against an
+    // existing path) Node preserves the existing permissions, so an
+    // older 0644 file would silently keep world-read after we wrote
+    // fresh private bytes into it. Explicit chmod on POSIX guarantees
+    // the documented owner-only contract on every invocation.
+    if (process.platform !== "win32") {
+      await fs.chmod(outPrivate, 0o600);
+    }
   } catch (err) {
     process.stderr.write(
       `${c.red("error:")} could not write private key to ${outPrivate}: ${(err as Error).message}\n`,

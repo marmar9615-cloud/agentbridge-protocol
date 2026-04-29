@@ -459,6 +459,42 @@ describe("keys generate command", () => {
     }
   });
 
+  it("rewriting an existing private key file re-applies mode 0o600 (regression)", async () => {
+    if (process.platform === "win32") return; // POSIX-only contract.
+    const outPublic = path.join(tmpDir, "keys.json");
+    const outPrivate = path.join(tmpDir, "private.json");
+
+    // Pre-create the private file with 0o644 (world-read), as a
+    // careless operator's prior key file might be. fs.writeFile's
+    // `mode` only applies on creation, so without an explicit chmod
+    // a re-run of `keys generate` against this existing path would
+    // leave the world-read bit set and leak the freshly-generated
+    // key on shared systems — exactly the scenario Codex flagged.
+    await fs.writeFile(outPrivate, "{}", { mode: 0o644 });
+    const before = statSync(outPrivate).mode & 0o777;
+    expect(before).toBe(0o644);
+
+    const code = await runCli({
+      argv: [
+        "keys",
+        "generate",
+        "--kid",
+        "rewrite-key",
+        "--issuer",
+        "https://example.com",
+        "--out-public",
+        outPublic,
+        "--out-private",
+        outPrivate,
+      ],
+    });
+    expect(code).toBe(0);
+
+    // After the re-run, mode must be 0o600 regardless of the prior file's mode.
+    const after = statSync(outPrivate).mode & 0o777;
+    expect(after).toBe(0o600);
+  });
+
   it("private key bytes never appear on stdout or stderr", async () => {
     const outPublic = path.join(tmpDir, "keys.json");
     const outPrivate = path.join(tmpDir, "private.json");
