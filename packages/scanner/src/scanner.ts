@@ -3,6 +3,7 @@ import {
   scoreManifest,
   type ScannerCheck,
   type RecommendationCategory,
+  type SignatureScoringOptions,
 } from "./score";
 import { probePage, type PageProbeResult } from "./playwright";
 
@@ -42,6 +43,15 @@ export interface ScanOptions {
   fetcher?: typeof fetch;
   /** Manifest fetch timeout (ms). Default 5000. */
   timeoutMs?: number;
+  /**
+   * Optional signed-manifest checking (v0.5.0). When omitted, scanner
+   * output is identical to v0.4.x — unsigned manifests still score
+   * the same, signed manifests trigger no signature check. The
+   * scanner does NOT fetch `/.well-known/agentbridge-keys.json` for
+   * you; pass the key set in via `signature.keySet`. See
+   * `SignatureScoringOptions` for the full surface.
+   */
+  signature?: SignatureScoringOptions;
 }
 
 const EMPTY_GROUPS: Record<RecommendationCategory, string[]> = {
@@ -151,7 +161,10 @@ export async function scanUrl(rawUrl: string, opts: ScanOptions = {}): Promise<S
   }
 
   const manifest = validation.manifest;
-  const scoring = scoreManifest(manifest);
+  const scoring = scoreManifest(
+    manifest,
+    opts.signature ? { signature: opts.signature } : undefined,
+  );
   const checks = [...scoring.checks];
   const passed = [...scoring.passed];
 
