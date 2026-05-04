@@ -34,7 +34,7 @@
     "smoke:http": "node scripts/http-mcp-smoke.mjs"
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
+    "@types/node": "^25.6.0",
     "concurrently": "^9.1.0",
     "tsup": "^8.3.0",
     "tsx": "^4.19.0",
