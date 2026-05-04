@@ -13,7 +13,7 @@
     "@marmarlabs/agentbridge-core": "^0.4.0",
     "@marmarlabs/agentbridge-scanner": "^0.4.0",
     "marked": "^14.1.0",
-    "next": "^15.0.0",
+    "next": "^16.2.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
