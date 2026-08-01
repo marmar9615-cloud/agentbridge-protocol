@@ -43,7 +43,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Node 24
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           # npm Trusted Publishing requires npm CLI >= 11.5.1 to perform the
           # OIDC exchange and `--provenance` attestations. Node 24 LTS ships
